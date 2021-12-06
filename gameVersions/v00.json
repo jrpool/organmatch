@@ -1,0 +1,102 @@
+{
+  "doc": {
+    "classes": {
+      "organ": "Number is count of organ cards per type",
+      "type": "Code name of category of organ/patient match",
+      "influence": "Numbers are points per influence card and count of cards",
+      "patient": "Number is count of cards per priority-type permutation"
+    },
+    "goal": "Number is count of rounds won that makes a winner",
+    "playerCount": "Numbers are minimum and maximum count of players",
+    "timeLimit": "Maximum play time in minutes"
+  },
+  "organ": {
+    "heart": 2,
+    "lung": 2,
+    "liver": 2
+  },
+  "type": [
+    "alpha",
+    "beta",
+    "gamma",
+    "delta"
+  ],
+  "priority": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "patient": {
+    "h": {
+      "need": [
+        "heart"
+      ],
+      "count": 2
+    },
+    "u": {
+      "need": [
+        "lung"
+      ],
+      "count": 2
+    },
+    "i": {
+      "need": [
+        "liver"
+      ],
+      "count": 2
+    },
+    "hu": {
+      "need": [
+        "heart",
+        "lung"
+      ],
+      "count": 1
+    },
+    "hi": {
+      "need": [
+        "heart",
+        "liver"
+      ],
+      "count": 1
+    },
+    "ui": {
+      "need": [
+        "lung",
+        "liver"
+      ],
+      "count": 1
+    }
+  },
+  "influence": {
+    "urgent": {
+      "points": 2,
+      "count": 10
+    },
+    "child": {
+      "points": 1,
+      "count": 10
+    },
+    "addict": {
+      "points": -1,
+      "count": 10
+    },
+    "bribe": {
+      "points": -2,
+      "count": 10
+    }
+  },
+  "playerCount": [
+    3,
+    8
+  ],
+  "goal": 6,
+  "turnInfMax": 2,
+  "patientInfMax": 2,
+  "priorityLimit": [
+    1,
+    4
+  ],
+  "hand": 7,
+  "timeLimit": 4
+}

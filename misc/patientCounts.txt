@@ -1,0 +1,19 @@
+Organs:
+2 each of 3 organs in 4 colors
+(total 24)
+
+Patients, for each of 12 color-organ sets (see attached):
+2 with 3-star priority
+2 with 2-star priority
+2 with 1-star priority
+1 with 4-star priority
+1 with 2-star priority needing 1 of the other 3 organs (liver+lung,
+lung+heart, heart+liver)
+(total 96)
+
+Influence:
+10 each of +2
+10 each of +1
+10 each of -1
+10 each of -2
+(total 40)
