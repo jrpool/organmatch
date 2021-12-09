@@ -2,8 +2,8 @@
   newSession
   Creates a session of OrganMatch.
   Arguments:
-  0: game version.
-  1: player count.
+  0: game version (e.g., 01).
+  1: player count (e.g., 5).
 */
 // IMPORTS
 const fs = require('fs');
@@ -11,13 +11,13 @@ const fs = require('fs');
 const gameVersion = process.argv[2];
 const playerCount = process.argv[3];
 // FUNCTIONS
-// Adds a session code to the data.
+// Adds a session code to session data.
 const createCode = sessionData => {
   const now = Date.now();
   const sessionCode = now.toString().slice(5, 10);
   sessionData.sessionCode = sessionCode;
 }
-// Adds organ cards to the data.
+// Adds organ cards to session data.
 const createOrganCards = (versionData, sessionData) => {
   const cards = [];
   const [organs] = versionData;
@@ -35,7 +35,7 @@ const createOrganCards = (versionData, sessionData) => {
   });
   sessionData.cards.organ = cards;
 };
-// Adds influence cards to the data.
+// Adds influence cards to session data.
 const createInfuenceCards = (versionData, sessionData) => {
   const cards = [];
   const influences = versionData.influences.types;
@@ -51,7 +51,7 @@ const createInfuenceCards = (versionData, sessionData) => {
   });
   sessionData.cards.influence = cards;
 };
-// Adds patient cards to the data.
+// Adds patient cards to session data.
 const createPatientCards = (versionData, sessionData) => {
   const [organs] = versionData;
   const groups = Object.keys(versionData.matchGroups.groups);
@@ -92,7 +92,7 @@ const createPatientCards = (versionData, sessionData) => {
   sessionData.cards.patient = cards;
 };
 // Creates a session file.
-exports.newSession = (version, playerCount) => {
+const newSession = (version, playerCount) => {
   const sessionData = {};
   createCode(sessionData);
   sessionData.playerCount = playerCount;
@@ -101,4 +101,8 @@ exports.newSession = (version, playerCount) => {
   createOrganCards(versionData, sessionData);
   createInfluenceCards(versionData, sessionData);
   createPatientCards(versionData, sessionData);
+  return sessionData;
 };
+// OPERATION
+const sessionData = newSession(gameVersion, playerCount);
+fs.writeFileSync(`on/${sessionData.sessionCode}.json`, JSON.stringify(sessionData, null, 2));
