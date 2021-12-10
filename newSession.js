@@ -20,7 +20,7 @@ const createCode = sessionData => {
 // Adds organ cards to session data.
 const createOrganCards = (versionData, sessionData) => {
   const cards = [];
-  const [organs] = versionData;
+  const {organs} = versionData;
   const groups = Object.keys(versionData.matchGroups.groups);
   const {count} = versionData.cardCounts.organ;
   organs.forEach(organ => {
@@ -36,7 +36,7 @@ const createOrganCards = (versionData, sessionData) => {
   sessionData.cards.organ = cards;
 };
 // Adds influence cards to session data.
-const createInfuenceCards = (versionData, sessionData) => {
+const createInfluenceCards = (versionData, sessionData) => {
   const cards = [];
   const influences = versionData.influences.types;
   const {count} = versionData.cardCounts.influence;
@@ -53,7 +53,7 @@ const createInfuenceCards = (versionData, sessionData) => {
 };
 // Adds patient cards to session data.
 const createPatientCards = (versionData, sessionData) => {
-  const [organs] = versionData;
+  const {organs} = versionData;
   const groups = Object.keys(versionData.matchGroups.groups);
   const {types} = versionData.cardCounts.patient;
   const cards = [];
@@ -80,11 +80,11 @@ const createPatientCards = (versionData, sessionData) => {
       })
     });
   });
-  const patientCount = sessionData.cards.patient.length;
+  const patientCount = cards.length;
   const positions = new Array(patientCount);
   positions.fill(1);
   const taggedPositions = positions.map((position, index) => [index, Math.random()]);
-  taggedPositions.sort((a, b) => a[1] < b[1]);
+  taggedPositions.sort((a, b) => a[1] - b[1]);
   const queuePositions = taggedPositions.map(pair => pair[0]);
   cards.forEach((card, index) => {
     card.queuePosition = queuePositions[index];
@@ -92,17 +92,35 @@ const createPatientCards = (versionData, sessionData) => {
   sessionData.cards.patient = cards;
 };
 // Creates a session file.
-const newSession = (version, playerCount) => {
-  const sessionData = {};
+const newSession = () => {
+  const sessionData = {
+    playerCount: null,
+    cards: {}
+  };
   createCode(sessionData);
   sessionData.playerCount = playerCount;
-  const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
-  const versionData = JSON.parse(versionJSON);
-  createOrganCards(versionData, sessionData);
-  createInfluenceCards(versionData, sessionData);
-  createPatientCards(versionData, sessionData);
-  return sessionData;
+  try {
+    const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
+    const versionData = JSON.parse(versionJSON);
+    const playerCountLimits = versionData.limits.playerCount;
+    if (playerCount < playerCountLimits.min || playerCount > playerCountLimits.max) {
+      console.log(
+        `ERROR: player count not between ${playerCountLimits.min} and ${playerCountLimits.max}`
+      );
+      return false;
+    }
+    createOrganCards(versionData, sessionData);
+    createInfluenceCards(versionData, sessionData);
+    createPatientCards(versionData, sessionData);
+    return sessionData;
+  }
+  catch(error) {
+    console.log(`ERROR: no such version (${error.message})`);
+    return false;
+  };
 };
 // OPERATION
 const sessionData = newSession(gameVersion, playerCount);
-fs.writeFileSync(`on/${sessionData.sessionCode}.json`, JSON.stringify(sessionData, null, 2));
+if (sessionData) {
+  fs.writeFileSync(`on/${sessionData.sessionCode}.json`, JSON.stringify(sessionData, null, 2));
+}
