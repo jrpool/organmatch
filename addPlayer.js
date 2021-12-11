@@ -22,7 +22,7 @@ const addPlayer = () => {
       const playerIndex = playersJoined;
       sessionData.playersJoined++;
       const player = players[playerIndex];
-      player.joined = Date.now();
+      player.joinTime = Date.now();
       player.name = playerName;
       fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
       return playerIndex;

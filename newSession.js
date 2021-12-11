@@ -105,12 +105,15 @@ const newSession = () => {
     playerCount,
     playersJoined: 0,
     piles: {
-      new: {
+      latent: {
         organ: [],
         influence: [],
         patient: []
       },
-      old: {
+      current: {
+        organ: null
+      },
+      extinct: {
         organ: [],
         influence: [],
         patient: []
@@ -128,16 +131,16 @@ const newSession = () => {
       );
       return false;
     }
-    const newPiles = sessionData.piles.new;
-    newPiles.organ = shuffle(createOrganData(versionData));
-    newPiles.influence = shuffle(createInfluenceData(versionData));
-    newPiles.patient = shuffle(createPatientData(versionData));
+    const latentPiles = sessionData.piles.latent;
+    latentPiles.organ = shuffle(createOrganData(versionData));
+    latentPiles.influence = shuffle(createInfluenceData(versionData));
+    latentPiles.patient = shuffle(createPatientData(versionData));
     const handSize = versionData.cardCounts.hand.count;
     for (let player = 0; player < playerCount; player++) {
-      const deal = sessionData.piles.new.patient.splice(0, handSize);
+      const deal = sessionData.piles.latent.patient.splice(0, handSize);
       sessionData.players.push({
-        joined: null,
-        name: '',
+        joinTime: null,
+        name: null,
         hand: {
           patients: deal,
           influences: []
@@ -158,4 +161,5 @@ if (sessionData) {
   fs.writeFileSync(
     `on/${sessionData.sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`
   );
+  console.log(`Session ${sessionData.sessionCode} created`);
 }
