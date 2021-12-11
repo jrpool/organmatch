@@ -97,6 +97,10 @@
   },
   "cardCounts": {
     "description": "Counts of card types",
+    "hand": {
+      "description": "How many patient cards are in each player’s hand",
+      "count": 7
+    },
     "influence": {
       "description": "How many influence cards exist per influence type",
       "count": 10

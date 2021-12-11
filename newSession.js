@@ -11,14 +11,14 @@ const fs = require('fs');
 const gameVersion = process.argv[2];
 const playerCount = process.argv[3];
 // FUNCTIONS
-// Adds a session code to session data.
-const createCode = sessionData => {
+// Returns a session code.
+const createCode = () => {
   const now = Date.now();
   const sessionCode = now.toString().slice(5, 10);
-  sessionData.sessionCode = sessionCode;
+  return sessionCode;
 }
-// Adds organ cards to session data.
-const createOrganCards = (versionData, sessionData) => {
+// Returns organ data.
+const createOrganData = versionData => {
   const cards = [];
   const {organs} = versionData;
   const groups = Object.keys(versionData.matchGroups.groups);
@@ -33,10 +33,10 @@ const createOrganCards = (versionData, sessionData) => {
       };
     });
   });
-  sessionData.cards.organ = cards;
+  return cards;
 };
-// Adds influence cards to session data.
-const createInfluenceCards = (versionData, sessionData) => {
+// Returns influence data.
+const createInfluenceData = versionData => {
   const cards = [];
   const influences = versionData.influences.types;
   const {count} = versionData.cardCounts.influence;
@@ -49,10 +49,10 @@ const createInfluenceCards = (versionData, sessionData) => {
       });
     };
   });
-  sessionData.cards.influence = cards;
+  return cards;
 };
-// Adds patient cards to session data.
-const createPatientCards = (versionData, sessionData) => {
+// Returns patient data.
+const createPatientData = versionData => {
   const {organs} = versionData;
   const groups = Object.keys(versionData.matchGroups.groups);
   const {types} = versionData.cardCounts.patient;
@@ -89,16 +89,34 @@ const createPatientCards = (versionData, sessionData) => {
   cards.forEach((card, index) => {
     card.queuePosition = queuePositions[index];
   });
-  sessionData.cards.patient = cards;
+  return cards;
 };
-// Creates a session file.
+// Shuffles an array of cards.
+const shuffle = cards => {
+  const shuffler = cards.map(card => [card, Math.random()]);
+  shuffler.sort((a, b) => a[1] - b[1]);
+  return shuffler.map(pair => pair[0]);
+};
+// Returns data for a session.
 const newSession = () => {
   const sessionData = {
-    playerCount: null,
-    cards: {}
+    gameVersion,
+    sessionCode: createCode(),
+    playerCount,
+    piles: {
+      new: {
+        organ: [],
+        influence: [],
+        patient: []
+      },
+      old: {
+        organ: [],
+        influence: [],
+        patient: []
+      }
+    },
+    players: []
   };
-  createCode(sessionData);
-  sessionData.playerCount = playerCount;
   try {
     const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
     const versionData = JSON.parse(versionJSON);
@@ -109,9 +127,22 @@ const newSession = () => {
       );
       return false;
     }
-    createOrganCards(versionData, sessionData);
-    createInfluenceCards(versionData, sessionData);
-    createPatientCards(versionData, sessionData);
+    const newPiles = sessionData.piles.new;
+    newPiles.organ = shuffle(createOrganData(versionData));
+    newPiles.influence = shuffle(createInfluenceData(versionData));
+    newPiles.patient = shuffle(createPatientData(versionData));
+    const handSize = versionData.cardCounts.hand.count;
+    for (let player = 0; player < playerCount; player++) {
+      const deal = sessionData.piles.new.patient.splice(0, handSize);
+      sessionData.players.push({
+        name: '',
+        hand: {
+          patients: deal,
+          influences: []
+        },
+        wins: []
+      });
+    };
     return sessionData;
   }
   catch(error) {
@@ -120,7 +151,9 @@ const newSession = () => {
   };
 };
 // OPERATION
-const sessionData = newSession(gameVersion, playerCount);
+const sessionData = newSession();
 if (sessionData) {
-  fs.writeFileSync(`on/${sessionData.sessionCode}.json`, JSON.stringify(sessionData, null, 2));
+  fs.writeFileSync(
+    `on/${sessionData.sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`
+  );
 }
