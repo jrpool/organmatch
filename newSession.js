@@ -66,7 +66,7 @@ const createPatientCards = (versionData, sessionData) => {
     else if (organCount === 2) {
       organNeeds = organs
       .flatMap(organ0 => organs.map(organ1 => [organ0, organ1]))
-      .filter(pair => organs.indexOf(pair[0] < organs.indexOf(pair[1])));
+      .filter(pair => organs.indexOf(pair[0]) < organs.indexOf(pair[1]));
     }
     organNeeds.forEach(organNeed => {
       groups.forEach(group => {
