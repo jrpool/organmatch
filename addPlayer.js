@@ -13,8 +13,8 @@ const sessionCode = process.argv[3];
 // FUNCTIONS
 // Adds a player to a session and returns the index of the player.
 const addPlayer = () => {
-  const sessionCodes = fs.readdirSync('on');
-  if (sessionCodes.includes(sessionCode)) {
+  const sessionFileNames = fs.readdirSync('on');
+  if (sessionFileNames.includes(`${sessionCode}.json`)) {
     const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
     const sessionData = JSON.parse(sessionJSON);
     const {playerCount, playersJoined, players} = sessionData;
