@@ -103,6 +103,7 @@ const newSession = () => {
     gameVersion,
     sessionCode: createCode(),
     playerCount,
+    playersJoined: 0,
     piles: {
       new: {
         organ: [],
@@ -135,6 +136,7 @@ const newSession = () => {
     for (let player = 0; player < playerCount; player++) {
       const deal = sessionData.piles.new.patient.splice(0, handSize);
       sessionData.players.push({
+        joined: null,
         name: '',
         hand: {
           patients: deal,
