@@ -89,7 +89,8 @@ const createPatientCards = (versionData, groups) => {
     for (let i = 0; i < organQueueSizes[organ]; i++) {
       organQueues[organ][i] = [i, Math.random()];
     };
-    organQueues[organ].sort((a, b) => a[1] - b[1]).map(pair => pair[0]);
+    organQueues[organ].sort((a, b) => a[1] - b[1]);
+    organQueues[organ] = organQueues[organ].map(pair => pair[0]);
   });
   const queueIndexes = {};
   organs.forEach(organ => {
@@ -108,7 +109,7 @@ const createPatientCards = (versionData, groups) => {
         organNeed.forEach((organ, index) => {
           card.organNeed[index] = {
             organ,
-            queuePosition: queueIndexes[organ]++
+            queuePosition: organQueues[organ][queueIndexes[organ]++]
           };
         });
         cards.push(card);
@@ -116,15 +117,15 @@ const createPatientCards = (versionData, groups) => {
       else {
         groups.forEach(group => {
           const card = {
-            organNeed,
+            organNeed: organNeed.map(organ => ({
+              organ,
+              queuePosition: null
+            })),
             group,
             priority
           };
           organNeed.forEach((organ, index) => {
-            card.organNeed[index] = {
-              organ,
-              queuePosition: queueIndexes[organ]++
-            }
+            card.organNeed[index].queuePosition = organQueues[organ][queueIndexes[organ]++];
           });
           cards.push(card);
         });
