@@ -21,7 +21,6 @@ const matchGroups = versionData => Object.keys(versionData.matchGroups.groups);
 const createOrganCards = (versionData, groups) => {
   const cards = [];
   const cardTypes = versionData.organCards.types;
-  const cards = [];
   cardTypes.forEach(type => {
     const {organ, group, count} = type;
     for (let i = 0; i < count; i++) {
