@@ -24,12 +24,14 @@ const startRound = () => {
           piles.extinct.organ.push(piles.current.organ);
         }
         piles.current.organ = piles.latent.organ.shift();
-        const starter = rounds.length ? rounds[rounds.length - 1].winner : 0;
-        if (starter) {
+        const starter = rounds.length ? rounds[rounds.length - 1].nextStarter : 0;
+        if (typeof starter === 'number') {
           rounds.push({
             startTime: Date.now(),
             starter,
             currentOrgan: piles.current.organ,
+            winner: null,
+            nextStarter: null,
             turns: []
           });
           fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
