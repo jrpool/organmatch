@@ -27,7 +27,7 @@ const addPlayer = () => {
         name,
         joinTime: Date.now(),
         hand: {
-          patientCards: piles.latent.patient.splice(0, handSize),
+          patientCards: piles.latent.patient.splice(0, handSize.count),
           influenceCards: []
         },
         wins: []
