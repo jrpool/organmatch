@@ -14,7 +14,7 @@ const startRound = () => {
   try {
     const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
     const sessionData = JSON.parse(sessionJSON);
-    const {startTime, endTime, piles, rounds} = sessionData;
+    const {startTime, endTime, piles, players, rounds} = sessionData;
     if (endTime) {
       return 'sessionAlreadyEnded';
     }
@@ -25,10 +25,12 @@ const startRound = () => {
         }
         piles.current.organ = piles.latent.organ.shift();
         const starter = rounds.length ? rounds[rounds.length - 1].nextStarter : 0;
+        const ender = (starter + players.length - 1) % players.length;
         if (typeof starter === 'number') {
           rounds.push({
             startTime: Date.now(),
             starter,
+            ender,
             currentOrgan: piles.current.organ,
             winner: null,
             nextStarter: null,

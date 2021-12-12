@@ -30,6 +30,7 @@ const addPlayer = () => {
           patientCards: piles.latent.patient.splice(0, handSize.count),
           influenceCards: []
         },
+        bid: null,
         wins: []
       });
       fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
