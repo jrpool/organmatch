@@ -140,7 +140,9 @@ const newSession = () => {
     gameVersion,
     sessionCode: createCode(),
     playersJoined: 0,
-    started: false,
+    startTime: null,
+    roundsEnded: 0,
+    endTime: null,
     piles: {
       latent: {
         organ: [],
@@ -156,7 +158,8 @@ const newSession = () => {
         patient: []
       }
     },
-    players: []
+    players: [],
+    rounds: []
   };
   try {
     const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
