@@ -20,21 +20,27 @@ const startRound = () => {
     }
     else if (startTime) {
       if (piles.latent.organ.length) {
-        if (piles.current.organ.length) {
-          piles.expired.organ.push(piles.current.organ.shift());
+        if (piles.current.organ) {
+          piles.extinct.organ.push(piles.current.organ);
         }
-        piles.current.organ.push(piles.latent.organ.shift());
+        piles.current.organ = piles.latent.organ.shift();
         const starter = rounds.length ? rounds[rounds.length - 1].winner : 0;
-        rounds.push({
-          startTime: Date.now(),
-          starter,
-          currentOrgan: piles.current.organ[0],
-          turns: []
-        });
-        fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
+        if (starter) {
+          rounds.push({
+            startTime: Date.now(),
+            starter,
+            currentOrgan: piles.current.organ,
+            turns: []
+          });
+          fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
+          return `Round ${rounds.length} started`;
+        }
+        else {
+          return 'priorRoundWinnerless';
+        }
       }
       else {
-        return `organCardsExhausted`;
+        return 'organCardsExhausted';
       }
     }
     else {
@@ -42,7 +48,7 @@ const startRound = () => {
     }
   }
   catch (error) {
-    return error.message;
+    return `${error.message}\n${error.stack}`;
   }
 };
 // OPERATION
