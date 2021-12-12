@@ -137,6 +137,7 @@ const newSession = () => {
     gameVersion,
     sessionCode: createCode(),
     playersJoined: 0,
+    started: false,
     piles: {
       latent: {
         organ: [],
