@@ -87,7 +87,7 @@ const createPatientCards = (versionData, groups) => {
   organs.forEach(organ => {
     organQueues[organ] = (new Array(organQueueSizes[organ])).fill(1);
     for (let i = 0; i < organQueueSizes[organ]; i++) {
-      organQueues[organ] = [i, Math.random()];
+      organQueues[organ][i] = [i, Math.random()];
     };
     organQueues[organ].sort((a, b) => a[1] - b[1]).map(pair => pair[0]);
   });
