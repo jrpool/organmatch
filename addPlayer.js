@@ -8,22 +8,30 @@
 // IMPORTS
 const fs = require('fs');
 // CONSTANTS
-const playerName = process.argv[2];
+const name = process.argv[2];
 const sessionCode = process.argv[3];
 // FUNCTIONS
 // Adds a player to a session and returns the index of the player.
 const addPlayer = () => {
-  const sessionFileNames = fs.readdirSync('on');
-  if (sessionFileNames.includes(`${sessionCode}.json`)) {
+  try {
     const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
     const sessionData = JSON.parse(sessionJSON);
-    const {playerCount, playersJoined, players} = sessionData;
-    if (playersJoined < playerCount) {
-      const playerIndex = playersJoined;
+    const {gameVersion, playersJoined, piles, players} = sessionData;
+    const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
+    const versionData = JSON.parse(versionJSON);
+    const {playerCount} = versionData.limits;
+    const {handSize} = versionData;
+    if (playersJoined < playerCount.max) {
       sessionData.playersJoined++;
-      const player = players[playerIndex];
-      player.joinTime = Date.now();
-      player.name = playerName;
+      players.push({
+        name,
+        joinTime: new Date(now),
+        hand: {
+          patientCards: piles.latent.patient.splice(0, handSize),
+          influenceCards: []
+        },
+        wins: []
+      });
       fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
       return playerIndex;
     }
@@ -31,14 +39,14 @@ const addPlayer = () => {
       return 'sessionFull';
     }
   }
-  else {
-    return 'noSuchSession';
+  catch (error) {
+    return error.message;
   }
 };
 // OPERATION
 const playerIndex = addPlayer();
 if (typeof playerIndex === 'number') {
-  console.log(`Added ${playerName} to session ${sessionCode} as player ${playerIndex}`);
+  console.log(`Added ${name} to session ${sessionCode} as player ${playerIndex}`);
 }
 else {
   console.log(` ERROR: ${playerIndex}`);
