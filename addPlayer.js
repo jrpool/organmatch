@@ -11,7 +11,7 @@ const fs = require('fs');
 const name = process.argv[2];
 const sessionCode = process.argv[3];
 // FUNCTIONS
-// Adds a player to a session and returns the index of the player.
+// Adds a player to a session and returns the new count of players joined.
 const addPlayer = () => {
   try {
     const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
@@ -25,7 +25,7 @@ const addPlayer = () => {
       sessionData.playersJoined++;
       players.push({
         name,
-        joinTime: new Date(now),
+        joinTime: Date.now(),
         hand: {
           patientCards: piles.latent.patient.splice(0, handSize),
           influenceCards: []
@@ -33,7 +33,7 @@ const addPlayer = () => {
         wins: []
       });
       fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
-      return playerIndex;
+      return sessionData.playersJoined;
     }
     else {
       return 'sessionFull';
@@ -44,24 +44,10 @@ const addPlayer = () => {
   }
 };
 // OPERATION
-const playerIndex = addPlayer();
-if (typeof playerIndex === 'number') {
-  console.log(`Added ${name} to session ${sessionCode} as player ${playerIndex}`);
+const joinCount = addPlayer();
+if (typeof joinCount === 'number') {
+  console.log(`Added ${name} to session ${sessionCode}; players joined: ${joinCount}`);
 }
 else {
-  console.log(` ERROR: ${playerIndex}`);
+  console.log(` ERROR: ${joinCount}`);
 }
-
-const handSize = versionData.cardCounts.hand.count;
-for (let player = 0; player < playerCount; player++) {
-  const deal = sessionData.piles.latent.patient.splice(0, handSize);
-  sessionData.players.push({
-    joinTime: null,
-    name: null,
-    hand: {
-      patients: deal,
-      influences: []
-    },
-    wins: []
-  });
-};
