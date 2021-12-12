@@ -111,6 +111,7 @@ const createPatientCards = (versionData, groups) => {
             queuePosition: queueIndexes[organ]++
           };
         });
+        cards.push(card);
       }
       else {
         groups.forEach(group => {
@@ -125,6 +126,7 @@ const createPatientCards = (versionData, groups) => {
               queuePosition: queueIndexes[organ]++
             }
           });
+          cards.push(card);
         });
       }
     };
