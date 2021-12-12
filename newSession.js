@@ -3,13 +3,11 @@
   Creates a session of OrganMatch.
   Arguments:
   0: game version (e.g., 01).
-  1: player count (e.g., 5).
 */
 // IMPORTS
 const fs = require('fs');
 // CONSTANTS
 const gameVersion = process.argv[2];
-const playerCount = process.argv[3];
 // FUNCTIONS
 // Returns a session code.
 const createCode = () => {
@@ -17,31 +15,40 @@ const createCode = () => {
   const sessionCode = now.toString().slice(5, 10);
   return sessionCode;
 }
-// Returns organ data.
-const createOrganData = versionData => {
+// Returns data on groups.
+const matchGroups = versionData => Object.keys(versionData.matchGroups.groups);
+// Returns organ cards.
+const createOrganCards = (versionData, groups) => {
   const cards = [];
-  const {organs} = versionData;
-  const groups = Object.keys(versionData.matchGroups.groups);
-  const {count} = versionData.cardCounts.organ;
-  organs.forEach(organ => {
-    groups.forEach(group => {
-      for (let i = 0; i < count; i++) {
+  const cardTypes = versionData.organCards.types;
+  const cards = [];
+  cardTypes.forEach(type => {
+    const {organ, group, count} = type;
+    for (let i = 0; i < count; i++) {
+      if (group) {
         cards.push({
           organ,
           group
         });
-      };
-    });
+      }
+      else {
+        groups.forEach(group => {
+          cards.push({
+            organ,
+            group
+          });
+        });
+      }
+    }
   });
   return cards;
 };
-// Returns influence data.
-const createInfluenceData = versionData => {
+// Returns influence cards.
+const createInfluenceCards = versionData => {
   const cards = [];
-  const influences = versionData.influences.types;
-  const {count} = versionData.cardCounts.influence;
-  influences.forEach(influence => {
-    const {name, impact} = influence;
+  const cardTypes = versionData.influenceCards.types;
+  cardTypes.forEach(type => {
+    const {name, impact, count} = type;
     for (let i = 0; i < count; i++) {
       cards.push({
         name,
@@ -51,58 +58,85 @@ const createInfluenceData = versionData => {
   });
   return cards;
 };
-// Returns patient data.
-const createPatientData = versionData => {
-  const {organs} = versionData;
-  const groups = Object.keys(versionData.matchGroups.groups);
-  const {types} = versionData.cardCounts.patient;
-  const cards = [];
-  Object.keys(types).forEach(typeName => {
-    const {organCount, priority, count} = types[typeName];
-    let organNeeds;
-    if (organCount === 1) {
-      organNeeds = organs.map(organ => [organ]);
-    }
-    else if (organCount === 2) {
-      organNeeds = organs
-      .flatMap(organ0 => organs.map(organ1 => [organ0, organ1]))
-      .filter(pair => organs.indexOf(pair[0]) < organs.indexOf(pair[1]));
-    }
-    organNeeds.forEach(organNeed => {
-      groups.forEach(group => {
-        for (let i = 0; i < count; i++) {
-          cards.push({
-            organNeed,
-            group,
-            priority
-          });
-        };
-      })
-    });
-  });
-  const patientCount = cards.length;
-  const positions = new Array(patientCount);
-  positions.fill(1);
-  const taggedPositions = positions.map((position, index) => [index, Math.random()]);
-  taggedPositions.sort((a, b) => a[1] - b[1]);
-  const queuePositions = taggedPositions.map(pair => pair[0]);
-  cards.forEach((card, index) => {
-    card.queuePosition = queuePositions[index];
-  });
-  return cards;
-};
-// Shuffles an array of cards.
+// Returns an array, shuffled.
 const shuffle = cards => {
   const shuffler = cards.map(card => [card, Math.random()]);
   shuffler.sort((a, b) => a[1] - b[1]);
   return shuffler.map(pair => pair[0]);
+};
+// Returns patient cards.
+const createPatientCards = (versionData, groups) => {
+  const {types} = versionData.patientCards;
+  const organs = versionData.organCards.types.map(type => type.organ);
+  const organQueueSizes = {};
+  organs.forEach(organ => {
+    organQueueSizes[organ] = types.reduce((count, thisType) => {
+      if (thisType.organNeed.includes(organ)) {
+        if (thisType.group) {
+          return count + thisType.count;
+        }
+        else {
+          return count + groups.length * thisType.count;
+        }
+      }
+      else {
+        return count;
+      }
+    }, 0);
+  });
+  const organQueues = {};
+  organs.forEach(organ => {
+    organQueues[organ] = (new Array(organQueueSizes[organ])).fill(1);
+    for (let i = 0; i < organQueueSizes[organ]; i++) {
+      organQueues[organ] = [i, Math.random()];
+    };
+    organQueues[organ].sort((a, b) => a[1] - b[1]).map(pair => pair[0]);
+  });
+  const queueIndexes = {};
+  organs.forEach(organ => {
+    queueIndexes[organ] = 0;
+  });
+  const cards = [];
+  types.forEach(type => {
+    const {organNeed, group, priority, count} = type;
+    for (let i = 0; i < count; i++) {
+      if (group) {
+        const card = {
+          organNeed,
+          group,
+          priority
+        };
+        organNeed.forEach((organ, index) => {
+          card.organNeed[index] = {
+            organ,
+            queuePosition: queueIndexes[organ]++
+          };
+        });
+      }
+      else {
+        groups.forEach(group => {
+          const card = {
+            organNeed,
+            group,
+            priority
+          };
+          organNeed.forEach((organ, index) => {
+            card.organNeed[index] = {
+              organ,
+              queuePosition: queueIndexes[organ]++
+            }
+          });
+        });
+      }
+    };
+  });
+  return cards;
 };
 // Returns data for a session.
 const newSession = () => {
   const sessionData = {
     gameVersion,
     sessionCode: createCode(),
-    playerCount,
     playersJoined: 0,
     piles: {
       latent: {
@@ -124,30 +158,11 @@ const newSession = () => {
   try {
     const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
     const versionData = JSON.parse(versionJSON);
-    const playerCountLimits = versionData.limits.playerCount;
-    if (playerCount < playerCountLimits.min || playerCount > playerCountLimits.max) {
-      console.log(
-        `ERROR: player count not between ${playerCountLimits.min} and ${playerCountLimits.max}`
-      );
-      return false;
-    }
     const latentPiles = sessionData.piles.latent;
-    latentPiles.organ = shuffle(createOrganData(versionData));
-    latentPiles.influence = shuffle(createInfluenceData(versionData));
-    latentPiles.patient = shuffle(createPatientData(versionData));
-    const handSize = versionData.cardCounts.hand.count;
-    for (let player = 0; player < playerCount; player++) {
-      const deal = sessionData.piles.latent.patient.splice(0, handSize);
-      sessionData.players.push({
-        joinTime: null,
-        name: null,
-        hand: {
-          patients: deal,
-          influences: []
-        },
-        wins: []
-      });
-    };
+    const groups = matchGroups(versionData);
+    latentPiles.organ = shuffle(createOrganCards(versionData, groups));
+    latentPiles.influence = shuffle(createInfluenceCards(versionData));
+    latentPiles.patient = shuffle(createPatientCards(versionData, groups));
     return sessionData;
   }
   catch(error) {

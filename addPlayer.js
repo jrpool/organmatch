@@ -43,3 +43,17 @@ if (typeof playerIndex === 'number') {
 else {
   console.log(` ERROR: ${playerIndex}`);
 }
+
+const handSize = versionData.cardCounts.hand.count;
+for (let player = 0; player < playerCount; player++) {
+  const deal = sessionData.piles.latent.patient.splice(0, handSize);
+  sessionData.players.push({
+    joinTime: null,
+    name: null,
+    hand: {
+      patients: deal,
+      influences: []
+    },
+    wins: []
+  });
+};

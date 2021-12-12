@@ -1,0 +1,143 @@
+{
+  "organs": [
+    "heart",
+    "lung",
+    "liver"
+  ],
+  "matchGroups": {
+    "description": "Categories of organs and of patients that must match",
+    "groups": {
+      "alpha": {
+        "color": "lavender"
+      },
+      "beta": {
+        "color": "mauve"
+      },
+      "gamma": {
+        "color": "green"
+      },
+      "delta": {
+        "color": "blue"
+      }
+    }
+  },
+  "patientPriorities": {
+    "description": "Patient with the highest priority wins",
+    "levels": [
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "influences": {
+    "description": "Factors modifying patient priorities",
+    "types": [
+      {
+        "name": "urgency",
+        "description": "Patient’s health has deteriorated, making transplant more urgent",
+        "impact": 2
+      },
+      {
+        "name": "child",
+        "description": "Patient is a child",
+        "impact": 1
+      },
+      {
+        "name": "addict",
+        "description": "Patient has used a prohibited substance",
+        "impact": -1
+      },
+      {
+        "name": "bribe",
+        "description": "Patient has offered a bribe to the transplant committee",
+        "impact": -2
+      }
+    ]
+  },
+  "limits": {
+    "needCount": {
+      "description": "How many organ types a patient may need one each of",
+      "min": 1,
+      "max": 2
+    },
+    "playerCount": {
+      "description": "How many players may play a session of the game",
+      "min": 3,
+      "max": 8
+    },
+    "roundsWon": {
+      "description": "How many rounds a player may win (this wins the game)",
+      "max": 6
+    },
+    "influences": {
+      "description": "Limits on the use of influence cards",
+      "perTurn": {
+        "description": "How many a player may use in a turn",
+        "max": 2
+      },
+      "perPatient": {
+        "description": "How many may be placed on a patient",
+        "max": 2
+      },
+      "perTurnPatient":{
+        "description": "how many a player may place on a patient",
+        "max": 1
+      }
+    },
+    "priorities": {
+      "description": "Limits on the influenced priority of a patient",
+      "min": 1,
+      "max": 4
+    },
+    "sessionTime": {
+      "description": "Time in minutes elapsed after session launched until session is expunged",
+      "max": 240
+    }
+  },
+  "cardCounts": {
+    "description": "Counts of card types",
+    "hand": {
+      "description": "How many patient cards are in each player’s hand",
+      "count": 7
+    },
+    "influence": {
+      "description": "How many influence cards exist per influence type",
+      "count": 10
+    },
+    "organ": {
+      "description": "How many organ cards exist per combination of organ and match group",
+      "count": 2
+    },
+    "patient": {
+      "description": "Patients with each organ(s)/match group combination",
+      "types": [
+        {
+          "organCount": 1,
+          "priority": 4,
+          "count": 1
+        },
+        {
+          "organCount": 1,
+          "priority": 3,
+          "count": 2
+        },
+        {
+          "organCount": 1,
+          "priority": 2,
+          "count": 2
+        },
+        {
+          "organCount": 1,
+          "priority": 1,
+          "count": 2
+        },
+        {
+          "organCount": 2,
+          "priority": 2,
+          "count": 1
+        }
+      ]
+    }
+  }
+}
