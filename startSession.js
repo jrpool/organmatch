@@ -20,17 +20,24 @@ const startSession = () => {
   try {
     const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
     const sessionData = JSON.parse(sessionJSON);
-    const {gameVersion, playersJoined, players} = sessionData;
-    const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
-    const versionData = JSON.parse(versionJSON);
-    const {playerCount} = versionData.limits;
-    if (playersJoined >= playerCount.min) {
-      players = shuffle(players);
-      fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
-      return `Session ${sessionCode} started`;
+    if (sessionData.startTime) {
+      return 'alreadyStarted';
     }
     else {
-      return 'tooFewPlayers';
+      const {gameVersion, playersJoined, players} = sessionData;
+      const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
+      const versionData = JSON.parse(versionJSON);
+      const {playerCount} = versionData.limits;
+      if (playersJoined >= playerCount.min) {
+        const shuffledPlayers = JSON.parse(JSON.stringify(shuffle(players)));
+        players.splice(0, players.length, ...shuffledPlayers);
+        sessionData.startTime = Date.now();
+        fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
+        return `Session ${sessionCode} started`;
+      }
+      else {
+        return 'tooFewPlayers';
+      }
     }
   }
   catch (error) {
