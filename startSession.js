@@ -32,7 +32,7 @@ const startSession = () => {
         const shuffledPlayers = JSON.parse(JSON.stringify(shuffle(players)));
         players.splice(0, players.length, ...shuffledPlayers);
         sessionData.startTime = Date.now();
-        fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
+        require('./recordSession')(sessionData);
         return `Session ${sessionCode} started`;
       }
       else {

@@ -179,8 +179,6 @@ const newSession = () => {
 // OPERATION
 const sessionData = newSession();
 if (sessionData) {
-  fs.writeFileSync(
-    `on/${sessionData.sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`
-  );
+  require('./recordSession')(sessionData);
   console.log(`Session ${sessionData.sessionCode} created`);
 }

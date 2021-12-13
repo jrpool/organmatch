@@ -33,7 +33,7 @@ const addPlayer = () => {
         bid: null,
         wins: []
       });
-      fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
+      require('./recordSession')(sessionData);
       return sessionData.playersJoined;
     }
     else {

@@ -28,10 +28,11 @@ const startTurn = () => {
           playerIndex: null,
           matchingPatients: [],
           bidPatient: null,
-          bidPriority: null,
+          influencesReceived: [],
+          netPriority: null,
           replacedPatient: null,
           newPatient: null,
-          influencesUsed: [],
+          influencesSent: [],
         };
         if (turns.length) {
           const priorTurn = turns[turns.length - 1];
@@ -47,7 +48,7 @@ const startTurn = () => {
           turn.playerIndex = thisRound.starter;
         }
         turns.push(turn);
-        fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
+        require('./recordSession')(sessionData);
         return `Turn ${turns.length} started`;
       }
       else {

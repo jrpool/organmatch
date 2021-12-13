@@ -25,13 +25,14 @@ const playTurn = () => {
         if (turns.length) {
           const turn = turns[turns.length - 1];
           const {playerIndex, matchingPatients} = turn;
-          let {endTime, bidPatient, bidPriority} = turn;
+          let {endTime, bidPatient, netPriority} = turn;
           if (playerIndex) {
             const {organ} = piles.current;
             const player = players[playerIndex];
             const {hand} = player;
             let {bid} = player;
             const {patientCards} = hand;
+            // Identify the turn player’s matching patient cards.
             const matchIndexes = patientCards
             .map((patient, index) => {
               const {organNeed} = patient;
@@ -46,21 +47,29 @@ const playTurn = () => {
               }
             })
             .filter(index => index !== null);
+            // Record them.
             matchIndexes.forEach(index => {
               matchingPatients.push(patientCards[index]);
             });
+            // If there is 1 of them:
             const matchCount = matchIndexes.length;
             if (matchCount === 1) {
               if (bid) {
                 return 'bidNotEmpty';
               }
               else {
+                // Bid it and record the bid in both the turn and the player.
                 bidPatient = bid = patientCards.splice(matchIndexes[0], 1);
-                bidPriority = bid.priority;
+                netPriority = bid.priority;
+                // If the hand contains no influence cards, end the turn.
                 const influenceCount = hand.influenceCards.length;
+                let reportEnd = '';
                 if (! influenceCount) {
                   endTime = Date.now();
+                  reportEnd = ' and ended';
                 }
+                require('./recordSession')(sessionData);
+                return `Turn ${turns.length} played${reportEnd}`;
               }
             }
           }

@@ -36,7 +36,7 @@ const startRound = () => {
             nextStarter: null,
             turns: []
           });
-          fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
+          require('./recordSession')(sessionData);
           return `Round ${rounds.length} started`;
         }
         else {
