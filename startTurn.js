@@ -36,13 +36,16 @@ const startTurn = () => {
         };
         if (turns.length) {
           const priorTurn = turns[turns.length - 1];
-          const priorPlayerIndex = priorTurn.playerIndex;
-          if (priorPlayerIndex) {
-            turn.playerIndex = (priorTurn.playerIndex + 1) % players.length;
+          if (priorTurn.endTime){
+            const priorPlayerIndex = priorTurn.playerIndex;
+            if (priorPlayerIndex !== null) {
+              turn.playerIndex = (priorPlayerIndex + 1) % players.length;
+            }
+            else {
+              return 'noPriorPlayer';
+            }
           }
-          else {
-            return 'noPriorPlayer';
-          }
+          return 'priorTurnNotEnded';
         }
         else {
           turn.playerIndex = thisRound.starter;

@@ -7,6 +7,8 @@
 // IMPORTS
 const fs = require('fs');
 // OPERATION
-const sessionData = process.argv[2];
-const {sessionCode} = sessionData;
-fs.writeFileSync(`on/${sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`);
+module.exports = sessionData => {
+  fs.writeFileSync(
+    `on/${sessionData.sessionCode}.json`, `${JSON.stringify(sessionData, null, 2)}\n`
+  );
+};

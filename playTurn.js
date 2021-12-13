@@ -26,7 +26,7 @@ const playTurn = () => {
           const turn = turns[turns.length - 1];
           const {playerIndex, matchingPatients} = turn;
           let {endTime, bidPatient, netPriority} = turn;
-          if (playerIndex) {
+          if (playerIndex !== null) {
             const {organ} = piles.current;
             const player = players[playerIndex];
             const {hand} = player;
@@ -64,13 +64,30 @@ const playTurn = () => {
                 // If the hand contains no influence cards, end the turn.
                 const influenceCount = hand.influenceCards.length;
                 let reportEnd = '';
-                if (! influenceCount) {
-                  endTime = Date.now();
-                  reportEnd = ' and ended';
+                // If the hand contains any influence cards, record progress.
+                if (influenceCount) {
+                  require('./recordSession')(sessionData);
+                  return `Turn ${turns.length} played with bid and requires finish`;
                 }
-                require('./recordSession')(sessionData);
-                return `Turn ${turns.length} played${reportEnd}`;
+                // Otherwise, i.e. if the hand contains no influence cards, end the turn.
+                else {
+                  endTime = Date.now();
+                  require('./recordSession')(sessionData);
+                  return `Turn ${turns.length} played with bid and ended`;
+                }
               }
+            }
+            // Otherwise, i.e. if the hand contains 2+ matching patient cards:
+            else if (matchCount) {
+              // Record progress.
+              require('./recordSession')(sessionData);
+              return `Turn ${turns.length} played and requires bidding finish`;
+            }
+            // Otherwise, i.e. if the hand contains no matching patient card:
+            else {
+              // Record progress.
+              require('./recordSession')(sessionData);
+              return `Turn ${turns.length} played and requires replacement finish`;
             }
           }
           else {
@@ -94,4 +111,4 @@ const playTurn = () => {
   }
 };
 // OPERATION
-console.log(startTurn());
+console.log(playTurn());

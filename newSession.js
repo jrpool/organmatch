@@ -139,6 +139,7 @@ const newSession = () => {
   const sessionData = {
     gameVersion,
     sessionCode: createCode(),
+    creationTime: Date.now(),
     playersJoined: 0,
     startTime: null,
     roundsEnded: 0,
