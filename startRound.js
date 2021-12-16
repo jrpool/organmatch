@@ -27,7 +27,9 @@ module.exports = sessionData => {
         if (typeof starter === 'number') {
           // Initialize a round record and add it to the session data.
           sessionData.rounds.push({
+            id: sessionData.rounds.length + 1,
             startTime: Date.now(),
+            endTime: null,
             starter,
             ender,
             currentOrgan: sessionData.piles.current.organ,

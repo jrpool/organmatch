@@ -14,4 +14,5 @@ module.exports = (versionData, sessionData, playerNames) => {
       return false;
     }
   }
+  return sessionData;
 };

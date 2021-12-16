@@ -12,10 +12,10 @@ module.exports = sessionData => {
     }
     else if (sessionData.startTime) {
       if (sessionData.rounds.length) {
-        const thisRound = sessionData.rounds[sessionData.rounds.length - 1];
+        const round = sessionData.rounds[sessionData.rounds.length - 1];
         // Initialize a turn record.
         const turn = {
-          id: thisRound.turns.length,
+          id: round.turns.length + 1,
           startTime: Date.now(),
           endTime: null,
           playerIndex: null,
@@ -49,8 +49,8 @@ module.exports = sessionData => {
           }
         };
         // If this is not the first turn of its round:
-        if (thisRound.turns.length) {
-          const priorTurn = thisRound.turns[thisRound.turns.length - 1];
+        if (round.turns.length) {
+          const priorTurn = round.turns[round.turns.length - 1];
           if (priorTurn.endTime){
             const priorPlayerIndex = priorTurn.playerIndex;
             if (priorPlayerIndex !== null) {
@@ -68,12 +68,12 @@ module.exports = sessionData => {
         // Otherwise, i.e. if this is the first turn of its round:
         else {
           // Identify the turn’s player as the round’s starting player.
-          turn.playerIndex = thisRound.starter;
+          turn.playerIndex = round.starter;
         }
-        // Add the player’s initial hand to the session data.
-        turn.hand.initial = sessionData.players[turn.playerIndex].hand.current;
+        // Add the player’s hand to the session data.
+        turn.hand.final = turn.hand.initial = sessionData.players[turn.playerIndex].hand.current;
         // Add the turn record to the turn records of the round.
-        thisRound.turns.push(turn);
+        round.turns.push(turn);
         return sessionData;
       }
       else {

@@ -35,8 +35,7 @@ if (versionData) {
                 `Turn ${turnID} of round ${roundID} of session ${sessionCode} played`
               );
               const round = sessionData.rounds[roundID - 1];
-              const turn = round.turns[turnID - 1];
-              console.log(`Turn data:\n${JSON.stringify(turn, null, 2)}`);
+              console.log(`Round data:\n${JSON.stringify(round, null, 2)}`);
             }
           }
         }
