@@ -1,54 +1,37 @@
 /*
   addPlayer
-  Adds a player to a session of OrganMatch.
-  Arguments:
-  0: player name (e.g., Jane Doe).
-  1: session code (e.g., 45678).
+  Adds a player to a session of OrganMatch and returns the session data.
 */
-// IMPORTS
-const fs = require('fs');
-// CONSTANTS
-const name = process.argv[2];
-const sessionCode = process.argv[3];
 // FUNCTIONS
-// Adds a player to a session and returns the new count of players joined.
-const addPlayer = () => {
+// Adds a player to a session and returns the session data.
+module.exports = (versionData, sessionData, playerName) => {
   try {
-    const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
-    const sessionData = JSON.parse(sessionJSON);
-    const {gameVersion, playersJoined, piles, players} = sessionData;
-    const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
-    const versionData = JSON.parse(versionJSON);
-    const {playerCount} = versionData.limits;
-    const {handSize} = versionData;
-    if (playersJoined < playerCount.max) {
+    if (sessionData.playersJoined < versionData.limits.playerCount.max) {
       sessionData.playersJoined++;
-      players.push({
-        name,
+      sessionData.players.push({
+        name: playerName,
         joinTime: Date.now(),
         hand: {
-          patientCards: piles.latent.patient.splice(0, handSize.count),
-          influenceCards: []
+          initial: {
+            patientCards: sessionData.piles.latent.patient.splice(0, versionData.handSize.count),
+            influenceCards: []
+          },
+          current: {
+            patientCards: sessionData.piles.latent.patient.splice(0, versionData.handSize.count),
+            influenceCards: []
+          }
         },
-        bid: null,
         wins: []
       });
-      require('./recordSession')(sessionData);
-      return sessionData.playersJoined;
+      return sessionData;
     }
     else {
-      return 'sessionFull';
+      console.log('ERROR: session full');
+      return false;
     }
   }
   catch (error) {
-    return error.message;
+    console.log(`ERROR: ${error.message}`);
+    return false;
   }
 };
-// OPERATION
-const joinCount = addPlayer();
-if (typeof joinCount === 'number') {
-  console.log(`Added ${name} to session ${sessionCode}; players joined: ${joinCount}`);
-}
-else {
-  console.log(` ERROR: ${joinCount}`);
-}

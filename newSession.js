@@ -1,13 +1,7 @@
 /*
   newSession
   Creates a session of OrganMatch.
-  Arguments:
-  0: game version (e.g., 01).
 */
-// IMPORTS
-const fs = require('fs');
-// CONSTANTS
-const gameVersion = process.argv[2];
 // FUNCTIONS
 // Returns a session code.
 const createCode = () => {
@@ -15,26 +9,26 @@ const createCode = () => {
   const sessionCode = now.toString().slice(5, 10);
   return sessionCode;
 }
-// Returns data on groups.
+// Returns an array of the names of the groups of a version.
 const matchGroups = versionData => Object.keys(versionData.matchGroups.groups);
-// Returns organ cards.
-const createOrganCards = (versionData, groups) => {
+// Creates and returns all organ cards for a session.
+const createOrganCards = versionData => {
   const cards = [];
   const cardTypes = versionData.organCards.types;
   cardTypes.forEach(type => {
-    const {organ, group, count} = type;
-    for (let i = 0; i < count; i++) {
-      if (group) {
+    for (let i = 0; i < type.count; i++) {
+      if (type.group) {
         cards.push({
-          organ,
-          group
+          organ: type.organ,
+          group: type.group
         });
       }
       else {
+        const groups = matchGroups(versionData);
         groups.forEach(group => {
           cards.push({
-            organ,
-            group
+            organ: type.organ,
+            group: type.group
           });
         });
       }
@@ -42,34 +36,33 @@ const createOrganCards = (versionData, groups) => {
   });
   return cards;
 };
-// Returns influence cards.
+// Creates and returns the influence cards for a session.
 const createInfluenceCards = versionData => {
   const cards = [];
   const cardTypes = versionData.influenceCards.types;
   cardTypes.forEach(type => {
-    const {name, impact, count} = type;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < type.count; i++) {
       cards.push({
-        name,
-        impact
+        name: type.name,
+        impact: type.impact
       });
     };
   });
   return cards;
 };
 // Returns an array, shuffled.
-const shuffle = cards => {
-  const shuffler = cards.map(card => [card, Math.random()]);
+const shuffle = array => {
+  const shuffler = array.map(item => [item, Math.random()]);
   shuffler.sort((a, b) => a[1] - b[1]);
   return shuffler.map(pair => pair[0]);
 };
-// Returns patient cards.
-const createPatientCards = (versionData, groups) => {
-  const {types} = versionData.patientCards;
+// Creates and returns the patient cards for a session.
+const createPatientCards = versionData => {
   const organs = versionData.organCards.types.map(type => type.organ);
   const organQueueSizes = {};
+  const groups = matchGroups(versionData);
   organs.forEach(organ => {
-    organQueueSizes[organ] = types.reduce((count, thisType) => {
+    organQueueSizes[organ] = versionData.patientCards.types.reduce((count, thisType) => {
       if (thisType.organNeed.includes(organ)) {
         if (thisType.group) {
           return count + thisType.count;
@@ -97,16 +90,15 @@ const createPatientCards = (versionData, groups) => {
     queueIndexes[organ] = 0;
   });
   const cards = [];
-  types.forEach(type => {
-    const {organNeed, group, priority, count} = type;
-    for (let i = 0; i < count; i++) {
-      if (group) {
+  versionData.patientCards.types.forEach(type => {
+    for (let i = 0; i < type.count; i++) {
+      if (type.group) {
         const card = {
-          organNeed,
-          group,
-          priority
+          organNeed: type.organNeed,
+          group: type.group,
+          priority: type.priority
         };
-        organNeed.forEach((organ, index) => {
+        type.organNeed.forEach((organ, index) => {
           card.organNeed[index] = {
             organ,
             queuePosition: organQueues[organ][queueIndexes[organ]++]
@@ -117,14 +109,14 @@ const createPatientCards = (versionData, groups) => {
       else {
         groups.forEach(group => {
           const card = {
-            organNeed: organNeed.map(organ => ({
+            organNeed: type.organNeed.map(organ => ({
               organ,
               queuePosition: null
             })),
-            group,
-            priority
+            group: type.group,
+            priority: type.priority
           };
-          organNeed.forEach((organ, index) => {
+          type.organNeed.forEach((organ, index) => {
             card.organNeed[index].queuePosition = organQueues[organ][queueIndexes[organ]++];
           });
           cards.push(card);
@@ -135,9 +127,9 @@ const createPatientCards = (versionData, groups) => {
   return cards;
 };
 // Returns data for a session.
-const newSession = () => {
+module.exports = versionData => {
   const sessionData = {
-    gameVersion,
+    versionID,
     sessionCode: createCode(),
     creationTime: Date.now(),
     playersJoined: 0,
@@ -163,13 +155,10 @@ const newSession = () => {
     rounds: []
   };
   try {
-    const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
-    const versionData = JSON.parse(versionJSON);
     const latentPiles = sessionData.piles.latent;
-    const groups = matchGroups(versionData);
-    latentPiles.organ = shuffle(createOrganCards(versionData, groups));
+    latentPiles.organ = shuffle(createOrganCards(versionData));
     latentPiles.influence = shuffle(createInfluenceCards(versionData));
-    latentPiles.patient = shuffle(createPatientCards(versionData, groups));
+    latentPiles.patient = shuffle(createPatientCards(versionData));
     return sessionData;
   }
   catch(error) {
@@ -177,9 +166,3 @@ const newSession = () => {
     return false;
   };
 };
-// OPERATION
-const sessionData = newSession();
-if (sessionData) {
-  require('./recordSession')(sessionData);
-  console.log(`Session ${sessionData.sessionCode} created`);
-}

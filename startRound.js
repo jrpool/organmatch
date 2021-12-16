@@ -1,59 +1,59 @@
 /*
   startRound
-  Starts a round of OrganMatch.
-  Arguments:
-  0: session code (e.g., 45678).
+  Starts a round of OrganMatch and returns the session data.
 */
-// IMPORTS
-const fs = require('fs');
-// CONSTANTS
-const sessionCode = process.argv[2];
 // FUNCTIONS
 // Starts a round.
-const startRound = () => {
+module.exports = sessionData => {
   try {
-    const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
-    const sessionData = JSON.parse(sessionJSON);
-    const {startTime, endTime, piles, players, rounds} = sessionData;
-    if (endTime) {
-      return 'sessionAlreadyEnded';
+    if (sessionData.endTime) {
+      console.log('ERROR: session already ended');
+      return false;
     }
-    else if (startTime) {
-      if (piles.latent.organ.length) {
-        if (piles.current.organ) {
-          piles.extinct.organ.push(piles.current.organ);
+    else if (sessionData.startTime) {
+      if (sessionData.piles.latent.organ.length) {
+        // If this is not the first round:
+        if (sessionData.piles.current.organ) {
+          // Move the current organ card to the extinct pile.
+          sessionData.piles.extinct.organ.push(sessionData.piles.current.organ);
         }
-        piles.current.organ = piles.latent.organ.shift();
-        const starter = rounds.length ? rounds[rounds.length - 1].nextStarter : 0;
-        const ender = (starter + players.length - 1) % players.length;
+        // Move the top latent organ card to the current pile.
+        sessionData.piles.current.organ = sessionData.piles.latent.organ.shift();
+        // Identify the players who will start and end the round.
+        const starter = sessionData.rounds.length
+        ? sessionData.rounds[sessionData.rounds.length - 1].nextStarter
+        : 0;
+        const ender = (starter + sessionData.players.length - 1) % sessionData.players.length;
         if (typeof starter === 'number') {
-          rounds.push({
+          // Initialize a round record and add it to the session data.
+          sessionData.rounds.push({
             startTime: Date.now(),
             starter,
             ender,
-            currentOrgan: piles.current.organ,
+            currentOrgan: sessionData.piles.current.organ,
             winner: null,
             nextStarter: null,
             turns: []
           });
-          require('./recordSession')(sessionData);
-          return `Round ${rounds.length} started`;
+          return sessionData;
         }
         else {
-          return 'priorRoundWinnerless';
+          console.log('ERROR: prior round winnerless');
+          return false;
         }
       }
       else {
-        return 'organCardsExhausted';
+        console.log('ERROR: organ cards exhausted');
+        return false;
       }
     }
     else {
-      return 'sessionNotYetStarted';
+      console.log('ERROR: session not yet started');
+      return false;
     }
   }
   catch (error) {
-    return `${error.message}\n${error.stack}`;
+    console.log(`ERROR: ${error.message}\n${error.stack}`);
+    return false;
   }
 };
-// OPERATION
-console.log(startRound());

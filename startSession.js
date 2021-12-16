@@ -1,13 +1,7 @@
 /*
   startSession
   Starts a session of OrganMatch.
-  Arguments:
-  0: session code (e.g., 45678).
 */
-// IMPORTS
-const fs = require('fs');
-// CONSTANTS
-const sessionCode = process.argv[2];
 // FUNCTIONS
 // Returns an array, shuffled.
 const shuffle = items => {
@@ -16,33 +10,27 @@ const shuffle = items => {
   return shuffler.map(pair => pair[0]);
 };
 // Starts a session.
-const startSession = () => {
+module.exports = (versionData, sessionData) => {
   try {
-    const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
-    const sessionData = JSON.parse(sessionJSON);
     if (sessionData.startTime) {
-      return 'alreadyStarted';
+      console.log('ERROR: already started');
+      return false;
     }
     else {
-      const {gameVersion, playersJoined, players} = sessionData;
-      const versionJSON = fs.readFileSync(`gameVersions/v${gameVersion}.json`, 'utf8');
-      const versionData = JSON.parse(versionJSON);
-      const {playerCount} = versionData.limits;
-      if (playersJoined >= playerCount.min) {
-        const shuffledPlayers = JSON.parse(JSON.stringify(shuffle(players)));
-        players.splice(0, players.length, ...shuffledPlayers);
+      if (sessionData.playersJoined >= versionData.limits.playerCount.min) {
+        const shuffledPlayers = JSON.parse(JSON.stringify(shuffle(sessionData.players)));
+        sessionData.players.splice(0, sessionData.players.length, ...shuffledPlayers);
         sessionData.startTime = Date.now();
-        require('./recordSession')(sessionData);
-        return `Session ${sessionCode} started`;
+        return sessionData;
       }
       else {
-        return 'tooFewPlayers';
+        console.log('ERROR: too few players');
+        return false;
       }
     }
   }
   catch (error) {
-    return error.message;
+    console.log(`ERROR: ${error.message}`);
+    return false;
   }
 };
-// OPERATION
-console.log(startSession());

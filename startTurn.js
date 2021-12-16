@@ -1,70 +1,96 @@
 /*
   startTurn
   Starts a turn of OrganMatch.
-  Arguments:
-  0: session code (e.g., 45678).
 */
-// IMPORTS
-const fs = require('fs');
-// CONSTANTS
-const sessionCode = process.argv[2];
 // FUNCTIONS
-// Starts a turn.
-const startTurn = () => {
+// Starts a turn and returns the session data.
+module.exports = sessionData => {
   try {
-    const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
-    const sessionData = JSON.parse(sessionJSON);
-    const {startTime, endTime, players, rounds} = sessionData;
-    if (endTime) {
-      return 'sessionAlreadyEnded';
+    if (sessionData.endTime) {
+      console.log('ERROR: session already ended');
+      return false;
     }
-    else if (startTime) {
-      if (rounds.length) {
-        const thisRound = rounds[rounds.length - 1];
-        const {turns} = thisRound;
+    else if (sessionData.startTime) {
+      if (sessionData.rounds.length) {
+        const thisRound = sessionData.rounds[sessionData.rounds.length - 1];
+        // Initialize a turn record.
         const turn = {
+          id: thisRound.turns.length,
           startTime: Date.now(),
           endTime: null,
           playerIndex: null,
-          matchingPatients: [],
-          bidPatient: null,
-          influencesReceived: [],
-          netPriority: null,
-          replacedPatient: null,
-          newPatient: null,
-          influencesSent: [],
+          hand: {
+            initial: {
+              patient: [],
+              influence: []
+            },
+            matches: [],
+            changes: {
+              bid: null,
+              replace: {
+                old: null,
+                new: null
+              },
+              influence: {
+                use: [],
+                draw: null
+              }
+            },
+            final: {
+              patient: [],
+              influence: []
+            }
+          },
+          bids: {
+            initial: [],
+            final: []
+          }
         };
-        if (turns.length) {
-          const priorTurn = turns[turns.length - 1];
+        // If this is not the first turn of its round:
+        if (thisRound.turns.length) {
+          const priorTurn = thisRound.turns[thisRound.turns.length - 1];
           if (priorTurn.endTime){
             const priorPlayerIndex = priorTurn.playerIndex;
             if (priorPlayerIndex !== null) {
-              turn.playerIndex = (priorPlayerIndex + 1) % players.length;
+              // Identify the turn’s player.
+              turn.playerIndex = (priorPlayerIndex + 1) % sessionData.players.length;
             }
             else {
-              return 'noPriorPlayer';
+              console.log('ERROR: no prior player');
+              return false;
             }
           }
-          return 'priorTurnNotEnded';
+          console.log('ERROR: prior turn not ended');
+          return false;
         }
+        // Otherwise, i.e. if this is the first turn of its round:
         else {
+          // Identify the turn’s player as the round’s starting player.
           turn.playerIndex = thisRound.starter;
         }
-        turns.push(turn);
-        require('./recordSession')(sessionData);
-        return `Turn ${turns.length} started`;
+        // Add the player’s initial hand to the session data.
+        turn.hand.initial = sessionData.players[turn.playerIndex].hand.current;
+        const roundID = sessionData.rounds.length;
+        if (roundID === 1) {
+          turn.hand.initial =
+        }
+        turn.hand.initial =
+        // Add the turn record to the turn records of the round.
+        thisRound.turns.push(turn);
+        return sessionData;
       }
       else {
-        return 'noRoundStarted';
+        console.log('ERROR: no round started');
+        return false;
       }
     }
     else {
-      return 'sessionNotYetStarted';
+      console.log('ERROR: session not yet started');
+      return false;
     }
   }
   catch (error) {
-    return `${error.message}\n${error.stack}`;
+    console.log(`ERROR: ${error.message}\n${error.stack}`);
+    return false;
   }
 };
-// OPERATION
-console.log(startTurn());

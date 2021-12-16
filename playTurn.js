@@ -1,44 +1,32 @@
 /*
   playTurn
-  Performs the mandatory actions of a turn of OrganMatch.
-  Arguments:
-  0: session code (e.g., 45678).
+  Performs the mandatory actions of a turn of OrganMatch and returns the session data.
 */
-// IMPORTS
-const fs = require('fs');
-// CONSTANTS
-const sessionCode = process.argv[2];
 // FUNCTIONS
 // Performs the mandatory actions of a turn.
-const playTurn = () => {
+module.exports = sessionData => {
   try {
-    const sessionJSON = fs.readFileSync(`on/${sessionCode}.json`, 'utf8');
-    const sessionData = JSON.parse(sessionJSON);
-    const {startTime, endTime, players, piles, rounds} = sessionData;
-    if (endTime) {
-      return 'sessionAlreadyEnded';
+    if (sessionData.endTime) {
+      console.log('ERROR: session already ended');
+      return false;
     }
-    else if (startTime) {
-      if (rounds.length) {
-        const thisRound = rounds[rounds.length - 1];
-        const {turns} = thisRound;
-        if (turns.length) {
-          const turn = turns[turns.length - 1];
-          const {playerIndex, matchingPatients} = turn;
-          let {endTime, bidPatient, netPriority} = turn;
-          if (playerIndex !== null) {
-            const {organ} = piles.current;
-            const player = players[playerIndex];
-            const {hand} = player;
-            let {bid} = player;
-            const {patientCards} = hand;
+    else if (sessionData.startTime) {
+      if (sessionData.rounds.length) {
+        const thisRound = sessionData.rounds[sessionData.rounds.length - 1];
+        if (thisRound.turns.length) {
+          const turn = thisRound.turns[thisRound.turns.length - 1];
+          if (turn.playerIndex === null) {
+            console.log('ERROR: no turn player');
+            return false;
+          }
+          else {
+            const player = sessionData.players[turn.playerIndex];
             // Identify the turn player’s matching patient cards.
-            const matchIndexes = patientCards
+            const matchIndexes = player.hand.patientCards
             .map((patient, index) => {
-              const {organNeed} = patient;
               if (
-                organNeed.some(need => need.organ === organ.organ)
-                && patient.group === organ.group
+                patient.organNeed.some(need => need.organ === sessionData.piles.current.organ.organ)
+                && patient.group === sessionData.piles.current.organ.group
               ) {
                 return index;
               }
@@ -47,33 +35,41 @@ const playTurn = () => {
               }
             })
             .filter(index => index !== null);
-            // Record them.
+            // Add them to the session data.
             matchIndexes.forEach(index => {
-              matchingPatients.push(patientCards[index]);
+              turn.hand.matches.push(player.hand.patientCards[index]);
             });
-            // If there is 1 of them:
+            // If the count of them is 1:
             const matchCount = matchIndexes.length;
             if (matchCount === 1) {
-              if (bid) {
+              if (player.bid) {
                 return 'bidNotEmpty';
               }
               else {
                 // Bid it and record the bid in both the turn and the player.
-                bidPatient = bid = patientCards.splice(matchIndexes[0], 1);
-                netPriority = bid.priority;
-                // If the hand contains no influence cards, end the turn.
-                const influenceCount = hand.influenceCards.length;
-                let reportEnd = '';
-                // If the hand contains any influence cards, record progress.
+                bidPatient = player.bid = player.hand.patientCards.splice(matchIndexes[0], 1);
+                netPriority = player.bid.priority;
+                const influenceCount = player.hand.influenceCards.length;
+                // If the hand contains any influence cards:
                 if (influenceCount) {
+                  // Record progress.
                   require('./recordSession')(sessionData);
-                  return `Turn ${turns.length} played with bid and requires finish`;
+                  // Return the turn ID and the influence cards.
+                  return {
+                    turn: thisRound.turns.length,
+                    usableCards: {
+                      influence: player.hand.influenceCards
+                    }
+                  };
                 }
-                // Otherwise, i.e. if the hand contains no influence cards, end the turn.
+                // Otherwise, i.e. if the hand contains no influence cards:
                 else {
-                  endTime = Date.now();
+                  // End the turn.
+                  turn.endTime = Date.now();
+                  // Record the turn.
                   require('./recordSession')(sessionData);
-                  return `Turn ${turns.length} played with bid and ended`;
+                  // Return a turn-completion state.
+                  return '';
                 }
               }
             }
@@ -81,17 +77,28 @@ const playTurn = () => {
             else if (matchCount) {
               // Record progress.
               require('./recordSession')(sessionData);
-              return `Turn ${turns.length} played and requires bidding finish`;
+              // Return the turn ID and the patient and influence cards:
+              return {
+                turn: thisRound.turns.length,
+                usableCards: {
+                  bidPatient: player.hand.patientCards,
+                  influence: player.hand.influenceCards
+                }
+              };
             }
             // Otherwise, i.e. if the hand contains no matching patient card:
             else {
               // Record progress.
               require('./recordSession')(sessionData);
-              return `Turn ${turns.length} played and requires replacement finish`;
+              // Return the turn ID and the replaceable patient cards:
+              return {
+                turn: thisRound.turns.length,
+                usableCards: {
+                  replacePatient: player.hand.patientCards
+                }
+              };
+              return `Turn ${thisRound.turns.length} played and requires replacement finish`;
             }
-          }
-          else {
-            return 'noTurnPlayer'
           }
         }
         else{
