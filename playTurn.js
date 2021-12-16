@@ -53,7 +53,7 @@ module.exports = sessionData => {
                 const roundBid = {bid};
                 roundBid.turnID = round.turns.length;
                 roundBid.playerID = turn.playerIndex + 1;
-                player.hand.current.splice(matchIndexes[0], 1);
+                player.hand.current.patient.splice(matchIndexes[0], 1);
                 // Replace the bid player and revise the session data accordingly.
                 const drawnPatient = sessionData.piles.latent.patient.shift();
                 turn.hand.changes.draw = drawnPatient;

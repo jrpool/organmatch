@@ -19,6 +19,7 @@ module.exports = sessionData => {
           startTime: Date.now(),
           endTime: null,
           playerIndex: null,
+          playerName: null,
           hand: {
             initial: {
               patient: [],
@@ -54,8 +55,9 @@ module.exports = sessionData => {
           if (priorTurn.endTime){
             const priorPlayerIndex = priorTurn.playerIndex;
             if (priorPlayerIndex !== null) {
-              // Identify the turn’s player.
+              // Add the turn’s player to the session data.
               turn.playerIndex = (priorPlayerIndex + 1) % sessionData.players.length;
+              turn.playerName = sessionData.players[turn.playerIndex].name;
             }
             else {
               console.log('ERROR: no prior player');
