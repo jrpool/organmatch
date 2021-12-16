@@ -26,11 +26,13 @@ module.exports = sessionData => {
             },
             matches: [],
             changes: {
-              bid: null,
-              replace: {
-                old: null,
-                new: null
+              bid: {
+                patient: null,
+                influences: [],
+                netPriority: null
               },
+              surrender: null,
+              draw: null,
               influence: {
                 use: [],
                 draw: null
@@ -70,11 +72,6 @@ module.exports = sessionData => {
         }
         // Add the player’s initial hand to the session data.
         turn.hand.initial = sessionData.players[turn.playerIndex].hand.current;
-        const roundID = sessionData.rounds.length;
-        if (roundID === 1) {
-          turn.hand.initial =
-        }
-        turn.hand.initial =
         // Add the turn record to the turn records of the round.
         thisRound.turns.push(turn);
         return sessionData;

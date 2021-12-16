@@ -8,7 +8,7 @@ const createCode = () => {
   const now = Date.now();
   const sessionCode = now.toString().slice(5, 10);
   return sessionCode;
-}
+};
 // Returns an array of the names of the groups of a version.
 const matchGroups = versionData => Object.keys(versionData.matchGroups.groups);
 // Creates and returns all organ cards for a session.
@@ -28,7 +28,7 @@ const createOrganCards = versionData => {
         groups.forEach(group => {
           cards.push({
             organ: type.organ,
-            group: type.group
+            group
           });
         });
       }
@@ -46,7 +46,7 @@ const createInfluenceCards = versionData => {
         name: type.name,
         impact: type.impact
       });
-    };
+    }
   });
   return cards;
 };
@@ -81,7 +81,7 @@ const createPatientCards = versionData => {
     organQueues[organ] = (new Array(organQueueSizes[organ])).fill(1);
     for (let i = 0; i < organQueueSizes[organ]; i++) {
       organQueues[organ][i] = [i, Math.random()];
-    };
+    }
     organQueues[organ].sort((a, b) => a[1] - b[1]);
     organQueues[organ] = organQueues[organ].map(pair => pair[0]);
   });
@@ -113,7 +113,7 @@ const createPatientCards = versionData => {
               organ,
               queuePosition: null
             })),
-            group: type.group,
+            group,
             priority: type.priority
           };
           type.organNeed.forEach((organ, index) => {
@@ -122,14 +122,14 @@ const createPatientCards = versionData => {
           cards.push(card);
         });
       }
-    };
+    }
   });
   return cards;
 };
 // Returns data for a session.
 module.exports = versionData => {
   const sessionData = {
-    versionID,
+    versionID: versionData.versionID,
     sessionCode: createCode(),
     creationTime: Date.now(),
     playersJoined: 0,
@@ -164,5 +164,5 @@ module.exports = versionData => {
   catch(error) {
     console.log(`ERROR: no such version (${error.message})`);
     return false;
-  };
+  }
 };

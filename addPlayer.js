@@ -13,12 +13,12 @@ module.exports = (versionData, sessionData, playerName) => {
         joinTime: Date.now(),
         hand: {
           initial: {
-            patientCards: sessionData.piles.latent.patient.splice(0, versionData.handSize.count),
-            influenceCards: []
+            patient: sessionData.piles.latent.patient.splice(0, versionData.handSize.count),
+            influence: []
           },
           current: {
-            patientCards: sessionData.piles.latent.patient.splice(0, versionData.handSize.count),
-            influenceCards: []
+            patient: sessionData.piles.latent.patient.splice(0, versionData.handSize.count),
+            influence: []
           }
         },
         wins: []

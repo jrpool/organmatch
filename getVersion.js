@@ -10,10 +10,11 @@ module.exports = versionID => {
   try {
     const versionJSON = fs.readFileSync(`gameVersions/v${versionID}.json`, 'utf8');
     const versionData = JSON.parse(versionJSON);
+    versionData.versionID = versionID;
     return versionData;
   }
   catch(error) {
     console.log(`ERROR: no such version (${error.message})`);
     return false;
-  };
+  }
 };

@@ -12,9 +12,9 @@ module.exports = sessionData => {
     }
     else if (sessionData.startTime) {
       if (sessionData.rounds.length) {
-        const thisRound = sessionData.rounds[sessionData.rounds.length - 1];
-        if (thisRound.turns.length) {
-          const turn = thisRound.turns[thisRound.turns.length - 1];
+        const round = sessionData.rounds[sessionData.rounds.length - 1];
+        if (round.turns.length) {
+          const turn = round.turns[round.turns.length - 1];
           if (turn.playerIndex === null) {
             console.log('ERROR: no turn player');
             return false;
@@ -22,8 +22,7 @@ module.exports = sessionData => {
           else {
             const player = sessionData.players[turn.playerIndex];
             // Identify the turn player’s matching patient cards.
-            const matchIndexes = player.hand.patientCards
-            .map((patient, index) => {
+            const matchIndexes = turn.hand.initial.patient.map((patient, index) => {
               if (
                 patient.organNeed.some(need => need.organ === sessionData.piles.current.organ.organ)
                 && patient.group === sessionData.piles.current.organ.group
@@ -33,89 +32,61 @@ module.exports = sessionData => {
               else {
                 return null;
               }
-            })
-            .filter(index => index !== null);
+            }).filter(index => index !== null);
             // Add them to the session data.
             matchIndexes.forEach(index => {
-              turn.hand.matches.push(player.hand.patientCards[index]);
+              turn.hand.matches.push(turn.hand.initial.patient[index]);
             });
             // If the count of them is 1:
             const matchCount = matchIndexes.length;
             if (matchCount === 1) {
               if (player.bid) {
-                return 'bidNotEmpty';
+                console.log('ERROR: bid not empty before turn played');
+                return false;
               }
               else {
-                // Bid it and record the bid in both the turn and the player.
-                bidPatient = player.bid = player.hand.patientCards.splice(matchIndexes[0], 1);
-                netPriority = player.bid.priority;
-                const influenceCount = player.hand.influenceCards.length;
-                // If the hand contains any influence cards:
-                if (influenceCount) {
-                  // Record progress.
-                  require('./recordSession')(sessionData);
-                  // Return the turn ID and the influence cards.
-                  return {
-                    turn: thisRound.turns.length,
-                    usableCards: {
-                      influence: player.hand.influenceCards
-                    }
-                  };
-                }
-                // Otherwise, i.e. if the hand contains no influence cards:
-                else {
+                // Bid it and revise the session data accordingly.
+                const bid = {patient: turn.hand.initial.patient.splice(matchIndexes[0], 1)};
+                bid.netPriority = bid.patient.priority;
+                turn.hand.changes.bid = bid;
+                turn.bids.final.push(bid);
+                const roundBid = {bid};
+                roundBid.turnID = round.turns.length;
+                roundBid.playerID = turn.playerIndex + 1;
+                player.hand.current.splice(matchIndexes[0], 1);
+                // Replace the bid player and revise the session data accordingly.
+                const drawnPatient = sessionData.piles.latent.patient.shift();
+                turn.hand.changes.draw = drawnPatient;
+                turn.hand.final.patient.push(drawnPatient);
+                player.hand.current.patient.push(drawnPatient);
+                // If the hand contains no influence cards:
+                const influenceCount = turn.hand.initial.influence.length;
+                if (! influenceCount) {
                   // End the turn.
                   turn.endTime = Date.now();
-                  // Record the turn.
-                  require('./recordSession')(sessionData);
-                  // Return a turn-completion state.
-                  return '';
                 }
               }
             }
-            // Otherwise, i.e. if the hand contains 2+ matching patient cards:
-            else if (matchCount) {
-              // Record progress.
-              require('./recordSession')(sessionData);
-              // Return the turn ID and the patient and influence cards:
-              return {
-                turn: thisRound.turns.length,
-                usableCards: {
-                  bidPatient: player.hand.patientCards,
-                  influence: player.hand.influenceCards
-                }
-              };
-            }
-            // Otherwise, i.e. if the hand contains no matching patient card:
-            else {
-              // Record progress.
-              require('./recordSession')(sessionData);
-              // Return the turn ID and the replaceable patient cards:
-              return {
-                turn: thisRound.turns.length,
-                usableCards: {
-                  replacePatient: player.hand.patientCards
-                }
-              };
-              return `Turn ${thisRound.turns.length} played and requires replacement finish`;
-            }
+            return sessionData;
           }
         }
         else{
-          return 'noTurnStarted';
+          console.log('ERROR: no turn started');
+          return false;
         }
       }
       else {
-        return 'noRoundStarted';
+        console.log('ERROR: no round started');
+        return false;
       }
     }
     else {
-      return 'sessionNotYetStarted';
+      console.log('ERROR: session not yet started');
+      return false;
     }
   }
   catch (error) {
-    return `${error.message}\n${error.stack}`;
+    console.log(`ERROR: ${error.message}\n${error.stack}`);
+    return false;
   }
 };
-// OPERATION
-console.log(playTurn());

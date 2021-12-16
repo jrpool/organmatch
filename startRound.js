@@ -21,8 +21,8 @@ module.exports = sessionData => {
         sessionData.piles.current.organ = sessionData.piles.latent.organ.shift();
         // Identify the players who will start and end the round.
         const starter = sessionData.rounds.length
-        ? sessionData.rounds[sessionData.rounds.length - 1].nextStarter
-        : 0;
+          ? sessionData.rounds[sessionData.rounds.length - 1].nextStarter
+          : 0;
         const ender = (starter + sessionData.players.length - 1) % sessionData.players.length;
         if (typeof starter === 'number') {
           // Initialize a round record and add it to the session data.
@@ -33,7 +33,8 @@ module.exports = sessionData => {
             currentOrgan: sessionData.piles.current.organ,
             winner: null,
             nextStarter: null,
-            turns: []
+            turns: [],
+            bids: []
           });
           return sessionData;
         }
