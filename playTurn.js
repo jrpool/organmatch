@@ -58,7 +58,6 @@ module.exports = sessionData => {
                 const drawnPatient = sessionData.piles.latent.patient.shift();
                 turn.hand.changes.draw = drawnPatient;
                 turn.hand.final.patient.push(drawnPatient);
-                player.hand.current.patient.push(drawnPatient);
                 // If the hand contains no influence cards:
                 const influenceCount = turn.hand.initial.influence.length;
                 if (! influenceCount) {

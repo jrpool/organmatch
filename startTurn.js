@@ -57,7 +57,6 @@ module.exports = sessionData => {
             if (priorPlayerIndex !== null) {
               // Add the turn’s player to the session data.
               turn.playerIndex = (priorPlayerIndex + 1) % sessionData.players.length;
-              turn.playerName = sessionData.players[turn.playerIndex].name;
             }
             else {
               console.log('ERROR: no prior player');
@@ -72,6 +71,7 @@ module.exports = sessionData => {
           // Identify the turn’s player as the round’s starting player.
           turn.playerIndex = round.starter;
         }
+        turn.playerName = sessionData.players[turn.playerIndex].name;
         // Add the player’s hand to the session data.
         turn.hand.final = turn.hand.initial = sessionData.players[turn.playerIndex].hand.current;
         // Add the turn record to the turn records of the round.
