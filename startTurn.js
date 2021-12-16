@@ -73,7 +73,10 @@ module.exports = sessionData => {
         }
         turn.playerName = sessionData.players[turn.playerIndex].name;
         // Add the player’s hand to the session data.
-        turn.hand.final = turn.hand.initial = sessionData.players[turn.playerIndex].hand.current;
+        turn.hand.initial = JSON.parse(
+          JSON.stringify(sessionData.players[turn.playerIndex].hand.current)
+        );
+        turn.hand.final = JSON.parse(JSON.stringify(turn.hand.initial));
         // Add the turn record to the turn records of the round.
         round.turns.push(turn);
         return sessionData;

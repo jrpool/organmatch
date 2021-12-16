@@ -46,7 +46,7 @@ module.exports = sessionData => {
               }
               else {
                 // Bid it and revise the session data accordingly.
-                const bid = {patient: turn.hand.initial.patient.splice(matchIndexes[0], 1)};
+                const bid = {patient: turn.hand.initial.patient[matchIndexes[0]]};
                 bid.netPriority = bid.patient.priority;
                 turn.hand.changes.bid = bid;
                 turn.bids.final.push(bid);
@@ -55,6 +55,7 @@ module.exports = sessionData => {
                 roundBid.playerID = turn.playerIndex + 1;
                 round.bids.push(roundBid);
                 player.hand.current.patient.splice(matchIndexes[0], 1);
+                turn.hand.final.patient.splice(matchIndexes[0], 1);
                 // Replace the bid player and revise the session data accordingly.
                 const drawnPatient = sessionData.piles.latent.patient.shift();
                 turn.hand.changes.draw = drawnPatient;
