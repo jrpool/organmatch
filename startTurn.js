@@ -28,9 +28,9 @@ module.exports = sessionData => {
             matches: [],
             changes: {
               patient: {
-                bid: null,
-                surrender: null,
-                draw: null
+                isBid: null,
+                handIndex: null,
+                card: null
               },
               influence: []
             },
