@@ -27,26 +27,21 @@ module.exports = sessionData => {
             },
             matches: [],
             changes: {
-              bid: {
-                patient: null,
-                influences: [],
-                netPriority: null
-              },
-              surrender: null,
-              draw: null,
-              influence: {
-                use: [],
+              patient: {
+                bid: null,
+                surrender: null,
                 draw: null
-              }
+              },
+              influence: []
             },
-            final: {
+            current: {
               patient: [],
               influence: []
             }
           },
           bids: {
             initial: [],
-            final: []
+            current: []
           }
         };
         // If this is not the first turn of its round:
@@ -76,7 +71,7 @@ module.exports = sessionData => {
         turn.hand.initial = JSON.parse(
           JSON.stringify(sessionData.players[turn.playerIndex].hand.current)
         );
-        turn.hand.final = JSON.parse(JSON.stringify(turn.hand.initial));
+        turn.hand.current = JSON.parse(JSON.stringify(turn.hand.initial));
         // Add the turn record to the turn records of the round.
         round.turns.push(turn);
         return sessionData;
