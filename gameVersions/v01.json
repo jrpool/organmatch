@@ -32,17 +32,17 @@
         "description": "How many a player may use in a turn",
         "max": 2
       },
-      "perPatient": {
-        "description": "How many may be placed on a patient",
+      "perBid": {
+        "description": "How many may be placed on a bid",
         "max": 2
       },
-      "perTurnPatient":{
-        "description": "how many a player may place on a patient",
+      "perTurnBid":{
+        "description": "how many a player may place on a bid",
         "max": 1
       }
     },
     "priorities": {
-      "description": "Limits on the influenced priority of a patient",
+      "description": "Limits on the influenced priority of a bid",
       "min": 1,
       "max": 4
     },

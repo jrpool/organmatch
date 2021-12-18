@@ -137,28 +137,23 @@ module.exports = versionData => {
     roundsEnded: 0,
     endTime: null,
     piles: {
-      latent: {
-        organ: [],
-        influence: [],
-        patient: []
+      organs: {
+        latent: [],
+        current: null,
+        old: []
       },
-      current: {
-        organ: null
-      },
-      extinct: {
-        organ: [],
-        influence: [],
-        patient: []
-      }
+      patients: [],
+      influences: []
     },
     players: [],
     rounds: []
   };
   try {
-    const latentPiles = sessionData.piles.latent;
-    latentPiles.organ = shuffle(createOrganCards(versionData));
-    latentPiles.influence = shuffle(createInfluenceCards(versionData));
-    latentPiles.patient = shuffle(createPatientCards(versionData));
+    // Populate the card piles in the session data.
+    const {piles} = sessionData;
+    piles.organs.latent = shuffle(createOrganCards(versionData));
+    piles.influences = shuffle(createInfluenceCards(versionData));
+    piles.patients = shuffle(createPatientCards(versionData));
     return sessionData;
   }
   catch(error) {

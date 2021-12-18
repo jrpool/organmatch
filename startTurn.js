@@ -1,93 +1,82 @@
 /*
   startTurn
-  Starts a turn of OrganMatch.
+  Starts a turn of the current round of a session of OrganMatch.
 */
 // FUNCTIONS
-// Starts a turn and returns the session data.
+// Starts a turn.
 module.exports = sessionData => {
   try {
-    if (sessionData.endTime) {
-      console.log('ERROR: session already ended');
-      return false;
-    }
-    else if (sessionData.startTime) {
-      if (sessionData.rounds.length) {
-        const round = sessionData.rounds[sessionData.rounds.length - 1];
-        // Initialize a turn record.
-        const turn = {
-          id: round.turns.length + 1,
-          startTime: Date.now(),
-          endTime: null,
-          playerIndex: null,
-          playerName: null,
-          hand: {
-            initial: {
-              patient: [],
-              influence: []
-            },
-            matches: [],
-            changes: {
-              patient: {
-                isBid: null,
-                handIndex: null,
-                card: null
-              },
-              influence: []
-            },
-            current: {
-              patient: [],
-              influence: []
-            }
-          },
-          bids: {
-            initial: [],
-            current: []
-          }
-        };
-        // If this is not the first turn of its round:
-        if (round.turns.length) {
-          const priorTurn = round.turns[round.turns.length - 1];
-          if (priorTurn.endTime){
-            const priorPlayerIndex = priorTurn.playerIndex;
-            if (priorPlayerIndex !== null) {
-              // Add the turn’s player to the session data.
-              turn.playerIndex = (priorPlayerIndex + 1) % sessionData.players.length;
-            }
-            else {
-              console.log('ERROR: no prior player');
-              return false;
-            }
-          }
-          console.log('ERROR: prior turn not ended');
-          return false;
-        }
-        // Otherwise, i.e. if this is the first turn of its round:
-        else {
-          // Identify the turn’s player as the round’s starting player.
-          turn.playerIndex = round.starter;
-        }
-        turn.playerName = sessionData.players[turn.playerIndex].name;
-        // Add the player’s hand to the session data.
-        turn.hand.initial = JSON.parse(
-          JSON.stringify(sessionData.players[turn.playerIndex].hand.current)
-        );
-        turn.hand.current = JSON.parse(JSON.stringify(turn.hand.initial));
-        // Add the turn record to the turn records of the round.
-        round.turns.push(turn);
-        return sessionData;
+    const round = sessionData.rounds[sessionData.rounds.length - 1];
+    // Identify the turn’s player.
+    const playerIndex = round.turns.length
+      ? (round.turns[round.turns.length - 1].playerIndex + 1) % sessionData.players.length
+      : round.starter;
+    const player = sessionData.players[playerIndex];
+    const playerName = player.name;
+    /*
+      Make the arrays of cards in the current hand new arrays of the cards in the initial hand,
+      so that changes to the current arrays will not affect the initial arrays.
+    */
+    const initial = player.hand.current;
+    const current = {
+      patients: [...initial.patients],
+      influences: [...initial.influences]
+    };
+    const matches = [];
+    // Identify the turn player’s matching patient cards.
+    const matchIndexes = initial.patients.map((patient, index) => {
+      if (
+        patient.organNeed.some(need => need.organ === sessionData.piles.organs.current.organ)
+        && patient.group === sessionData.piles.organs.current.group
+      ) {
+        return index;
       }
       else {
-        console.log('ERROR: no round started');
-        return false;
+        return null;
       }
-    }
-    else {
-      console.log('ERROR: session not yet started');
-      return false;
+    }).filter(index => index !== null);
+    // Add them to the session data.
+    matchIndexes.forEach(index => {
+      matches.push({
+        index,
+        patient: initial.patients[index]
+      });
+    });
+    // Initialize a turn record.
+    const turn = {
+      index: round.turns.length,
+      startTime: Date.now(),
+      endTime: null,
+      playerIndex,
+      playerName,
+      hand: {
+        initial,
+        matches,
+        changes: {
+          patient: {
+            isBid: null,
+            index: null,
+            patient: null,
+            drawn: null
+          },
+          influences: []
+        },
+        current
+      },
+      bids: {
+        initial: [],
+        current: []
+      }
+    };
+    // Add the turn record to the turn records of the round.
+    round.turns.push(turn);
+    // If the count of matches is 1:
+    if (matchIndexes.length === 1) {
+      // Bid and replace it and revise the session data accordingly.
+      require('./bid')(sessionData, 0);
     }
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
-    return false;
   }
 };

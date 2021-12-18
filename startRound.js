@@ -6,57 +6,34 @@
 // Starts a round.
 module.exports = sessionData => {
   try {
-    if (sessionData.endTime) {
-      console.log('ERROR: session already ended');
-      return false;
+    // If this is not the first round:
+    const currentOrgan = sessionData.piles.organs.current;
+    if (currentOrgan) {
+      // Move the current organ card to the old pile.
+      sessionData.piles.organs.old.push(currentOrgan);
     }
-    else if (sessionData.startTime) {
-      if (sessionData.piles.latent.organ.length) {
-        // If this is not the first round:
-        if (sessionData.piles.current.organ) {
-          // Move the current organ card to the extinct pile.
-          sessionData.piles.extinct.organ.push(sessionData.piles.current.organ);
-        }
-        // Move the top latent organ card to the current pile.
-        sessionData.piles.current.organ = sessionData.piles.latent.organ.shift();
-        // Identify the players who will start and end the round.
-        const starter = sessionData.rounds.length
-          ? sessionData.rounds[sessionData.rounds.length - 1].nextStarter
-          : 0;
-        const ender = (starter + sessionData.players.length - 1) % sessionData.players.length;
-        if (typeof starter === 'number') {
-          // Initialize a round record and add it to the session data.
-          sessionData.rounds.push({
-            id: sessionData.rounds.length + 1,
-            startTime: Date.now(),
-            endTime: null,
-            starter,
-            ender,
-            currentOrgan: sessionData.piles.current.organ,
-            winner: null,
-            nextStarter: null,
-            turns: [],
-            bids: []
-          });
-          return sessionData;
-        }
-        else {
-          console.log('ERROR: prior round winnerless');
-          return false;
-        }
-      }
-      else {
-        console.log('ERROR: organ cards exhausted');
-        return false;
-      }
-    }
-    else {
-      console.log('ERROR: session not yet started');
-      return false;
-    }
+    // Move the top latent organ card to the current pile.
+    sessionData.piles.organs.current = sessionData.piles.organs.latent.shift();
+    // Identify the players who will start and end the round.
+    const starter = sessionData.rounds.length
+      ? sessionData.rounds[sessionData.rounds.length - 1].nextStarter
+      : 0;
+    const ender = (starter + sessionData.players.length - 1) % sessionData.players.length;
+    // Initialize a round record and add it to the session data.
+    sessionData.rounds.push({
+      index: sessionData.rounds.length,
+      startTime: Date.now(),
+      endTime: null,
+      starter,
+      ender,
+      organ: sessionData.piles.organs.current,
+      winner: null,
+      nextStarter: null,
+      turns: [],
+      bids: []
+    });
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
-    return false;
   }
 };

@@ -5,14 +5,7 @@
 module.exports = (versionData, sessionData, playerNames) => {
   while (playerNames.length) {
     const playerName = playerNames.shift();
-    sessionData = require('./addPlayer')(versionData, sessionData, playerName);
-    if (sessionData) {
-      console.log(`Added player ${playerName} to session ${sessionData.sessionCode}`);
-    }
-    else {
-      console.log(`ERROR: failed to add player ${playerName}`);
-      return false;
-    }
+    require('./addPlayer')(versionData, sessionData, playerName);
+    console.log(`Added player ${playerName} to session ${sessionData.sessionCode}`);
   }
-  return sessionData;
 };
