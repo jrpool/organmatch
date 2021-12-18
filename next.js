@@ -12,22 +12,27 @@ module.exports = (versionData, sessionData) => {
     else if (sessionData.startTime) {
       if (sessionData.rounds.length) {
         const round = sessionData.rounds[sessionData.rounds.length - 1];
-        if (round.turns.length) {
-          const turn = round.turns[round.turns.length - 1];
-          if (turn.endTime) {
-            if (turn.playerIndex === round.ender) {
-              return ['endRound'];
+        if (round.endTime) {
+          return 'startRound';
+        }
+        else {
+          if (round.turns.length) {
+            const turn = round.turns[round.turns.length - 1];
+            if (turn.endTime) {
+              if (turn.playerIndex === round.ender) {
+                return ['endRound'];
+              }
+              else {
+                return ['startTurn'];
+              }
             }
             else {
-              return ['startTurn'];
+              return ['endTurn'];
             }
           }
           else {
-            return ['endTurn'];
+            return ['startTurn'];
           }
-        }
-        else {
-          return ['startTurn'];
         }
       }
       else {
