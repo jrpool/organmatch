@@ -25,6 +25,10 @@ module.exports = (versionData, sessionData)  => {
       round.winner.name = winner.name;
       const {wins} = winner;
       wins.push(round.bids[0]);
+      // Return the losing patients to the pile.
+      round.bids.slice(1).forEach(losingBid => {
+        sessionData.piles.patients.push(losingBid.patient);
+      });
       // If the victory ends the session:
       if (wins.length === versionData.limits.winningRounds.max) {
         // Add the winner to the session data.

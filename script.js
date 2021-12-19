@@ -14,7 +14,11 @@ if (versionData) {
         ['Susan Colowick', 'strategy0'],
         ['Jonathan Pool', 'strategy0'],
         ['Mike Harbour', 'strategy0'],
-        ['Naomi Smith', 'strategy0']
+        ['Naomi Smith', 'strategy0'],
+        ['Dick Rodstein', 'strategy0'],
+        ['Lorna Graham', 'strategy0'],
+        ['Joe Biden', 'strategy0'],
+        ['Chuck Schumer', 'strategy0']
       ]);
       const listPlayers = () => sessionData.players.map(player => player.name).join('\n');
       require('./startSession')(sessionData);
