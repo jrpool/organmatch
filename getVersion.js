@@ -14,7 +14,7 @@ module.exports = versionID => {
     return versionData;
   }
   catch(error) {
-    console.log(`ERROR: no such version (${error.message})`);
+    console.log(`ERROR: ${error.message}\n${error.stack}`);
     return false;
   }
 };

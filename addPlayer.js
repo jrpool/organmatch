@@ -4,7 +4,7 @@
 */
 // FUNCTIONS
 // Adds a player to a session and returns the session data.
-module.exports = (versionData, sessionData, playerName) => {
+module.exports = (versionData, sessionData, playerName, strategyName) => {
   try {
     // Increment the player count.
     sessionData.playersJoined++;
@@ -14,6 +14,7 @@ module.exports = (versionData, sessionData, playerName) => {
     sessionData.players.push({
       name: playerName,
       joinTime: Date.now(),
+      strategyName,
       hand: {
         initial: {
           patients,
@@ -32,7 +33,7 @@ module.exports = (versionData, sessionData, playerName) => {
     });
   }
   catch (error) {
-    console.log(`ERROR: ${error.message}`);
+    console.log(`ERROR: ${error.message}\n${error.stack}`);
     return false;
   }
 };

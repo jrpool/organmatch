@@ -20,6 +20,6 @@ module.exports = sessionData => {
     sessionData.startTime = Date.now();
   }
   catch (error) {
-    console.log(`ERROR: ${error.message}`);
+    console.log(`ERROR: ${error.message}\n${error.stack}`);
   }
 };

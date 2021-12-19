@@ -128,27 +128,31 @@ const createPatientCards = versionData => {
 };
 // Returns data for a session.
 module.exports = versionData => {
-  const sessionData = {
-    versionID: versionData.versionID,
-    sessionCode: createCode(),
-    creationTime: Date.now(),
-    playersJoined: 0,
-    startTime: null,
-    roundsEnded: 0,
-    endTime: null,
-    piles: {
-      organs: {
-        latent: [],
-        current: null,
-        old: []
-      },
-      patients: [],
-      influences: []
-    },
-    players: [],
-    rounds: []
-  };
   try {
+    const sessionData = {
+      versionID: versionData.versionID,
+      sessionCode: createCode(),
+      creationTime: Date.now(),
+      playersJoined: 0,
+      startTime: null,
+      roundsEnded: 0,
+      endTime: null,
+      winner: {
+        index: null,
+        name: null
+      },
+      piles: {
+        organs: {
+          latent: [],
+          current: null,
+          old: []
+        },
+        patients: [],
+        influences: []
+      },
+      players: [],
+      rounds: []
+    };
     // Populate the card piles in the session data.
     const {piles} = sessionData;
     piles.organs.latent = shuffle(createOrganCards(versionData));
@@ -157,7 +161,7 @@ module.exports = versionData => {
     return sessionData;
   }
   catch(error) {
-    console.log(`ERROR: no such version (${error.message})`);
+    console.log(`ERROR: ${error.message}\n${error.stack}`);
     return false;
   }
 };
