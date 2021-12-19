@@ -13,17 +13,6 @@ const shuffle = array => {
     array[i] = array[i][0];
   }
 };
-/*
-const shuffle = array => {
-  const shuffler = Array(array.length).fill(0).map((item, index) => [index, Math.random()]);
-  shuffler.sort((a, b) => a[1] - b[1]);
-  const shuffledArray = [];
-  for (let i = 0; i < array.length; i++) {
-    shuffledArray.push(array[shuffler[i][0]]);
-  }
-  array = shuffledArray;
-};
-*/
 // Starts a session.
 module.exports = sessionData => {
   try {

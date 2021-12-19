@@ -33,19 +33,19 @@ if (versionData) {
           console.log(`Turn ${turn.index} started`);
           require('./endTurn')(versionData, sessionData);
           const didBid = turn.hand.changes.patient.isBid;
-          const bidAct = `made ${didBid ? 'a' : 'no'} bid`;
+          const bidAct = didBid ? 'made a bid' : 'replaced a patient';
           const useCount = turn.hand.changes.influences.length;
           let useAct = '';
           if (useCount > 1) {
-            useAct = `used ${useCount} influences`;
+            useAct = ` and used ${useCount} influences`;
           }
           else if (useCount) {
-            useAct = 'used 1 influence';
+            useAct = ' and used 1 influence';
           }
           else {
-            useAct = 'used no influence';
+            useAct = '';
           }
-          console.log(`Turn ${turn.index}: ${turn.player.name} ${bidAct} and ${useAct}`);
+          console.log(`Turn ${turn.index}: ${turn.player.name} ${bidAct}${useAct}`);
         }
         require('./endRound')(versionData, sessionData);
         console.log(`Round won by ${round.winner.name || 'nobody'}`);

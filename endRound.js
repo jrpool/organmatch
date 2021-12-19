@@ -17,7 +17,7 @@ module.exports = (versionData, sessionData)  => {
     // If the round has any bids:
     if (round.bids.length) {
       // Identify the round’s winning bid, winner, and next starter.
-      const scoreBid = bid => bid.netPriority - bid.patient.queuePosition / 1000;
+      const scoreBid = bid => bid.netPriority - bid.queuePosition / 1000;
       round.bids.sort((a, b) => scoreBid(b) - scoreBid(a));
       const winnerIndex = round.bids[0].player.index;
       const winner = sessionData.players[winnerIndex];
@@ -25,9 +25,12 @@ module.exports = (versionData, sessionData)  => {
       round.winner.name = winner.name;
       const {wins} = winner;
       wins.push(round.bids[0]);
-      // Return the losing patients to the pile.
+      // Make losing bidders return the bid patients to the pile and draw influence cards.
       round.bids.slice(1).forEach(losingBid => {
         sessionData.piles.patients.push(losingBid.patient);
+        sessionData.players[losingBid.player.index].hand.current.influences.push(
+          sessionData.piles.influences.shift()
+        );
       });
       // If the victory ends the session:
       if (wins.length === versionData.limits.winningRounds.max) {

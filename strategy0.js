@@ -27,9 +27,9 @@ module.exports = (action, versionData, sessionData)  => {
         let turnBidCount = 0;
         while (
           influences.length
-          && bidCount < limits.perBid.max
-          && turnBidCount < limits.perTurnBid.max
-          && turnCount < limits.perTurn.max
+          && bidCount < limits.influences.perBid.max
+          && turnBidCount < limits.influences.perTurnBid.max
+          && turnCount < limits.influences.perTurn.max
         ) {
           uses.push({
             index: influences.splice(-1),
