@@ -7,9 +7,6 @@ module.exports = (versionData, sessionData, players) => {
     while (players.length) {
       const player = players.shift();
       require('./addPlayer')(versionData, sessionData, ...player);
-      console.log(
-        `Player ${player[0]} with strategy ${player[1]} joined session ${sessionData.sessionCode}`
-      );
     }
   }
   catch (error) {
