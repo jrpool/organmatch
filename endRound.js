@@ -11,10 +11,10 @@ module.exports = (versionData, sessionData)  => {
     const round = sessionData.rounds[sessionData.rounds.length - 1];
     // If the round has any bids:
     if (round.bids.length) {
-      // Identify the round’s winning bid and winner.
+      // Identify the round’s winning bid, winner, and next starter.
       const scoreBid = bid => bid.netPriority - bid.patient.queuePosition / 1000;
       round.bids.sort((a, b) => scoreBid(b) - scoreBid(a));
-      round.winner = round.bids[0].playerIndex;
+      round.nextStarter = round.winner = round.bids[0].playerIndex;
       const {wins} = sessionData.players[round.winner];
       wins.push(round.bids[0]);
       // If the victory ends the session:
@@ -26,6 +26,11 @@ module.exports = (versionData, sessionData)  => {
         sessionData.endTime = Date.now();
         return;
       }
+    }
+    // Otherwise, i.e. if the round has no bids:
+    else {
+      // Identify the next round’s starter.
+      round.nextStarter = round.starter;
     }
     // If the organs have been exhausted:
     if (! sessionData.piles.organs.latent.length) {
