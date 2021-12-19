@@ -18,6 +18,12 @@ module.exports = (versionData, sessionData)  => {
         index = strategy('bid', versionData, sessionData);
         require('./bid')(sessionData, index);
       }
+      // Otherwise, if the player must choose a patient to replace:
+      else if (! turn.hand.matches.length) {
+        // Get and apply the player’s choice.
+        index = strategy('swap', versionData, sessionData);
+        require('./swap')(sessionData, index);
+      }
       // If the player must choose whether and, if so, how to use influences:
       if (turn.hand.current.influences.length) {
         // Get the player’s choices, constrained by the version limits.

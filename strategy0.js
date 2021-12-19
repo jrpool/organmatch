@@ -15,6 +15,11 @@ module.exports = (action, versionData, sessionData)  => {
       const {matches} = turn.hand;
       return matches.length - 1;
     }
+    // Decision on which patient to replace.
+    else if (action === 'swap') {
+      const {patients} = turn.hand.current;
+      return patients.length - 1;
+    }
     // Decision on which influences to use on which bids.
     else if (action === 'use') {
       const influences = Array.from(turn.hand.current.influences);
