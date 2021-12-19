@@ -2,46 +2,42 @@
   script
   Performs a sequence of OrganMatch operations.
 */
-const versionData = require('./getVersion')('01');
+const versionData = require('./getVersion')('02');
 if (versionData) {
   console.log('Version 01 found');
-  let sessionData = require('./newSession')(versionData);
+  const sessionData = require('./newSession')(versionData);
   if (sessionData) {
     const {sessionCode} = sessionData;
     console.log(`Session ${sessionCode} created`);
-    sessionData = require('./addPlayers')(versionData, sessionData, [
-      'Susan Colowick',
-      'Jonathan Pool',
-      'Mike Harbour',
-      'Naomi Smith'
+    require('./addPlayers')(versionData, sessionData, [
+      ['Susan Colowick', 'strategy0'],
+      ['Jonathan Pool', 'strategy0'],
+      ['Mike Harbour', 'strategy0'],
+      ['Naomi Smith', 'strategy0']
     ]);
-    if (sessionData) {
-      sessionData = require('./startSession')(versionData, sessionData);
-      if (sessionData) {
-        console.log(
-          `Session ${sessionCode} started with ${sessionData.players.length} players`
-        );
-        sessionData = require('./startRound')(sessionData);
-        if (sessionData) {
-          const roundID = sessionData.rounds.length;
-          console.log(`Round ${roundID} of session ${sessionCode} started`);
-          sessionData = require('./startTurn')(sessionData);
-          if (sessionData) {
-            const turnID = sessionData.rounds[sessionData.rounds.length - 1].turns.length;
-            console.log(`Turn ${turnID} of round ${roundID} of session ${sessionCode} started`);
-            sessionData = require('./playTurn')(sessionData);
-            if (sessionData) {
-              console.log(
-                `Turn ${turnID} of round ${roundID} of session ${sessionCode} played`
-              );
-              const round = sessionData.rounds[roundID - 1];
-              const turn = round.turns[turnID - 1];
-              console.log(`Turn ${turn.endTime ? 'ended' : 'needs to be finished'}`);
-              console.log(`Round data:\n${JSON.stringify(round, null, 2)}`);
-            }
-          }
-        }
+    const listPlayers = () => sessionData.players.map(player => player.name).join('\n');
+    console.log(`Added players:\n${listPlayers()}`);
+    require('./startSession')(sessionData);
+    console.log(`Session started with shuffled players:\n${listPlayers()}`);
+    while (sessionData.endTime === null) {
+      require('./startRound')(sessionData);
+      const round = sessionData.rounds[sessionData.rounds.length - 1];
+      console.log(`Round ${round.index} started`);
+      while (round.endTime === null) {
+        require('./startTurn')(sessionData);
+        const turn = round.turns[round.turns.length - 1];
+        console.log(`Turn ${turn.index} started`);
+        require('./endTurn')(versionData, sessionData);
+        console.log('Turn ended');
       }
+      console.log('Round ended');
     }
+    console.log('Session ended');
   }
+  else {
+    console.log('ERROR: could not create session');
+  }
+}
+else {
+  console.log('ERROR: could not find version');
 }

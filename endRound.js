@@ -2,6 +2,8 @@
   endRound
   Processes the end of a round of a session of OrganMatch.
 */
+// IMPORTS
+const fs = require('fs');
 // FUNCTIONS
 // Processes the end of a round.
 module.exports = (versionData, sessionData)  => {
@@ -29,6 +31,8 @@ module.exports = (versionData, sessionData)  => {
     if (! sessionData.piles.organs.latent.length) {
       // End the session.
       sessionData.endTime = Date.now();
+      // Record the session.
+      fs.writeFileSync(`on/${sessionData.sessionCode}.json`, JSON.stringify(sessionData, null, 2));
     }
   }
   catch (error) {

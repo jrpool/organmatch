@@ -2,12 +2,14 @@
   addPlayers
   Adds players to a session of OrganMatch.
 */
-module.exports = (versionData, sessionData, playerNames) => {
+module.exports = (versionData, sessionData, players) => {
   try {
-    while (playerNames.length) {
-      const playerName = playerNames.shift();
-      require('./addPlayer')(versionData, sessionData, playerName);
-      console.log(`Added player ${playerName} to session ${sessionData.sessionCode}`);
+    while (players.length) {
+      const player = players.shift();
+      require('./addPlayer')(versionData, sessionData, ...player);
+      console.log(
+        `Player ${player[0]} with strategy ${player[1]} joined session ${sessionData.sessionCode}`
+      );
     }
   }
   catch (error) {
