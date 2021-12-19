@@ -50,12 +50,18 @@ module.exports = (versionData, sessionData)  => {
             },
             influence: turn.hand.current.influences.slice(use.index, use.index + 1)
           };
-          round.bids[use.bidIndex].influence.push(influence);
-          turn.bids.current[use.bidIndex].influence.push(influence);
+          const roundBid = round.bids[use.bidIndex];
+          const turnBid = turn.bids.current[use.bidIndex];
+          roundBid.influences.push(influence);
+          turnBid.influences.push(influence);
           const {impact} = influence.influence;
-          round.bids[use.bidIndex].netPriority += impact;
-          turn.bids.current[use.bidIndex].netPriority += impact;
+          roundBid.netPriority += impact;
+          turnBid.netPriority += impact;
           turn.hand.changes.influences.push(influence.influence);
+          const impactTerm = impact > 0 ? `+${impact}` : impact;
+          console.log(
+            `Player ${turn.player.name} applied ${impactTerm} to the ${turnBid.player.name} bid`
+          );
         });
       }
       turn.endTime = Date.now();

@@ -37,6 +37,7 @@ module.exports = (sessionData, index) => {
     turn.hand.current.patients.splice(index, 1);
     player.hand.current.patients.push(drawn);
     turn.hand.current.patients.push(drawn);
+    console.log(`Player ${player.name} bid a priority-${patient.priority} patient`);
     // If the hand contains no influence cards:
     if (turn.hand.initial.influences.length === 0) {
       // End the turn.

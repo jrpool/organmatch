@@ -32,6 +32,7 @@ module.exports = (versionData, sessionData, playerName, strategyName) => {
       },
       wins: []
     });
+    console.log(`Added player ${playerName} with strategy ${strategyName}`);
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);

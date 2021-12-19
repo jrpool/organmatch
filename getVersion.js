@@ -11,6 +11,7 @@ module.exports = versionID => {
     const versionJSON = fs.readFileSync(`gameVersions/v${versionID}.json`, 'utf8');
     const versionData = JSON.parse(versionJSON);
     versionData.versionID = versionID;
+    console.log(`Got data on version ${versionID}`);
     return versionData;
   }
   catch(error) {

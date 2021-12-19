@@ -155,6 +155,7 @@ module.exports = versionData => {
     piles.organs.latent = shuffle(createOrganCards(versionData));
     piles.influences = shuffle(createInfluenceCards(versionData));
     piles.patients = shuffle(createPatientCards(versionData));
+    console.log(`Created session ${sessionData.sessionCode}`);
     return sessionData;
   }
   catch(error) {

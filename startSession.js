@@ -20,6 +20,10 @@ module.exports = sessionData => {
     shuffle(sessionData.players);
     // Start the session.
     sessionData.startTime = Date.now();
+    console.log(
+      `Started at ${Date(sessionData.startTime)} with ${sessionData.players.length} players:`
+    );
+    console.log(JSON.stringify(sessionData.players.map(player => player.name), null, 2));
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
