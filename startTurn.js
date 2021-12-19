@@ -9,7 +9,7 @@ module.exports = sessionData => {
     const round = sessionData.rounds[sessionData.rounds.length - 1];
     // Identify the turn’s player.
     const playerIndex = round.turns.length
-      ? (round.turns[round.turns.length - 1].playerIndex + 1) % sessionData.players.length
+      ? (round.turns[round.turns.length - 1].player.index + 1) % sessionData.players.length
       : round.starter;
     const player = sessionData.players[playerIndex];
     const playerName = player.name;
@@ -47,8 +47,10 @@ module.exports = sessionData => {
       index: round.turns.length,
       startTime: Date.now(),
       endTime: null,
-      playerIndex,
-      playerName,
+      player: {
+        index: playerIndex,
+        name: playerName
+      },
       hand: {
         initial,
         matches,

@@ -8,7 +8,7 @@ module.exports = (versionData, sessionData)  => {
   try {
     const round = sessionData.rounds[sessionData.rounds.length - 1];
     const turn = round.turns[round.turns.length - 1];
-    const strategy = require(`./${sessionData.players[turn.playerIndex].strategyName}`);
+    const strategy = require(`./${sessionData.players[turn.player.index].strategyName}`);
     // If the turn has not yet ended:
     if (! turn.endTime) {
       let index = null;
@@ -44,8 +44,10 @@ module.exports = (versionData, sessionData)  => {
         uses.forEach(use => {
           const influence = {
             turnIndex: turn.index,
-            playerIndex: turn.playerIndex,
-            playerName: turn.playerName,
+            player: {
+              index: turn.player.index,
+              name: turn.player.name
+            },
             influence: turn.hand.current.influences.slice(use.index, use.index + 1)
           };
           round.bids[use.bidIndex].influence.push(influence);
@@ -59,7 +61,7 @@ module.exports = (versionData, sessionData)  => {
       turn.endTime = Date.now();
     }
     // If the turn is the last turn of its round:
-    if (turn.playerIndex === round.ender) {
+    if (turn.player.index === round.ender) {
       // End the round.
       round.endTime = Date.now();
     }

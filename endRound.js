@@ -19,7 +19,7 @@ module.exports = (versionData, sessionData)  => {
       // Identify the round’s winning bid, winner, and next starter.
       const scoreBid = bid => bid.netPriority - bid.patient.queuePosition / 1000;
       round.bids.sort((a, b) => scoreBid(b) - scoreBid(a));
-      const winnerIndex = round.bids[0].playerIndex;
+      const winnerIndex = round.bids[0].player.index;
       const winner = sessionData.players[winnerIndex];
       round.nextStarter = round.winner.index = winnerIndex;
       round.winner.name = winner.name;

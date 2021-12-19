@@ -19,7 +19,7 @@ module.exports = (versionData, sessionData) => {
           if (round.turns.length) {
             const turn = round.turns[round.turns.length - 1];
             if (turn.endTime) {
-              if (turn.playerIndex === round.ender) {
+              if (turn.player.index === round.ender) {
                 return ['endRound'];
               }
               else {

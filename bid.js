@@ -8,7 +8,7 @@ module.exports = (sessionData, index) => {
   try {
     const round = sessionData.rounds[sessionData.rounds.length - 1];
     const turn = round.turns[round.turns.length - 1];
-    const player = sessionData.players[turn.playerIndex];
+    const player = sessionData.players[turn.player.index];
     // Bid and replace the specified patient and revise the session data accordingly.
     const match = turn.hand.matches[index];
     const {patient} = match;
@@ -21,8 +21,10 @@ module.exports = (sessionData, index) => {
     };
     const bid = {
       turnIndex: turn.index,
-      playerIndex: turn.playerIndex,
-      playerName: turn.playerName,
+      player: {
+        index: turn.player.index,
+        name: turn.player.name
+      },
       patient,
       influences: [],
       netPriority: patient.priority
