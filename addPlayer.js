@@ -12,6 +12,7 @@ module.exports = (versionData, sessionData, playerName, strategyName) => {
     const patients = sessionData.piles.patients.splice(0, versionData.handSize.count);
     // Add data on the player to the session data.
     sessionData.players.push({
+      index: sessionData.players.length,
       name: playerName,
       joinTime: Date.now(),
       strategyName,

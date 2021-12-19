@@ -31,9 +31,10 @@ if (versionData) {
           console.log('Turn ended');
         }
         require('./endRound')(versionData, sessionData);
-        console.log('Round ended');
+        console.log(`Round won by ${round.winner.name || 'nobody'}`);
       }
-      console.log('Session ended');
+      console.log(`Session ended. Winners: ${sessionData.winners.map(winner => winner.name)}`);
+      console.log(`Organs still available: ${sessionData.piles.organs.latent.length}`);
     }
     catch (error) {
       console.log(JSON.stringify(sessionData, null, 2));

@@ -137,10 +137,7 @@ module.exports = versionData => {
       startTime: null,
       roundsEnded: 0,
       endTime: null,
-      winner: {
-        index: null,
-        name: null
-      },
+      winners: [],
       piles: {
         organs: {
           latent: [],
