@@ -62,7 +62,7 @@ module.exports = (versionData, sessionData)  => {
           turnBid.influences.push(influence);
           const oldNetPriority = roundBid.netPriority;
           const {impact} = influence.influence;
-          const priorityLimits = versionData.limits.netPriority;
+          const priorityLimits = versionData.limits.priorities;
           const newNetPriority = Math.min(
             priorityLimits.max, Math.max(priorityLimits.min, oldNetPriority + impact)
           );
