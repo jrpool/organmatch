@@ -66,8 +66,8 @@ module.exports = sessionData => {
         current
       },
       bids: {
-        initial: [],
-        current: []
+        initial: round.bids,
+        current: round.bids
       }
     };
     // Add the turn record to the turn records of the round.

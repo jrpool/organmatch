@@ -60,14 +60,20 @@ module.exports = (versionData, sessionData)  => {
           const turnBid = turn.bids.current[use.bidIndex];
           roundBid.influences.push(influence);
           turnBid.influences.push(influence);
+          const oldNetPriority = roundBid.netPriority;
           const {impact} = influence.influence;
+          const priorityLimits = versionData.limits.netPriority;
+          const newNetPriority = Math.min(
+            priorityLimits.max, Math.max(priorityLimits.min, oldNetPriority + impact)
+          );
           roundBid.netPriority += impact;
           turnBid.netPriority += impact;
           turn.hand.changes.influences.push(influence.influence);
           const impactTerm = impact > 0 ? `+${impact}` : impact;
           console.log(
-            `Player ${turn.player.name} applied ${impactTerm} to the ${turnBid.player.name} bid`
+            `Player ${turn.player.name} influenced the ${turnBid.player.name} bid by ${impactTerm}`
           );
+          console.log(`Its net priority was ${oldNetPriority} and is now ${newNetPriority}`);
         });
       }
       turn.endTime = Date.now();
