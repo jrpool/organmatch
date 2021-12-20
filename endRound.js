@@ -33,7 +33,7 @@ module.exports = (versionData, sessionData)  => {
         const winReturnNews = winInfluenceCount === 1
           ? '1 influence card'
           : `${winInfluenceCount} influence cards`;
-        console.log(`Winner ${winner.name} returned ${winReturnNews}`);
+        console.log(`Winning bidder ${winner.name} returned ${winReturnNews}`);
       }
       sessionData.piles.influences.push(...round.bids[0].influences);
       // For each losing bid:

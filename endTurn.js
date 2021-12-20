@@ -41,7 +41,7 @@ module.exports = (versionData, sessionData)  => {
           if (usables.some(
             usable => usable.handIndex === useWant.handIndex && usable.bidIndex === useWant.bidIndex
           )) {
-            // Apply it, removing the influence from the player’s and turn’s current hands.
+            // Apply it, revising the player’s and turn’s current hands.
             const {handIndex} = useWant;
             player.hand.current.influences.splice(handIndex, handIndex + 1);
             const influence = {
@@ -52,20 +52,22 @@ module.exports = (versionData, sessionData)  => {
               },
               influence: turn.hand.current.influences.splice(handIndex, handIndex + 1)[0]
             };
-            const roundBid = round.bids[useWant.bidIndex];
-            const turnBid = turn.bids.current[useWant.bidIndex];
-            roundBid.influences.push(influence);
-            turnBid.influences.push(influence);
-            const oldNetPriority = roundBid.netPriority;
-            const priorityLimits = versionData.limits.priorities;
-            const newNetPriority = Math.min(
-              priorityLimits.max, Math.max(priorityLimits.min, oldNetPriority + impact)
-            );
-            roundBid.netPriority += impact;
-            turnBid.netPriority += impact;
             turn.hand.changes.influences.push(influence.influence);
+            // Identify the influenced bid (referenced in both the round and the turn).
+            const bid = round.bids[useWant.bidIndex];
+            // Revise the bid accordingly.
+            bid.influences.push(influence);
+            const totalImpact = bid.influences.reduce(
+              (total, currentUse) => total + currentUse.influence.impact
+            );
+            const protoPriority = bid.patient.priority + totalImpact;
+            const priorityLimits = versionData.limits.priorities;
+            const oldNetPriority = bid.netPriority;
+            bid.netPriority = Math.min(
+              priorityLimits.max, Math.max(priorityLimits.min, protoPriority)
+            );
             console.log(
-              `Permitted. The net priority was ${oldNetPriority} and is now ${newNetPriority}`
+              `Permitted. The net priority was ${oldNetPriority} and is now ${bid.netPriority}`
             );
             usables = usable(versionData, sessionData);
           }
