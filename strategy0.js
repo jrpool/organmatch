@@ -37,7 +37,7 @@ module.exports = (action, versionData, sessionData)  => {
           && turnCount < limits.influences.perTurn.max
         ) {
           uses.push({
-            index: influences.splice(-1),
+            index: influences.length - 1,
             bidIndex
           });
           bidCount++;

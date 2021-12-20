@@ -54,7 +54,7 @@ module.exports = (versionData, sessionData)  => {
               index: turn.player.index,
               name: turn.player.name
             },
-            influence: turn.hand.current.influences.slice(use.index, use.index + 1)
+            influence: turn.hand.current.influences.slice(use.index, use.index + 1)[0]
           };
           const roundBid = round.bids[use.bidIndex];
           const turnBid = turn.bids.current[use.bidIndex];
@@ -80,5 +80,6 @@ module.exports = (versionData, sessionData)  => {
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
+    sessionData.endTime = Date.now();
   }
 };

@@ -32,7 +32,7 @@ module.exports = (versionData, sessionData)  => {
           sessionData.piles.influences.shift()
         );
       });
-      console.log(`The round winner was ${winner.name}`);
+      console.log(`The round winner was ${winner.name}\n`);
       // If the victory ends the session:
       if (wins.length === versionData.limits.winningRounds.max) {
         // Add the winner to the session data.
@@ -48,7 +48,7 @@ module.exports = (versionData, sessionData)  => {
     else {
       // Identify the next round’s starter.
       round.nextStarter = round.starter;
-      console.log('The round had no winner');
+      console.log('The round had no winner\n');
     }
     // If no player has won enough rounds to end the session but the organs have been exhausted:
     if (! sessionEnded && ! sessionData.piles.organs.latent.length) {
@@ -81,5 +81,6 @@ module.exports = (versionData, sessionData)  => {
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
+    sessionData.endTime = Date.now();
   }
 };

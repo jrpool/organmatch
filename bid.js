@@ -34,13 +34,14 @@ module.exports = (sessionData, index) => {
     round.bids.push(bid);
     turn.bids.current.push(bid);
     player.hand.current.patients.splice(index, 1);
+    console.log(`Player ${player.name} bid a priority-${patient.priority} patient`);
     turn.hand.current.patients.splice(index, 1);
     player.hand.current.patients.push(drawn);
     turn.hand.current.patients.push(drawn);
-    console.log(`Player ${player.name} bid a priority-${patient.priority} patient`);
+    console.log(`A priority-${drawn.priority} patient was drawn to replace it`);
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
-    return false;
+    sessionData.endTime = Date.now();
   }
 };

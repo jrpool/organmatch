@@ -21,7 +21,7 @@ if (versionData) {
       while (sessionData.endTime === null) {
         require('./startRound')(sessionData);
         const round = sessionData.rounds[sessionData.rounds.length - 1];
-        while (round.endTime === null) {
+        while (sessionData.endTime === null && round.endTime === null) {
           require('./startTurn')(sessionData);
           require('./endTurn')(versionData, sessionData);
         }
