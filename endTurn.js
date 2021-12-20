@@ -58,7 +58,7 @@ module.exports = (versionData, sessionData)  => {
             // Revise the bid accordingly.
             bid.influences.push(influence);
             const totalImpact = bid.influences.reduce(
-              (total, currentUse) => total + currentUse.influence.impact
+              (total, currentUse) => total + currentUse.influence.impact, 0
             );
             const protoPriority = bid.patient.priority + totalImpact;
             const priorityLimits = versionData.limits.priorities;
