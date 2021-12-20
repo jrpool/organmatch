@@ -4,19 +4,18 @@
 */
 // FUNCTIONS
 // Bids and replaces a patient.
-module.exports = (sessionData, index) => {
+module.exports = (sessionData, matchIndex) => {
   try {
     const round = sessionData.rounds[sessionData.rounds.length - 1];
     const turn = round.turns[round.turns.length - 1];
     const player = sessionData.players[turn.player.index];
     // Bid and replace the specified patient and revise the session data accordingly.
-    const match = turn.hand.matches[index];
+    const match = turn.hand.matches[matchIndex];
     const organ = sessionData.piles.organs.current;
     const {patient} = match;
     const drawn = sessionData.piles.patients.shift();
     turn.hand.changes.patient = {
       isBid: true,
-      index: match.index,
       patient,
       drawn
     };
@@ -33,6 +32,7 @@ module.exports = (sessionData, index) => {
     };
     round.bids.push(bid);
     turn.bids.current.push(bid);
+    const {index} = match;
     player.hand.current.patients.splice(index, 1);
     turn.hand.current.patients.splice(index, 1);
     player.hand.current.patients.push(drawn);

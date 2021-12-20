@@ -14,9 +14,11 @@ module.exports = (versionData, sessionData)  => {
     sessionData.piles.organs.current = null;
     let sessionEnded = false;
     const round = sessionData.rounds[sessionData.rounds.length - 1];
+    const bidCount = round.bids.length;
     // If the round has any bids:
-    if (round.bids.length) {
-      console.log(`The round had ${round.bids.length} bids`);
+    if (bidCount) {
+      const bidTerm = bidCount > 1 ? 'bids' : 'bid';
+      console.log(`The round had ${round.bids.length} ${bidTerm}`);
       // Identify the round’s winning bid, winner, and next starter.
       const scoreBid = bid => bid.netPriority - bid.queuePosition / 1000;
       round.bids.sort((a, b) => scoreBid(b) - scoreBid(a));
@@ -65,7 +67,7 @@ module.exports = (versionData, sessionData)  => {
     else {
       // Identify the next round’s starter.
       round.nextStarter = round.starter;
-      console.log('The round had no winner\n');
+      console.log('The round had no bid and therefore no winner\n');
     }
     // If no player has won enough rounds to end the session but the organs have been exhausted:
     if (! sessionEnded && ! sessionData.piles.organs.latent.length) {
@@ -94,6 +96,7 @@ module.exports = (versionData, sessionData)  => {
       }
       console.log(`\nThe session was ${winnerNews}`);
       console.log(`Organs still available: ${sessionData.piles.organs.latent.length}`);
+      console.log(`Patients still available: ${sessionData.piles.patients.length}`);
     }
   }
   catch (error) {
