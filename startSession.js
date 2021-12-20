@@ -19,9 +19,9 @@ module.exports = sessionData => {
     // Shuffle the players of the session.
     shuffle(sessionData.players);
     // Start the session.
-    sessionData.startTime = Date.now();
+    sessionData.startTime = (new Date()).toISOString();
     console.log(
-      `Started at ${Date(sessionData.startTime)} with ${sessionData.players.length} players:`
+      `Started at ${sessionData.startTime} with ${sessionData.players.length} players:`
     );
     console.log(JSON.stringify(sessionData.players.map(player => player.name), null, 2));
   }

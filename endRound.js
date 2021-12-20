@@ -16,6 +16,7 @@ module.exports = (versionData, sessionData)  => {
     const round = sessionData.rounds[sessionData.rounds.length - 1];
     // If the round has any bids:
     if (round.bids.length) {
+      console.log(`>>> The round has ${round.bids.length} bids`);
       // Identify the round’s winning bid, winner, and next starter.
       const scoreBid = bid => bid.netPriority - bid.queuePosition / 1000;
       round.bids.sort((a, b) => scoreBid(b) - scoreBid(a));
@@ -33,6 +34,9 @@ module.exports = (versionData, sessionData)  => {
         // Draw an influence card.
         sessionData.players[losingBid.player.index].hand.current.influences.push(
           sessionData.piles.influences.shift()
+        );
+        console.log(
+          `Bidder ${losingBid.player.name} returned the bid cards and drew an influence card`
         );
       });
       console.log(`The round winner was ${winner.name}\n`);
@@ -61,7 +65,7 @@ module.exports = (versionData, sessionData)  => {
     // If the session has ended:
     if (sessionEnded) {
       // Add this fact and the winners to the session data and record the session.
-      sessionData.endTime = Date.now();
+      sessionData.endTime = (new Date()).toISOString();
       const playerWinCounts = sessionData.players.map(player => player.wins.length);
       const maxCount = Math.max(...playerWinCounts);
       const winners = sessionData.players.filter(player => player.wins.length === maxCount);
@@ -70,7 +74,7 @@ module.exports = (versionData, sessionData)  => {
         name: winner.name
       }));
       fs.writeFileSync(`on/${sessionData.sessionCode}.json`, JSON.stringify(sessionData, null, 2));
-      console.log(`Session ended at ${Date(sessionData.endTime)}`);
+      console.log(`Session ended at ${sessionData.endTime}`);
       let winnerNews = '';
       if (sessionData.winners.length > 1) {
         winnerNews = `tied by ${sessionData.winners.map(winner => winner.name).join(' and ')}`;
@@ -84,6 +88,6 @@ module.exports = (versionData, sessionData)  => {
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
-    sessionData.endTime = Date.now();
+    sessionData.endTime = (new Date()).toISOString();
   }
 };

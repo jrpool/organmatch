@@ -14,7 +14,7 @@ module.exports = (versionData, sessionData, playerName, strategyName) => {
     sessionData.players.push({
       index: sessionData.players.length,
       name: playerName,
-      joinTime: Date.now(),
+      joinTime: (new Date()).toISOString(),
       strategyName,
       hand: {
         initial: {

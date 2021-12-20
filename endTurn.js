@@ -76,16 +76,16 @@ module.exports = (versionData, sessionData)  => {
           console.log(`Its net priority was ${oldNetPriority} and is now ${newNetPriority}`);
         });
       }
-      turn.endTime = Date.now();
+      turn.endTime = (new Date()).toISOString();
     }
     // If the turn is the last turn of its round:
     if (turn.player.index === round.ender) {
       // End the round.
-      round.endTime = Date.now();
+      round.endTime = (new Date()).toISOString();
     }
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
-    sessionData.endTime = Date.now();
+    sessionData.endTime = (new Date()).toISOString();
   }
 };

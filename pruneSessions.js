@@ -9,7 +9,7 @@ const fs = require('fs');
 // FUNCTIONS
 // Deletes expired session files.
 const pruneSessions = () => {
-  const now = Date.now();
+  const now = (new Date()).toISOString();
   const maxBirthTime = now - 60000 * process.argv[2];
   const fileNames = fs.readdirSync('on');
   fileNames.forEach(fileName => {

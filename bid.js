@@ -42,6 +42,6 @@ module.exports = (sessionData, index) => {
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
-    sessionData.endTime = Date.now();
+    sessionData.endTime = (new Date()).toISOString();
   }
 };

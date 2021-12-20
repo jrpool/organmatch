@@ -132,7 +132,7 @@ module.exports = versionData => {
     const sessionData = {
       versionID: versionData.versionID,
       sessionCode: createCode(),
-      creationTime: Date.now(),
+      creationTime: (new Date()).toISOString(),
       playersJoined: 0,
       startTime: null,
       roundsEnded: 0,

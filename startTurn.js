@@ -13,11 +13,12 @@ module.exports = sessionData => {
       : round.starter;
     const player = sessionData.players[playerIndex];
     const playerName = player.name;
-    /*
-      Make the arrays of cards in the current hand new arrays of the cards in the initial hand,
-      so that changes to the current arrays will not affect the initial arrays.
-    */
-    const initial = player.hand.current;
+    // Make all hands independently modifiable.
+    const currentHand = player.hand.current;
+    const initial = {
+      patients: [...currentHand.patients],
+      influences: [...currentHand.influences]
+    };
     const current = {
       patients: [...initial.patients],
       influences: [...initial.influences]
@@ -42,10 +43,10 @@ module.exports = sessionData => {
         patient: initial.patients[index]
       });
     });
-    // Initialize a turn record.
+    // Initialize a turn record, with independent bid arrays.
     const turn = {
       index: round.turns.length,
-      startTime: Date.now(),
+      startTime: (new Date()).toISOString(),
       endTime: null,
       player: {
         index: playerIndex,
@@ -66,8 +67,8 @@ module.exports = sessionData => {
         current
       },
       bids: {
-        initial: round.bids,
-        current: round.bids
+        initial: [...round.bids],
+        current: [...round.bids]
       }
     };
     // Add the turn record to the turn records of the round.
@@ -81,6 +82,6 @@ module.exports = sessionData => {
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
-    sessionData.endTime = Date.now();
+    sessionData.endTime = (new Date()).toISOString();
   }
 };

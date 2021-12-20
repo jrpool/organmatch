@@ -16,7 +16,7 @@ module.exports = sessionData => {
     // Initialize a round record and add it to the session data.
     sessionData.rounds.push({
       index: sessionData.rounds.length,
-      startTime: Date.now(),
+      startTime: (new Date()).toISOString(),
       endTime: null,
       starter,
       ender,
@@ -34,6 +34,6 @@ module.exports = sessionData => {
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
-    sessionData.endTime = Date.now();
+    sessionData.endTime = (new Date()).toISOString();
   }
 };
