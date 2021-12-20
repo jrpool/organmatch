@@ -20,32 +20,16 @@ module.exports = (action, versionData, sessionData)  => {
       const {patients} = turn.hand.current;
       return patients.length - 1;
     }
-    // Decision on which influences to use on which bids.
+    // Decision on which influence on which bid to exercise next.
     else if (action === 'use') {
-      const influences = Array.from(turn.hand.current.influences);
-      const bids = turn.bids.current;
-      let turnCount = 0;
-      const {limits} = versionData;
-      const uses = [];
-      bids.forEach((bid, bidIndex) => {
-        let bidCount = bid.influences.length;
-        let turnBidCount = 0;
-        while (
-          influences.length
-          && bidCount < limits.influences.perBid.max
-          && turnBidCount < limits.influences.perTurnBid.max
-          && turnCount < limits.influences.perTurn.max
-        ) {
-          uses.push({
-            index: influences.length - 1,
-            bidIndex
-          });
-          bidCount++;
-          turnBidCount++;
-          turnCount++;
-        }
-      });
-      return uses;
+      const usable = require('./usable');
+      const usables = usable(versionData, sessionData);
+      if (usables.length) {
+        return usables[usables.length - 1];
+      }
+      else {
+        return [];
+      }
     }
   }
   catch (error) {
