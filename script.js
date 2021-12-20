@@ -15,7 +15,7 @@ if (versionData) {
         ['Dick Rodstein', 'strategy0'],
         ['Lorna Graham', 'strategy0'],
         ['Joe Biden', 'strategy0'],
-        ['Chuck Schumer', 'strategy0']
+        ['Kamala Harris', 'strategy0']
       ]);
       require('./startSession')(sessionData);
       while (sessionData.endTime === null) {

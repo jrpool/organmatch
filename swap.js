@@ -23,8 +23,9 @@ module.exports = (sessionData, index) => {
     turn.hand.current.patients.splice(index, 1);
     player.hand.current.patients.push(drawn);
     turn.hand.current.patients.push(drawn);
-    console.log(`Player ${player.name} replaced a priority-${patient.priority} patient`);
-    console.log(`A priority-${drawn.priority} patient was drawn to replace it`);
+    console.log(
+      `Player ${player.name} surrendered a priority-${patient.priority} and drew a priority-${drawn.priority}`
+    );
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);

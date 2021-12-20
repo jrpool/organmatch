@@ -16,7 +16,7 @@ module.exports = (versionData, sessionData)  => {
     const round = sessionData.rounds[sessionData.rounds.length - 1];
     // If the round has any bids:
     if (round.bids.length) {
-      console.log(`>>> The round has ${round.bids.length} bids`);
+      console.log(`>>> The round had ${round.bids.length} bids`);
       // Identify the round’s winning bid, winner, and next starter.
       const scoreBid = bid => bid.netPriority - bid.queuePosition / 1000;
       round.bids.sort((a, b) => scoreBid(b) - scoreBid(a));
@@ -91,7 +91,7 @@ module.exports = (versionData, sessionData)  => {
       else {
         winnerNews = `won by ${sessionData.winners[0].name}`;
       }
-      console.log(`The session was ${winnerNews}`);
+      console.log(`\nThe session was ${winnerNews}`);
       console.log(`Organs still available: ${sessionData.piles.organs.latent.length}`);
     }
   }
