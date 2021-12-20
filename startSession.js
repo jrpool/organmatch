@@ -21,7 +21,7 @@ module.exports = sessionData => {
     // Start the session.
     sessionData.startTime = (new Date()).toISOString();
     console.log(
-      `Started at ${sessionData.startTime} with ${sessionData.players.length} players:`
+      `Started at ${sessionData.startTime} with ${sessionData.players.length} players, shuffled:`
     );
     console.log(JSON.stringify(sessionData.players.map(player => player.name), null, 2));
   }
