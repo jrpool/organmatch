@@ -42,11 +42,12 @@ module.exports = (versionData, sessionData)  => {
         sessionData.piles.patients.push(losingBid.patient);
         sessionData.piles.influences.push(...losingBid.influences);
         // Draw an influence card.
-        sessionData.players[losingBid.player.index].hand.current.influences.push(
-          sessionData.piles.influences.shift()
-        );
+        const drawn = sessionData.piles.influences.shift();
+        const {impact} = drawn;
+        const impactTerm = impact > 0 ? `+${impact}` : impact;
+        sessionData.players[losingBid.player.index].hand.current.influences.push(drawn);
         console.log(
-          `Bidder ${losingBid.player.name} returned the bid cards and drew an influence card`
+          `Bidder ${losingBid.player.name} returned the bid cards and drew a ${impactTerm} influence card`
         );
       });
       // If the victory ends the session:
