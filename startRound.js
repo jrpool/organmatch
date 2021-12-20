@@ -30,7 +30,7 @@ module.exports = sessionData => {
       bids: []
     });
     const round = sessionData.rounds[sessionData.rounds.length - 1];
-    console.log(`Round ${round.index} started with ${round.organ.group} ${round.organ.organ}`);
+    console.log(`\nRound ${round.index} started with ${round.organ.group} ${round.organ.organ}`);
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);

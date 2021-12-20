@@ -26,6 +26,16 @@ module.exports = (versionData, sessionData)  => {
       round.winner.name = winner.name;
       const {wins} = winner;
       wins.push(round.bids[0]);
+      console.log(`The round winner was ${winner.name}`);
+      // Return any influence cards on the winning bid to the pile.
+      const winInfluenceCount = round.bids[0].influences.length;
+      if (winInfluenceCount) {
+        const winReturnNews = winInfluenceCount === 1
+          ? '1 influence card'
+          : `${winInfluenceCount} influence cards`;
+        console.log(`Winner ${winner.name} returned ${winReturnNews}`);
+      }
+      sessionData.piles.influences.push(...round.bids[0].influences);
       // For each losing bid:
       round.bids.slice(1).forEach(losingBid => {
         // Return its patient and influence cards to the piles.
@@ -39,7 +49,6 @@ module.exports = (versionData, sessionData)  => {
           `Bidder ${losingBid.player.name} returned the bid cards and drew an influence card`
         );
       });
-      console.log(`The round winner was ${winner.name}\n`);
       // If the victory ends the session:
       if (wins.length === versionData.limits.winningRounds.max) {
         // Add the winner to the session data.
