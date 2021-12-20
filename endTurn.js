@@ -8,7 +8,8 @@ module.exports = (versionData, sessionData)  => {
   try {
     const round = sessionData.rounds[sessionData.rounds.length - 1];
     const turn = round.turns[round.turns.length - 1];
-    const strategy = require(`./${sessionData.players[turn.player.index].strategyName}`);
+    const player = sessionData.players[turn.player.index];
+    const strategy = require(`./${player.strategyName}`);
     // If the turn has not yet ended:
     if (! turn.endTime) {
       let index = null;
@@ -27,12 +28,14 @@ module.exports = (versionData, sessionData)  => {
       // As long as the player must choose whether and, if so, how to use influences:
       const usable = require('./usable');
       let usables = usable(versionData, sessionData);
+      console.log(`>>> usables count is ${usables.length}`);
       while (usables.length) {
-        console.log(`Player ${turn.player.name} may exercise influence`);
+        console.log(`Player ${player.name} may exercise influence`);
         // Get the player’s next use choice.
         const useWant = strategy('use', versionData, sessionData);
+        console.log(`>>> Influence choice: ${useWant.handIndex} on ${useWant.bidIndex}`);
         if (useWant) {
-          const bidPlayerName = turn.bid[useWant.bidIndex].player.name;
+          const bidPlayerName = turn.bids.current[useWant.bidIndex].player.name;
           const {impact} = turn.hand.current.influences[useWant.handIndex];
           const impactTerm = impact > 0 ? `+${impact}` : impact;
           console.log(`Proposal to influence the bid of ${bidPlayerName} by ${impactTerm}`);
@@ -40,8 +43,9 @@ module.exports = (versionData, sessionData)  => {
           if (usables.some(
             usable => usable.handIndex === useWant.handIndex && usable.bidIndex === useWant.bidIndex
           )) {
-            // Apply it.
+            // Apply it, removing the influence from the player’s and turn’s current hands.
             const {handIndex} = useWant;
+            player.hand.current.influences.splice(handIndex, handIndex + 1);
             const influence = {
               turnIndex: turn.index,
               player: {
@@ -65,6 +69,7 @@ module.exports = (versionData, sessionData)  => {
             console.log(
               `Permitted. The net priority was ${oldNetPriority} and is now ${newNetPriority}`
             );
+            console.log(`>>> Count of influences in hand: ${turn.hand.current.influences.length}`);
             usables = usable(versionData, sessionData);
           }
           // Otherwise, i.e. if the use choice is prohibited:
