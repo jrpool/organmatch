@@ -72,7 +72,7 @@ module.exports = sessionData => {
     };
     // Add the turn record to the turn records of the round.
     round.turns.push(turn);
-    console.log(`Turn ${turn.index} started`);
+    console.log(`▲ Turn ${turn.index} started`);
     // If the count of matches is 1:
     if (matchIndexes.length === 1) {
       // Bid and replace it and revise the session data accordingly.

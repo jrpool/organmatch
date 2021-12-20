@@ -25,9 +25,12 @@ module.exports = (versionData, sessionData)  => {
       round.winner.name = winner.name;
       const {wins} = winner;
       wins.push(round.bids[0]);
-      // Make losing bidders return the bid patients to the pile and draw influence cards.
+      // For each losing bid:
       round.bids.slice(1).forEach(losingBid => {
+        // Return its patient and influence cards to the piles.
         sessionData.piles.patients.push(losingBid.patient);
+        sessionData.piles.influences.push(...losingBid.influences);
+        // Draw an influence card.
         sessionData.players[losingBid.player.index].hand.current.influences.push(
           sessionData.piles.influences.shift()
         );
