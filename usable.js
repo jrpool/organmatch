@@ -23,11 +23,8 @@ module.exports = (versionData, sessionData) => {
         perBids.forEach((perBid, bidIndex) => {
           // If any player is still permitted to influence it:
           if (perBid.length < limits.perBid.max) {
-            console.log('>>> A bid can be influenced');
             // If the turn’s player is still permitted to influence it:
             const perTurnBidCount = perBid.filter(use => use.player.index === playerIndex).length;
-            console.log(`>>> Count of existing influences on bid: ${perBid.length}`);
-            console.log(`>>> Count of player’s existing influences on bid: ${perTurnBidCount}`);
             if (perTurnBidCount < limits.perTurnBid.max) {
               const perBidImpacts = perBids.map(use => use.impact);
               // For each influence in the player’s hand:

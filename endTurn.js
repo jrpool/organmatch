@@ -28,12 +28,10 @@ module.exports = (versionData, sessionData)  => {
       // As long as the player must choose whether and, if so, how to use influences:
       const usable = require('./usable');
       let usables = usable(versionData, sessionData);
-      console.log(`>>> usables count is ${usables.length}`);
       while (usables.length) {
         console.log(`Player ${player.name} may exercise influence`);
         // Get the player’s next use choice.
         const useWant = strategy('use', versionData, sessionData);
-        console.log(`>>> Influence choice: ${useWant.handIndex} on ${useWant.bidIndex}`);
         if (useWant) {
           const bidPlayerName = turn.bids.current[useWant.bidIndex].player.name;
           const {impact} = turn.hand.current.influences[useWant.handIndex];
@@ -69,7 +67,6 @@ module.exports = (versionData, sessionData)  => {
             console.log(
               `Permitted. The net priority was ${oldNetPriority} and is now ${newNetPriority}`
             );
-            console.log(`>>> Count of influences in hand: ${turn.hand.current.influences.length}`);
             usables = usable(versionData, sessionData);
           }
           // Otherwise, i.e. if the use choice is prohibited:
