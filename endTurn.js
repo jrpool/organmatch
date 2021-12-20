@@ -24,57 +24,54 @@ module.exports = (versionData, sessionData)  => {
         index = strategy('swap', versionData, sessionData);
         require('./swap')(sessionData, index);
       }
-      // If the player must choose whether and, if so, how to use influences:
-      if (turn.hand.current.influences.length) {
-        // Get the player’s choices, constrained by the version limits.
-        const limits = versionData.limits.influences;
-        const moreAllowed = {
-          perTurn: limits.perTurn.max,
-          perBid: limits.perBid.max,
-          perTurnBid: limits.perTurnBid.max
-        };
-        const uses = strategy('use', versionData, sessionData)
-        .slice(0, moreAllowed.perTurn)
-        .filter(use => {
-          const {bidIndex} = use;
-          const bidPriorCount = turn.bids.current[bidIndex].influences.length;
-          if (bidPriorCount < moreAllowed.perBid) {
-            if (moreAllowed.perTurnBid) {
-              moreAllowed.perTurnBid--;
-              return true;
-            }
-          }
-          return false;
-        });
-        // Apply the choices.
-        uses.forEach(use => {
-          const influence = {
-            turnIndex: turn.index,
-            player: {
-              index: turn.player.index,
-              name: turn.player.name
-            },
-            influence: turn.hand.current.influences.slice(use.index, use.index + 1)[0]
-          };
-          const roundBid = round.bids[use.bidIndex];
-          const turnBid = turn.bids.current[use.bidIndex];
-          roundBid.influences.push(influence);
-          turnBid.influences.push(influence);
-          const oldNetPriority = roundBid.netPriority;
-          const {impact} = influence.influence;
-          const priorityLimits = versionData.limits.priorities;
-          const newNetPriority = Math.min(
-            priorityLimits.max, Math.max(priorityLimits.min, oldNetPriority + impact)
-          );
-          roundBid.netPriority += impact;
-          turnBid.netPriority += impact;
-          turn.hand.changes.influences.push(influence.influence);
+      // As long as the player must choose whether and, if so, how to use influences:
+      const usable = require('./usable');
+      let usables = usable(versionData, sessionData);
+      while (usables.length) {
+        console.log(`Player ${turn.player.name} may exercise influence`);
+        // Get the player’s next use choice.
+        const useWant = strategy('use', versionData, sessionData);
+        if (useWant) {
+          const bidPlayerName = turn.bid[useWant.bidIndex].player.name;
+          const {impact} = turn.hand.current.influences[useWant.handIndex];
           const impactTerm = impact > 0 ? `+${impact}` : impact;
-          console.log(
-            `Player ${turn.player.name} influenced the ${turnBid.player.name} bid by ${impactTerm}`
-          );
-          console.log(`Its net priority was ${oldNetPriority} and is now ${newNetPriority}`);
-        });
+          console.log(`Proposal to influence the bid of ${bidPlayerName} by ${impactTerm}`);
+          // If it is permitted:
+          if (usables.some(
+            usable => usable.handIndex === useWant.handIndex && usable.bidIndex === useWant.bidIndex
+          )) {
+            // Apply it.
+            const {handIndex} = useWant;
+            const influence = {
+              turnIndex: turn.index,
+              player: {
+                index: turn.player.index,
+                name: turn.player.name
+              },
+              influence: turn.hand.current.influences.splice(handIndex, handIndex + 1)[0]
+            };
+            const roundBid = round.bids[useWant.bidIndex];
+            const turnBid = turn.bids.current[useWant.bidIndex];
+            roundBid.influences.push(influence);
+            turnBid.influences.push(influence);
+            const oldNetPriority = roundBid.netPriority;
+            const priorityLimits = versionData.limits.priorities;
+            const newNetPriority = Math.min(
+              priorityLimits.max, Math.max(priorityLimits.min, oldNetPriority + impact)
+            );
+            roundBid.netPriority += impact;
+            turnBid.netPriority += impact;
+            turn.hand.changes.influences.push(influence.influence);
+            console.log(
+              `Permitted. The net priority was ${oldNetPriority} and is now ${newNetPriority}`
+            );
+            usables = usable(versionData, sessionData);
+          }
+          // Otherwise, i.e. if the use choice is prohibited:
+          else {
+            console.log('Prohibited');
+          }
+        }
       }
       turn.endTime = (new Date()).toISOString();
     }
