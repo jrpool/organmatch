@@ -57,15 +57,8 @@ module.exports = (versionData, sessionData)  => {
             const bid = round.bids[useWant.bidIndex];
             // Revise the bid accordingly.
             bid.influences.push(influence);
-            const totalImpact = bid.influences.reduce(
-              (total, currentUse) => total + currentUse.influence.impact, 0
-            );
-            const protoPriority = bid.patient.priority + totalImpact;
-            const priorityLimits = versionData.limits.priorities;
             const oldNetPriority = bid.netPriority;
-            bid.netPriority = Math.min(
-              priorityLimits.max, Math.max(priorityLimits.min, protoPriority)
-            );
+            bid.netPriority += influence.influence.impact;
             console.log(
               `Permitted. The net priority was ${oldNetPriority} and is now ${bid.netPriority}`
             );
