@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Susan Colowick and Jonathan Robert Pool">
+    <meta name="creator" content="Susan Colowick and Jonathan Robert Pool">
+    <meta name="publisher" name="Jonathan Robert Pool">
+    <meta name="description" content="game of Organ Match">
+    <meta name="keywords" content="game,rationing,medicine,ethics,life,death,organ transplantation">
+    <title>Session status | OrganMatch</title>
+    __style__
+    <script id="params" type="application/json">__params__</script>
+    <script src="sessionStatus.js" defer></script>
+  </head>
+  <body class="cardlet">
+    <main>
+      <header>
+        <h1>OrganMatch: Session status</h1>
+        <p class="summary">Your patient&rsquo;s life depends on you&mdash;and luck</p>
+      </header>
+      <section id="section">
+        <p>Session <span id="sessionCode"></span> has been created.</p>
+        <p>Players can join the session at <a id="joinLink"></a>.</p>
+        <p>You may start the session when there are 3 to 8 players.</p>
+        <p>Players who have joined:</p>
+        <ul id="playerList"></ul>
+        <form id="startSession" role="status" class="invisible">
+          <p><button class="bb">Start session now</button></p>
+        </form>
+        <p><a href="index.html">OrganMatch home</a></p>
+      </section>
+    </main>
+  </body>
+</html>
