@@ -5,6 +5,8 @@
 
 // ########## IMPORTS
 
+// Module to keep secrets local.
+require('dotenv').config();
 // Module to access files.
 const fs = require('fs').promises;
 // Module to create a web server.
