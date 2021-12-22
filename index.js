@@ -8,7 +8,7 @@
 // Module to keep secrets local.
 require('dotenv').config();
 // Module to access files.
-const fs = require('fs').promises;
+const fs = require('fs');
 // Module to create a web server.
 const http = require('http');
 // Module to make HTTPS requests.
@@ -36,20 +36,27 @@ const serveTemplate = (name, params, res) => {
   res.write(page);
   res.end();
 };
+// Serves a script.
+const serveScript = (name, res) => {
+  res.setHeader('Content-Type', 'text/javascript');
+  const script = fs.readFileSync(name, 'utf8');
+  res.write(script);
+  res.end();
+};
 
 // ########## SERVER
 
 const {PROTOCOL, HOST, PORT} = process.env;
 const portSuffix = `:${PORT}` || '';
 const docRoot = `${PROTOCOL}://${HOST}${portSuffix}`;
+// Initialize the data on all current sessions.
 const sessions = {};
+// Get data on version 01.
+const versionData = require('./getVersion')('01');
 // Handles requests.
 const requestHandler = (req, res) => {
   const {method} = req;
   const bodyParts = [];
-  // Get data on version 01.
-  const versionData = require('./getVersion')('01');
-  // Initialize data on all current sessions.
   req.on('error', err => {
     console.error(`${err.message}\n${err.stack}`);
   })
@@ -57,31 +64,44 @@ const requestHandler = (req, res) => {
     bodyParts.push(chunk);
   })
   .on('end', () => {
-    const {url} = req;
+    let {url} = req;
+    if (url.startsWith('/organmatch')) {
+      url = url.replace(/^\/organmatch/, '') || '/';
+    }
+    if (url.endsWith('?')){
+      url = url.substring(0, url.length - 1);
+    }
     // If the request contained no data:
     if (method === 'GET') {
-      // If the home page was requested:
-      if (url === '/home') {
+      // If a script was requested:
+      if (url.endsWith('.js')) {
+        serveScript(url.slice(1), res);
+      }
+      // Otherwise, if the home page was requested:
+      else if (['/home', '/'].includes(url)) {
         // Serve it.
-        serveTemplate('home', {docRoot}, res);
+        serveTemplate('home', {}, res);
       }
       // Otherwise, if the game documentation was requested:
       else if (url === '/about') {
         // Serve it.
-        serveTemplate('about', {docRoot}, res);
+        serveTemplate('about', {}, res);
       }
       // Otherwise, if the session-creation form was requested:
       else if (url === '/createForm') {
         // Serve it.
-        serveTemplate('createSession', {docRoot}, res);
+        serveTemplate('createForm', {docRoot}, res);
       }
       // Otherwise, if the session-joining form was requested:
       else if (url === '/joinForm') {
         // Serve it.
         serveTemplate('joinForm', {docRoot}, res);
       }
-      // Otherwise, if a session creation was requested:
-      else if (url === '/createSession') {
+    }
+    // Otherwise, if the request submitted data:
+    else if (method === 'POST') {
+      // If a session creation was requested:
+      if (url === '/createSession') {
         // Get a code for the session.
         const sessionData = require('./createSession')(versionData);
         const {sessionCode} = sessionData;
@@ -91,14 +111,10 @@ const requestHandler = (req, res) => {
         // Serve a session-status page.
         serveTemplate('leaderStatus', {docRoot, sessionCode}, res);
       }
-    }
-    // Otherwise, if the request submitted data:
-    else if (method === 'POST') {
-      // If the user asked to join a session:
-      if (url === '/joinSession') {
+      // Otherwise, if the user asked to join a session:
+      else if (url === '/joinSession') {
         console.log('A user asked to join a session');
       }
-      console.log('Method is POST');
     }
   });
 };

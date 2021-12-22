@@ -7,4 +7,3 @@ if (queryParams.has('sessionCode')) {
   document.getElementById('sessionCode').value = sessionCode;
 }
 document.getElementById('joinSession').action = `${docRoot}/joinSession`;
-document.getElementById('homeLink').href = `${docRoot}/home`;
