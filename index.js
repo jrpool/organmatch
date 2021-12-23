@@ -97,6 +97,13 @@ const requestHandler = (req, res) => {
         // Serve it.
         serveTemplate('joinForm', {docRoot}, res);
       }
+      // Otherwise, if the user asked to join a session:
+      else if (url.startsWith('/joinSession')) {
+        // Serve a session-status page.
+        const params = (new URL(url, docRoot)).searchParams;
+        const sessionCode = params.has('sessionCode') ? params.get('sessionCode') : '';
+        serveTemplate('playerStatus', {docRoot, sessionCode}, res);
+      }
     }
     // Otherwise, if the request submitted data:
     else if (method === 'POST') {
@@ -107,13 +114,8 @@ const requestHandler = (req, res) => {
         const {sessionCode} = sessionData;
         // Add the session data to the data on all current sessions.
         sessions[sessionCode] = sessionData;
-        console.log(`Created. Count of current sessions: ${Object.keys(sessions).length}`);
         // Serve a session-status page.
         serveTemplate('leaderStatus', {docRoot, sessionCode}, res);
-      }
-      // Otherwise, if the user asked to join a session:
-      else if (url === '/joinSession') {
-        console.log('A user asked to join a session');
       }
     }
   });
