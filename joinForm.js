@@ -1,9 +1,7 @@
-// createSession
-const params = JSON.parse(document.getElementById('params').textContent);
-const {docRoot} = params;
-const queryParams = URL.searchParams(document.url).entries;
+// joinForm
+const queryParams = (new URL(document.URL)).searchParams;
 if (queryParams.has('sessionCode')) {
   const sessionCode = queryParams.get('sessionCode');
   document.getElementById('sessionCode').value = sessionCode;
+
 }
-document.getElementById('joinSession').action = `${docRoot}/joinSession`;

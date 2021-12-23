@@ -13,9 +13,9 @@ const fs = require('fs');
 const http = require('http');
 // Module to make HTTPS requests.
 const https = require('https');
-/*
 // Module to parse request bodies.
 const {parse} = require('querystring');
+/*
 // Module to create a websockets server.
 const ws = require('ws');
 */
@@ -93,16 +93,9 @@ const requestHandler = (req, res) => {
         serveTemplate('createForm', {docRoot}, res);
       }
       // Otherwise, if the session-joining form was requested:
-      else if (url === '/joinForm') {
+      else if (url.startsWith('/joinForm')) {
         // Serve it.
         serveTemplate('joinForm', {docRoot}, res);
-      }
-      // Otherwise, if the user asked to join a session:
-      else if (url.startsWith('/joinSession')) {
-        // Serve a session-status page.
-        const params = (new URL(url, docRoot)).searchParams;
-        const sessionCode = params.has('sessionCode') ? params.get('sessionCode') : '';
-        serveTemplate('playerStatus', {docRoot, sessionCode}, res);
       }
     }
     // Otherwise, if the request submitted data:
@@ -116,6 +109,13 @@ const requestHandler = (req, res) => {
         sessions[sessionCode] = sessionData;
         // Serve a session-status page.
         serveTemplate('leaderStatus', {docRoot, sessionCode}, res);
+      }
+      // Otherwise, if the user asked to join a session:
+      else if (url.startsWith('/joinSession')) {
+        // Serve a session-status page.
+        const params = (new URL(url, docRoot)).searchParams;
+        const sessionCode = params.has('sessionCode') ? params.get('sessionCode') : '';
+        serveTemplate('playerStatus', {docRoot, sessionCode}, res);
       }
     }
   });

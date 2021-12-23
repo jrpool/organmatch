@@ -10,7 +10,6 @@
     <meta name="keywords" content="game,rationing,medicine,ethics,life,death,organ transplantation">
     <title>Join a session | OrganMatch</title>
     __style__
-    <script id="params" type="application/json">__params__</script>
     <script src="joinForm.js" defer></script>
   </head>
   <body class="cardlet">
@@ -20,13 +19,13 @@
         <p class="summary">Your patient&rsquo;s life depends on you&mdash;and luck</p>
       </header>
       <p>Enter the session code and your name (both required). Then press the <q>Join session</q> button to join a session of OrganMatch. You will be able to start playing after the organizer starts the session.</p>
-      <form id="joinSession" method="post">
+      <form action="joinSession" method="post">
         <p><label>
           Session code
-          <input id="sessionCode" name="sessionCode" width="10" maxlength="10" required>
+          <input id="sessionCode" name="sessionCode" size="10" maxlength="10" required>
         </label></p>
         <p><label>
-          Your name <input name="name" width="40" maxlength="40" autocomplete="name" required>
+          Your name <input name="name" size="40" maxlength="40" autocomplete="name" required>
         </label></p>
         <p><button class="bb">Join session</button></p>
       </form>
