@@ -10,9 +10,7 @@ require('dotenv').config();
 // Module to access files.
 const fs = require('fs');
 // Module to create a web server.
-const http = require('http');
-// Module to make HTTPS requests.
-const https = require('https');
+const http2 = require('http2');
 
 // ########## GLOBAL CONSTANTS
 
@@ -41,7 +39,6 @@ const serveScript = (name, res) => {
 const serveEventStart = res => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
 };
 // Returns an event-stream message reporting an incremented total.
 const sendEventMsg = (res, eventName, data) => {
@@ -52,9 +49,9 @@ const sendEventMsg = (res, eventName, data) => {
 
 // ########## SERVER
 
-const {PROTOCOL, HOST, PORT} = process.env;
+const {HOST, PORT} = process.env;
 const portSuffix = `:${PORT}` || '';
-const docRoot = `${PROTOCOL}://${HOST}${portSuffix}`;
+const docRoot = `https://${HOST}${portSuffix}`;
 // Initialize the data on all current sessions.
 const sessions = {};
 // Initialize the SSE responses for player lists.
@@ -158,25 +155,18 @@ const requestHandler = (req, res) => {
     }
   });
 };
-if (PROTOCOL === 'https') {
-  const key = fs.readFileSync(process.env.KEY);
-  const cert = fs.readFileSync(process.env.CERT);
-  if (key && cert) {
-    const server = https.createServer(
-      {
-        key,
-        cert
-      },
-      requestHandler
-    );
-    if (server) {
-      server.listen(PORT);
-      console.log(`OrganMatch server listening on port ${PORT} (https://${HOST}/organmatch)`);
-    }
+const key = fs.readFileSync(process.env.KEY);
+const cert = fs.readFileSync(process.env.CERT);
+if (key && cert) {
+  const server = http2.createSecureServer(
+    {
+      key,
+      cert
+    },
+    requestHandler
+  );
+  if (server) {
+    server.listen(PORT);
+    console.log(`OrganMatch server listening on port ${PORT} (https://${HOST}/organmatch)`);
   }
-}
-else if (PROTOCOL === 'http') {
-  const server = http.createServer(requestHandler);
-  server.listen(PORT);
-  console.log(`OrganMatch server listening on http://${HOST}`);
 }
