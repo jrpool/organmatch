@@ -140,13 +140,13 @@ const requestHandler = (req, res) => {
           // Identify a list of the players who have joined.
           const playerNames = sessions[sessionCode].players.map(player => player.name);
           const playerListItems = playerNames.map(name => `<li>${name}</li>`);
-          const playerList = playerListItems.join('\n');
+          const nowPlayerList = playerListItems.join('\n');
           // Send the new player’s name to all existing players and the leader.
           newPlayerStreams.forEach(stream => {
             sendEventMsg(stream, null, name);
           });
           // Serve a session-status page.
-          serveTemplate('playerStatus', {sessionCode, playerList}, res);
+          serveTemplate('playerStatus', {sessionCode, nowPlayerList}, res);
         }
         // Otherwise, i.e. if the session code is invalid:
         else {

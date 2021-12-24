@@ -1,6 +1,14 @@
 // playerStatus
 const params = JSON.parse(document.getElementById('params').textContent);
-const {sessionCode, playerList} = params;
+const {sessionCode, nowPlayerList} = params;
 console.log(sessionCode);
 document.getElementById('sessionCode').textContent = sessionCode;
-document.getElementById('playerList').innerHTML = playerList;
+const playerList = document.getElementById('playerList');
+playerList.innerHTML = nowPlayerList;
+// Add players to the list when they join.
+const playerLister = new EventSource('/playerJoined');
+playerLister.onmessage = event => {
+  const newPlayer = document.createElement('li');
+  newPlayer.textContent = event.data;
+  playerList.appendChild(newPlayer);
+};
