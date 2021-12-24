@@ -10,6 +10,7 @@
     <meta name="keywords" content="game,rationing,medicine,ethics,life,death,organ transplantation">
     <title>Session status | OrganMatch</title>
     __style__
+    <script id="params" type="application/json">__params__</script>
     <script src="playerStatus.js" defer></script>
   </head>
   <body class="cardlet">
@@ -18,14 +19,12 @@
         <h1>OrganMatch: Session status</h1>
         <p class="summary">Your patient&rsquo;s life depends on you&mdash;and luck</p>
       </header>
-      <section id="section">
-        <p>You have joined session <span id="sessionCode"></span>.</p>
-        <p>You can begin to play when the organizer starts the session.</p>
-        <p>The allowed number of players is from 3 to 8.</p>
-        <p>Players who have joined:</p>
-        <ul id="playerList"></ul>
-        <p><a href="/">OrganMatch home</a></p>
-      </section>
+      <p>You have joined session <span id="sessionCode"></span>.</p>
+      <p>You can begin to play when the organizer starts the session.</p>
+      <p>The allowed number of players is from 3 to 8.</p>
+      <h2>Players who have joined</h2>
+      <ol id="playerList" class="listbox" aria-live="polite"></ol>
+      <p><a href="/">OrganMatch home</a></p>
     </main>
   </body>
 </html>

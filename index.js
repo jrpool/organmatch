@@ -13,12 +13,6 @@ const fs = require('fs');
 const http = require('http');
 // Module to make HTTPS requests.
 const https = require('https');
-// Module to parse request bodies.
-const {parse} = require('querystring');
-/*
-// Module to create a websockets server.
-const ws = require('ws');
-*/
 
 // ########## GLOBAL CONSTANTS
 
@@ -43,6 +37,18 @@ const serveScript = (name, res) => {
   res.write(script);
   res.end();
 };
+// Prepares to serve an event stream.
+const serveEventStart = res => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+};
+// Returns an event-stream message reporting an incremented total.
+const sendEventMsg = (res, eventName, data) => {
+  const eventLine = eventName ? `event: ${eventName}\n` : '';
+  const msg = `${eventLine}data: ${data}\n\n`;
+  res.write(msg);
+};
 
 // ########## SERVER
 
@@ -51,6 +57,8 @@ const portSuffix = `:${PORT}` || '';
 const docRoot = `${PROTOCOL}://${HOST}${portSuffix}`;
 // Initialize the data on all current sessions.
 const sessions = {};
+// Initialize the SSE responses for player lists.
+const newPlayerStreams = [];
 // Get data on version 01.
 const versionData = require('./getVersion')('01');
 // Handles requests.
@@ -97,25 +105,54 @@ const requestHandler = (req, res) => {
         // Serve it.
         serveTemplate('joinForm', {docRoot}, res);
       }
+      // Otherwise, if a player-list event stream was requested:
+      else if (url === '/playerJoined') {
+        // Send the stream headers to the client.
+        serveEventStart(res);
+        // Add the response to the list of new-player streams.
+        newPlayerStreams.push(res);
+      }
     }
     // Otherwise, if the request submitted data:
     else if (method === 'POST') {
+      // Get the data as a query string.
+      const queryString = Buffer.concat(bodyParts).toString();
+      // Parse it into a URLSearchParams object.
+      const params = new URLSearchParams(queryString);
       // If a session creation was requested:
       if (url === '/createSession') {
-        // Get a code for the session.
+        // Create a session and get its data.
         const sessionData = require('./createSession')(versionData);
         const {sessionCode} = sessionData;
-        // Add the session data to the data on all current sessions.
+        // Add them to the data on all current sessions.
         sessions[sessionCode] = sessionData;
         // Serve a session-status page.
         serveTemplate('leaderStatus', {docRoot, sessionCode}, res);
       }
       // Otherwise, if the user asked to join a session:
-      else if (url.startsWith('/joinSession')) {
-        // Serve a session-status page.
-        const params = (new URL(url, docRoot)).searchParams;
+      else if (url === '/joinSession') {
+        // If the session code is valid:
         const sessionCode = params.has('sessionCode') ? params.get('sessionCode') : '';
-        serveTemplate('playerStatus', {docRoot, sessionCode}, res);
+        const name = params.get('name');
+        if (Object.values(sessions).map(session => session.sessionCode).includes(sessionCode)) {
+          // Add the player to the session data.
+          require('./addPlayer')(versionData, sessions[sessionCode], name, 'strategy0');
+          // Identify a list of the players who have joined.
+          const playerNames = sessions[sessionCode].players.map(player => player.name);
+          const playerListItems = playerNames.map(name => `<li>${name}</li>`);
+          const playerList = playerListItems.join('\n');
+          // Send the new player’s name to all existing players and the leader.
+          newPlayerStreams.forEach(stream => {
+            sendEventMsg(stream, null, name);
+          });
+          // Serve a session-status page.
+          serveTemplate('playerStatus', {sessionCode, playerList}, res);
+        }
+        // Otherwise, i.e. if the session code is invalid:
+        else {
+          // Serve an error page.
+          serveTemplate('errorSessionCode', {}, res);
+        }
       }
     }
   });

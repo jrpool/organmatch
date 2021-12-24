@@ -1,9 +1,9 @@
 /*
   addPlayer
-  Adds a player to a session of OrganMatch and returns the session data.
+  Adds a player to a session of OrganMatchata.
 */
 // FUNCTIONS
-// Adds a player to a session and returns the session data.
+// Adds a player to a session.
 module.exports = (versionData, sessionData, playerName, strategyName) => {
   try {
     // Increment the player count.
