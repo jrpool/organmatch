@@ -124,10 +124,11 @@ const requestHandler = (req, res) => {
         // Create a session and get its data.
         const sessionData = require('./createSession')(versionData);
         const {sessionCode} = sessionData;
+        const minPlayerCount = versionData.limits.playerCount.min;
         // Add them to the data on all current sessions.
         sessions[sessionCode] = sessionData;
         // Serve a session-status page.
-        serveTemplate('leaderStatus', {docRoot, sessionCode}, res);
+        serveTemplate('leaderStatus', {minPlayerCount, docRoot, sessionCode}, res);
       }
       // Otherwise, if the user asked to join a session:
       else if (url === '/joinSession') {
