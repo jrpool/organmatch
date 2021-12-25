@@ -119,7 +119,7 @@ const requestHandler = (req, res) => {
       const USParams = new URLSearchParams(queryString);
       // Convert it to an object.
       const params = {};
-      USParams.entries().forEach(entry => {
+      Array.from(USParams.entries()).forEach(entry => {
         params[entry[0]] = entry[1];
       });
       // If a session creation was requested:
