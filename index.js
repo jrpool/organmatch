@@ -198,8 +198,9 @@ const requestHandler = (req, res) => {
             // Add the player to the session data.
             const playerID = String.fromCharCode(++playerIDCode);
             require('./addPlayer')(versionData, sessionData, playerID, playerName, 'strategy0');
-            const playerListItems = playerNames.map(
-              playerName => `<li>[<span class="mono">${playerID}]</span ${playerName}</li>`
+            const playerIDs = Object.keys(playerData);
+            const playerListItems = playerIDs.map(
+              playerID => `<li>[<span class="mono">${playerID}</span>] ${playerData[playerID]}</li>`
             );
             const playerList = playerListItems.join('\n');
             // Send the new player’s name to all other players and the leader.
