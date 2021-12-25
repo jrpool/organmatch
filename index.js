@@ -102,7 +102,7 @@ const requestHandler = (req, res) => {
     // If the request method was GET:
     if (method === 'GET') {
       // Get any query parameters as an object.
-      const params = parse((new URL(url)).search);
+      const params = parse((new URL(`${process.env.HOST}:${process.env.PORT}url`)).search);
       // If a script was requested:
       if (url.endsWith('.js')) {
         serveScript(url.slice(1), res);
