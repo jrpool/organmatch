@@ -102,7 +102,8 @@ const requestHandler = (req, res) => {
     // If the request method was GET:
     if (method === 'GET') {
       // Get any query parameters as an object.
-      const params = parse((new URL(`${process.env.HOST}:${process.env.PORT}url`)).search);
+      const absURL = `https://${process.env.HOST}:${process.env.PORT}${url}`;
+      const params = parse((new URL(absURL)).search);
       // If a script was requested:
       if (url.endsWith('.js')) {
         serveScript(url.slice(1), res);
@@ -133,19 +134,20 @@ const requestHandler = (req, res) => {
         // Send the stream headers to the client.
         serveEventStart(res);
         // Add the request and response to the new-player streams.
-        newPlayerStreams[userID] = res;
+        newPlayerStreams[sessionCode][userID] = res;
         // If the user later closes the request:
         req.on('close', () => {
+          console.log(`User ${userID} in session ${sessionCode} closed the connection`);
           // Stop sending new player notices to the user.
-          delete newPlayerStreams[userID];
+          delete newPlayerStreams[sessionCode][userID];
           // Send a revised player list to all remaining players and the leader.
           const playerData = getPlayers(sessionCode);
           const playerList = Object
           .keys(playerData)
           .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
           .join('\n');
-          Object.keys(newPlayerStreams).forEach(streamID => {
-            sendEventMsg(newPlayerStreams[streamID].res, playerList, 'revision');
+          Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
+            sendEventMsg(newPlayerStreams[sessionCode][userID].res, playerList, 'revision');
           });
         });
       }
@@ -162,6 +164,8 @@ const requestHandler = (req, res) => {
         const minPlayerCount = versionData.limits.playerCount.min;
         // Add them to the data on all current sessions.
         sessions[sessionCode] = sessionData;
+        // Initialize the new-player streams for the session.
+        newPlayerStreams[sessionCode] = {};
         // Serve a session-status page.
         serveTemplate('leaderStatus', {minPlayerCount, docRoot, sessionCode}, res);
       }
@@ -204,8 +208,9 @@ const requestHandler = (req, res) => {
             );
             const playerList = playerListItems.join('\n');
             // Send the new player’s name to all other players and the leader.
-            Object.keys(newPlayerStreams).forEach(streamID => {
-              sendEventMsg(newPlayerStreams[streamID].res, playerName);
+            console.log(`Keys of NPS are ${Object.keys(newPlayerStreams)}`);
+            Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
+              sendEventMsg(newPlayerStreams[sessionCode][userID].res, playerName);
             });
             // Serve a session-status page.
             serveTemplate('playerStatus', {sessionCode, playerList, playerID, playerName}, res);
