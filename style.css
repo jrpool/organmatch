@@ -74,6 +74,9 @@ div.figs {
   justify-content: center;
   flex-wrap: wrap;
 }
+.error {
+  border: 0.2rem solid #f00;
+}
 figure {
   display: inline-block;
 }
