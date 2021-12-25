@@ -58,7 +58,7 @@ const sessions = {};
 // Initialize the character code of the most recently joined player.
 let playerIDCode = 64;
 // Initialize the SSE responses for player lists.
-const newPlayerStreams = [];
+const newPlayerStreams = {};
 // Get data on version 01.
 const versionData = require('./getVersion')('01');
 // Parses a query string into a query-parameters object.
