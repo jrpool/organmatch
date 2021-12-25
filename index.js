@@ -171,7 +171,7 @@ const requestHandler = (req, res) => {
               sendEventMsg(stream, name);
             });
             // Serve a session-status page. It will add itself to newPlayerStreams.
-            serveTemplate('playerStatus', {sessionCode, playerList}, res);
+            serveTemplate('playerStatus', {sessionCode, playerList, name}, res);
           }
         }
         // Otherwise, i.e. if the session code is invalid:
