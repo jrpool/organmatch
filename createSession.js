@@ -147,7 +147,7 @@ module.exports = versionData => {
         patients: [],
         influences: []
       },
-      players: [],
+      players: {},
       rounds: []
     };
     // Populate the card piles in the session data.

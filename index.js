@@ -55,10 +55,32 @@ const portSuffix = `:${PORT}` || '';
 const docRoot = `https://${HOST}${portSuffix}`;
 // Initialize the data on all current sessions.
 const sessions = {};
+// Initialize the character code of the most recently joined player.
+let playerIDCode = 64;
 // Initialize the SSE responses for player lists.
 const newPlayerStreams = [];
 // Get data on version 01.
 const versionData = require('./getVersion')('01');
+// Parses a query string into a query-parameters object.
+const parse = queryString => {
+  // Parse the query string into a URLSearchParams object.
+  const USParams = new URLSearchParams(queryString);
+  // Convert it to an object.
+  const params = {};
+  Array.from(USParams.entries()).forEach(entry => {
+    params[entry[0]] = entry[1];
+  });
+  return params;
+};
+// Returns an object describing player IDs and names.
+const getPlayers = sessionData => {
+  const data = {};
+  Object.values(sessionData.players).forEach(player => {
+    const {playerID, playerName} = player;
+    data[playerID] = playerName;
+  });
+  return data;
+};
 // Handles requests.
 const requestHandler = (req, res) => {
   const {method} = req;
@@ -77,8 +99,10 @@ const requestHandler = (req, res) => {
     if (url.endsWith('?')){
       url = url.substring(0, url.length - 1);
     }
-    // If the request contained no data:
+    // If the request method was GET:
     if (method === 'GET') {
+      // Get any query parameters as an object.
+      const params = parse((new URL(url)).search);
       // If a script was requested:
       if (url.endsWith('.js')) {
         serveScript(url.slice(1), res);
@@ -96,32 +120,40 @@ const requestHandler = (req, res) => {
       // Otherwise, if the session-creation form was requested:
       else if (url === '/createForm') {
         // Serve it.
-        serveTemplate('createForm', {docRoot}, res);
+        serveTemplate('createForm', {}, res);
       }
       // Otherwise, if the session-joining form was requested:
       else if (url.startsWith('/joinForm')) {
         // Serve it.
-        serveTemplate('joinForm', {docRoot}, res);
+        serveTemplate('joinForm', {}, res);
       }
-      // Otherwise, if a player-list event stream was requested:
-      else if (url === '/playerJoined') {
+      // Otherwise, if adding a player to the new-player stream was requested:
+      else if (url.startsWith('/playerJoined')) {
+        const {sessionCode, userID} = params;
         // Send the stream headers to the client.
         serveEventStart(res);
-        // Add the response to the new-player streams.
-        newPlayerStreams.push(res);
+        // Add the request and response to the new-player streams.
+        newPlayerStreams[userID] = res;
+        // If the user later closes the request:
+        req.on('close', () => {
+          // Stop sending new player notices to the user.
+          delete newPlayerStreams[userID];
+          // Send a revised player list to all remaining players and the leader.
+          const playerData = getPlayers(sessionCode);
+          const playerList = Object
+          .keys(playerData)
+          .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
+          .join('\n');
+          Object.keys(newPlayerStreams).forEach(streamID => {
+            sendEventMsg(newPlayerStreams[streamID].res, playerList, 'revision');
+          });
+        });
       }
     }
-    // Otherwise, if the request submitted data:
+    // Otherwise, if the request method was POST:
     else if (method === 'POST') {
-      // Get the data as a query string.
-      const queryString = Buffer.concat(bodyParts).toString();
-      // Parse it into a URLSearchParams object.
-      const USParams = new URLSearchParams(queryString);
-      // Convert it to an object.
-      const params = {};
-      Array.from(USParams.entries()).forEach(entry => {
-        params[entry[0]] = entry[1];
-      });
+      // Get the data as an object.
+      const params = parse(Buffer.concat(bodyParts).toString());
       // If a session creation was requested:
       if (url === '/createSession') {
         // Create a session and get its data.
@@ -135,17 +167,18 @@ const requestHandler = (req, res) => {
       }
       // Otherwise, if the user asked to join a session:
       else if (url === '/joinSession') {
-        const {sessionCode, name} = params;
+        const {sessionCode, playerName} = params;
         // If the session code is valid:
         const sessionCodeOK = Object.keys(sessions).includes(sessionCode);
         if (sessionCodeOK) {
           const sessionData = sessions[sessionCode];
           // If the user is already a player:
-          const playerNames = sessionData.players.map(player => player.name);
-          if (playerNames.includes(name)) {
+          const playerData = getPlayers(sessionData);
+          const playerNames = Object.values(playerData);
+          if (playerNames.includes(playerName)) {
             // Serve an error page.
             serveTemplate(
-              'error', {error: `${name} is already a player in session ${sessionCode}`}, res
+              'error', {error: `${playerName} is already a player in session ${sessionCode}`}, res
             );
           }
           // Otherwise, if no more players are permitted:
@@ -163,15 +196,18 @@ const requestHandler = (req, res) => {
           // Otherwise, i.e. if the user is permitted to join the session:
           else {
             // Add the player to the session data.
-            require('./addPlayer')(versionData, sessionData, name, 'strategy0');
-            const playerListItems = playerNames.map(name => `<li>${name}</li>`);
+            const playerID = String.fromCharCode(++playerIDCode);
+            require('./addPlayer')(versionData, sessionData, playerID, playerName, 'strategy0');
+            const playerListItems = playerNames.map(
+              playerName => `<li>[<span class="mono">${playerID}]</span ${playerName}</li>`
+            );
             const playerList = playerListItems.join('\n');
             // Send the new player’s name to all other players and the leader.
-            newPlayerStreams.forEach(stream => {
-              sendEventMsg(stream, name);
+            Object.keys(newPlayerStreams).forEach(streamID => {
+              sendEventMsg(newPlayerStreams[streamID].res, playerName);
             });
-            // Serve a session-status page. It will add itself to newPlayerStreams.
-            serveTemplate('playerStatus', {sessionCode, playerList, name}, res);
+            // Serve a session-status page.
+            serveTemplate('playerStatus', {sessionCode, playerList, playerID, playerName}, res);
           }
         }
         // Otherwise, i.e. if the session code is invalid:

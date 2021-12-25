@@ -53,11 +53,6 @@ body.card {
 body.cardlet {
   font-size: 1.5rem;
 }
-.listbox {
-  min-height: 1rem;
-  padding: 0 0.5rem;
-  border: 0.2rem solid #666;
-}
 button {
   min-height: 44px;
   min-width: 44px;
@@ -137,6 +132,11 @@ img {
 }
 .invisible {
   display: none;
+}
+.listbox {
+  min-height: 1rem;
+  padding: 0 0.5rem;
+  border: 0.2rem solid #666;
 }
 p.date {
   margin-bottom: 0;

@@ -4,15 +4,14 @@
 */
 // FUNCTIONS
 // Adds a player to a session.
-module.exports = (versionData, sessionData, playerName, strategyName) => {
+module.exports = (versionData, sessionData, playerKey, playerName, strategyName) => {
   try {
     // Increment the player count.
     sessionData.playersJoined++;
     // Remove patients from the patient pile.
     const patients = sessionData.piles.patients.splice(0, versionData.handSize.count);
     // Add data on the player to the session data.
-    sessionData.players.push({
-      index: sessionData.players.length,
+    sessionData.players[playerKey] = {
       name: playerName,
       joinTime: (new Date()).toISOString(),
       strategyName,
@@ -31,7 +30,7 @@ module.exports = (versionData, sessionData, playerName, strategyName) => {
         }
       },
       wins: []
-    });
+    };
     console.log(`Added player ${playerName} with strategy ${strategyName}`);
   }
   catch (error) {
