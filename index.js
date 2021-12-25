@@ -41,9 +41,10 @@ const serveEventStart = res => {
   res.setHeader('Cache-Control', 'no-cache');
 };
 // Returns an event-stream message reporting an incremented total.
-const sendEventMsg = (res, eventName, data) => {
+const sendEventMsg = (res, data, eventName, id) => {
+  const idLine = id ? `id: ${id}\n` : '';
   const eventLine = eventName ? `event: ${eventName}\n` : '';
-  const msg = `${eventLine}data: ${data}\n\n`;
+  const msg = `${idLine}${eventLine}data: ${data}\n\n`;
   res.write(msg);
 };
 
@@ -106,7 +107,7 @@ const requestHandler = (req, res) => {
       else if (url === '/playerJoined') {
         // Send the stream headers to the client.
         serveEventStart(res);
-        // Add the response to the list of new-player streams.
+        // Add the response to the new-player streams.
         newPlayerStreams.push(res);
       }
     }
@@ -115,7 +116,12 @@ const requestHandler = (req, res) => {
       // Get the data as a query string.
       const queryString = Buffer.concat(bodyParts).toString();
       // Parse it into a URLSearchParams object.
-      const params = new URLSearchParams(queryString);
+      const USParams = new URLSearchParams(queryString);
+      // Convert it to an object.
+      const params = {};
+      USParams.entries().forEach(entry => {
+        params[entry[0]] = entry[1];
+      });
       // If a session creation was requested:
       if (url === '/createSession') {
         // Create a session and get its data.
@@ -129,27 +135,51 @@ const requestHandler = (req, res) => {
       }
       // Otherwise, if the user asked to join a session:
       else if (url === '/joinSession') {
+        const {sessionCode, name} = params;
         // If the session code is valid:
-        const sessionCode = params.has('sessionCode') ? params.get('sessionCode') : '';
-        const name = params.get('name');
-        if (Object.values(sessions).map(session => session.sessionCode).includes(sessionCode)) {
-          // Add the player to the session data.
-          require('./addPlayer')(versionData, sessions[sessionCode], name, 'strategy0');
-          // Identify a list of the players who have joined.
-          const playerNames = sessions[sessionCode].players.map(player => player.name);
-          const playerListItems = playerNames.map(name => `<li>${name}</li>`);
-          const nowPlayerList = playerListItems.join('\n');
-          // Send the new player’s name to all existing players and the leader.
-          newPlayerStreams.forEach(stream => {
-            sendEventMsg(stream, null, name);
-          });
-          // Serve a session-status page.
-          serveTemplate('playerStatus', {sessionCode, nowPlayerList}, res);
+        const sessionCodeOK = Object.keys(sessions).includes(sessionCode);
+        if (sessionCodeOK) {
+          const sessionData = sessions[sessionCode];
+          // If the user is already a player:
+          const playerNames = sessionData.players.map(player => player.name);
+          if (playerNames.includes(name)) {
+            // Serve an error page.
+            serveTemplate(
+              'error', {error: `${name} is already a player in session ${sessionCode}`}, res
+            );
+          }
+          // Otherwise, if no more players are permitted:
+          else if (playerNames.length === versionData.limits.playerCount.max) {
+            // Serve an error page.
+            serveTemplate(
+              'error', {error: `Joining session ${sessionCode} would give it too many players`}, res
+            );
+          }
+          // Otherwise, if the session has already started:
+          else if (sessionData.startTime) {
+            // Serve an error page.
+            serveTemplate('error', {error: `Session ${sessionCode} has already started`}, res);
+          }
+          // Otherwise, i.e. if the user is permitted to join the session:
+          else {
+            // Add the player to the session data.
+            require('./addPlayer')(versionData, sessionData, name, 'strategy0');
+            const playerListItems = playerNames.map(name => `<li>${name}</li>`);
+            const playerList = playerListItems.join('\n');
+            // Send the new player’s name to all other players and the leader.
+            newPlayerStreams.forEach(stream => {
+              sendEventMsg(stream, name);
+            });
+            // Serve a session-status page. It will add itself to newPlayerStreams.
+            serveTemplate('playerStatus', {sessionCode, playerList}, res);
+          }
         }
         // Otherwise, i.e. if the session code is invalid:
         else {
           // Serve an error page.
-          serveTemplate('errorSessionCode', {}, res);
+          serveTemplate(
+            'error', {error: `There is no session with code <q>${sessionCode}</q>`}, res
+          );
         }
       }
     }
