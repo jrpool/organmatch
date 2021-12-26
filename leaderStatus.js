@@ -8,14 +8,14 @@ const joinLink = document.getElementById('joinLink');
 joinLink.href = joinLink.textContent = `${docRoot}/joinForm?sessionCode=${sessionCode}`;
 // Ask the server for status-change messages.
 const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=Leader`);
-const playerUL = document.getElementById('playerList');
+const playerOL = document.getElementById('playerList');
 news.onmessage = event => {
   const {data} = event;
   const rawData = event.data.replace(/^[A-Za-z]+=/, '');
   // If a user disconnected:
   if (data.startsWith('revision=')) {
     // Revise the entire list.
-    playerUL.innerHTML = rawData.replace(/#newline#/g, '\n');
+    playerOL.innerHTML = rawData.replace(/#newline#/g, '\n');
   }
   // Otherwise, if a player joined:
   else if (data.startsWith('addition=')) {
@@ -23,7 +23,7 @@ news.onmessage = event => {
     const playerData = rawData.split('\t');
     const newPlayer = document.createElement('li');
     newPlayer.innerHTML = `[<span class="mono">${playerData[0]}</span>] ${playerData[1]}`;
-    playerUL.appendChild(newPlayer);
+    playerOL.appendChild(newPlayer);
   }
   // Otherwise, if the stage changed:
   else if (data.startsWith('sessionStage')) {
@@ -32,12 +32,12 @@ news.onmessage = event => {
     stageP.textContent = rawData;
   }
   // If the count of players is the minimum permitted:
-  if (playerUL.childElementCount === minPlayerCount) {
+  if (playerOL.childElementCount === minPlayerCount) {
     // Show the start-session button.
     document.getElementById('startSession').classList.remove('invisible');
   }
   // Otherwise, if the count is less than the minimum:
-  else if (playerUL.childElementCount < minPlayerCount) {
+  else if (playerOL.childElementCount < minPlayerCount) {
     // Hide the start-session button.
     document.getElementById('startSession').classList.add('invisible');
   }
