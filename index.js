@@ -19,7 +19,7 @@ const docRoot = `https://${HOST}${portSuffix}`;
 // Data on all current sessions.
 const sessions = {};
 // SSE responses for player lists.
-const newPlayerStreams = {};
+const newsStreams = {};
 // Data on version 01.
 const versionData = require('./getVersion')('01');
 const key = fs.readFileSync(process.env.KEY);
@@ -125,13 +125,13 @@ const requestHandler = (req, res) => {
         // Serve it.
         serveTemplate('joinForm', {}, res);
       }
-      // Otherwise, if adding a player to the new-player stream was requested:
-      else if (url.startsWith('/playerJoined')) {
+      // Otherwise, if adding a news stream was requested:
+      else if (url.startsWith('/newsRequest')) {
         const {sessionCode, userID} = params;
         // Send the stream headers to the client.
         serveEventStart(res);
-        // Add the response to the new-player streams.
-        newPlayerStreams[sessionCode][userID] = res;
+        // Add the response to the news streams.
+        newsStreams[sessionCode][userID] = res;
         // If the user later closes the request:
         req.on('close', () => {
           let playerData = {};
@@ -152,16 +152,24 @@ const requestHandler = (req, res) => {
             delete playerData[userID];
           }
           console.log(`${userNews} in session ${sessionCode} has closed the connection`);
-          // Stop sending new player notices to the user.
-          delete newPlayerStreams[sessionCode][userID];
+          // Delete the user’s news stream.
+          delete newsStreams[sessionCode][userID];
           // Send a revised player list to all remaining users.
           const playerList = Object
           .keys(playerData)
           .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
           .join('#newline#');
-          Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
-            sendEventMsg(newPlayerStreams[sessionCode][userID], `revision=${playerList}`);
+          Object.keys(newsStreams[sessionCode]).forEach(userID => {
+            sendEventMsg(newsStreams[sessionCode][userID], `revision=${playerList}`);
           });
+        });
+      }
+      // Otherwise, if the session was started:
+      else if (url.startsWith('/startSession')) {
+        const {sessionCode} = params;
+        // Notify all users.
+        Object.keys(newsStreams[sessionCode]).forEach(userID => {
+          sendEventMsg(newsStreams[sessionCode][userID], 'sessionStart=Session started');
         });
       }
     }
@@ -178,7 +186,7 @@ const requestHandler = (req, res) => {
         // Add them to the data on all current sessions.
         sessions[sessionCode] = sessionData;
         // Initialize the new-player streams for the session.
-        newPlayerStreams[sessionCode] = {};
+        newsStreams[sessionCode] = {};
         // Serve a session-status page.
         serveTemplate('leaderStatus', {minPlayerCount, docRoot, sessionCode}, res);
       }
@@ -221,9 +229,9 @@ const requestHandler = (req, res) => {
             );
             const playerList = playerListItems.join('\n');
             // Send the new player’s ID and name to all other players and the leader.
-            Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
+            Object.keys(newsStreams[sessionCode]).forEach(userID => {
               sendEventMsg(
-                newPlayerStreams[sessionCode][userID], `addition=${playerID}\t${playerName}`
+                newsStreams[sessionCode][userID], `addition=${playerID}\t${playerName}`
               );
             });
             // Serve a session-status page.

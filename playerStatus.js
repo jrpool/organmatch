@@ -11,10 +11,8 @@ const newPlayerLI = document.createElement('li');
 newPlayerLI.innerHTML = `[<span class="mono">${playerID}</span>] ${playerName}`;
 playerUL.appendChild(newPlayerLI);
 // Revise the list when a user joins or disconnects.
-const playerLister = new EventSource(
-  `/playerJoined?sessionCode=${sessionCode}&userID=${playerID}`
-);
-playerLister.onmessage = event => {
+const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
+news.onmessage = event => {
   const {data} = event;
   const rawData = event.data.replace(/^[a-z]+=/, '');
   // If a user disconnected:
@@ -22,12 +20,18 @@ playerLister.onmessage = event => {
     // Revise the entire list.
     playerUL.innerHTML = rawData.replace(/#newline#/g, '\n');
   }
-  // Otherwise, i.e. if a player joined:
+  // Otherwise, if a player joined:
   else if (data.startsWith('addition=')) {
     // Append the player to the list.
     const playerData = rawData.split('\t');
     const newPlayer = document.createElement('li');
     newPlayer.innerHTML = `[<span class="mono">${playerData[0]}</span>] ${playerData[1]}`;
     playerUL.appendChild(newPlayer);
+  }
+  // Otherwise, if the session started:
+  else if (data.startsWith('sessionStart=')) {
+    // Change the status accordingly.
+    const statusP = document.getElementById('status');
+    statusP.textContent = rawData;
   }
 };
