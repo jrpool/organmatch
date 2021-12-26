@@ -20,7 +20,7 @@ playerLister.onmessage = event => {
   // If a user disconnected:
   if (data.startsWith('revision=')) {
     // Revise the entire list.
-    playerUL.innerHTML = rawData;
+    playerUL.innerHTML = rawData.replace(/#newline#/g, '\n');
   }
   // Otherwise, i.e. if a player joined:
   else if (data.startsWith('addition=')) {

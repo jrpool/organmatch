@@ -158,7 +158,7 @@ const requestHandler = (req, res) => {
           const playerList = Object
           .keys(playerData)
           .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
-          .join('\n');
+          .join('#newline#');
           Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
             sendEventMsg(newPlayerStreams[sessionCode][userID], `revision=${playerList}`);
           });
