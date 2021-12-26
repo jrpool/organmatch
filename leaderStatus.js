@@ -42,11 +42,15 @@ news.onmessage = event => {
     document.getElementById('startSession').classList.add('invisible');
   }
 };
+// When the start-session form is submitted:
 const startForm = document.getElementById('startSession');
 startForm.onsubmit = async event => {
+  // Prevent a reload.
   event.preventDefault();
-  const response = await fetch('/startSession');
+  // Notify the server.
+  const response = await fetch(`/startSession?sessionCode=${sessionCode}`);
+  // Permanently remove the start-session button.
   if (response.ok) {
-    startForm.classList.add('invisible');
+    startForm.textContent = '';
   }
 };
