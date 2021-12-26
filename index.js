@@ -13,8 +13,21 @@ const fs = require('fs');
 const http2 = require('http2');
 
 // ########## GLOBAL CONSTANTS
+const {HOST, PORT} = process.env;
+const portSuffix = `:${PORT}` || '';
+const docRoot = `https://${HOST}${portSuffix}`;
+// Data on all current sessions.
+const sessions = {};
+// SSE responses for player lists.
+const newPlayerStreams = {};
+// Data on version 01.
+const versionData = require('./getVersion')('01');
+const key = fs.readFileSync(process.env.KEY);
+const cert = fs.readFileSync(process.env.CERT);
 
 // ########## GLOBAL VARIABLES
+// Character code of the most recently joined player.
+let playerIDCode = 64;
 
 // ########## FUNCTIONS
 
@@ -40,27 +53,11 @@ const serveEventStart = res => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
 };
-// Returns an event-stream message reporting an incremented total.
-const sendEventMsg = (res, data, eventName, id) => {
-  const idLine = id ? `id: ${id}\n` : '';
-  const eventLine = eventName ? `event: ${eventName}\n` : '';
-  const msg = `${idLine}${eventLine}data: ${data}\n\n`;
+// Returns an event-stream message.
+const sendEventMsg = (res, data) => {
+  const msg = `data: ${data}\n\n`;
   res.write(msg);
 };
-
-// ########## SERVER
-
-const {HOST, PORT} = process.env;
-const portSuffix = `:${PORT}` || '';
-const docRoot = `https://${HOST}${portSuffix}`;
-// Initialize the data on all current sessions.
-const sessions = {};
-// Initialize the character code of the most recently joined player.
-let playerIDCode = 64;
-// Initialize the SSE responses for player lists.
-const newPlayerStreams = {};
-// Get data on version 01.
-const versionData = require('./getVersion')('01');
 // Parses a query string into a query-parameters object.
 const parse = queryString => {
   // Parse the query string into a URLSearchParams object.
@@ -137,17 +134,33 @@ const requestHandler = (req, res) => {
         newPlayerStreams[sessionCode][userID] = res;
         // If the user later closes the request:
         req.on('close', () => {
-          console.log(`User ${userID} in session ${sessionCode} closed the connection`);
+          let playerData = {};
+          let userNews;
+          const sessionData = sessions[sessionCode];
+          // If the user is the leader:
+          if (userID === 'Leader') {
+            userNews = 'The leader';
+            // Empty the list of players.
+            sessionData.players = {};
+          }
+          // Otherwise, i.e. if the user is a player:
+          else {
+            playerData = getPlayers(sessions[sessionCode]);
+            userNews = `Player ${userID} (${playerData[userID]})`;
+            // Remove the player from the session data.
+            delete sessionData.players[userID];
+            delete playerData[userID];
+          }
+          console.log(`${userNews} in session ${sessionCode} has closed the connection`);
           // Stop sending new player notices to the user.
           delete newPlayerStreams[sessionCode][userID];
           // Send a revised player list to all remaining users.
-          const playerData = userID === 'Leader' ? {} : getPlayers(sessions[sessionCode]);
           const playerList = Object
           .keys(playerData)
           .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
           .join('\n');
           Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
-            sendEventMsg(newPlayerStreams[sessionCode][userID], playerList, 'revision');
+            sendEventMsg(newPlayerStreams[sessionCode][userID], `revision=${playerList}`);
           });
         });
       }
@@ -209,7 +222,9 @@ const requestHandler = (req, res) => {
             const playerList = playerListItems.join('\n');
             // Send the new player’s ID and name to all other players and the leader.
             Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
-              sendEventMsg(newPlayerStreams[sessionCode][userID], `${playerID}\t${playerName}`);
+              sendEventMsg(
+                newPlayerStreams[sessionCode][userID], `addition=${playerID}\t${playerName}`
+              );
             });
             // Serve a session-status page.
             serveTemplate('playerStatus', {sessionCode, playerList, playerID, playerName}, res);
@@ -226,8 +241,9 @@ const requestHandler = (req, res) => {
     }
   });
 };
-const key = fs.readFileSync(process.env.KEY);
-const cert = fs.readFileSync(process.env.CERT);
+
+// ########## SERVER
+
 if (key && cert) {
   const server = http2.createSecureServer(
     {

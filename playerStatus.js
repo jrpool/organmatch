@@ -15,15 +15,17 @@ const playerLister = new EventSource(
   `/playerJoined?sessionCode=${sessionCode}&userID=${playerID}`
 );
 playerLister.onmessage = event => {
-  // If a user disconnects:
-  if (event.event === 'revision') {
+  const {data} = event;
+  const rawData = event.data.replace(/^[a-z]+=/, '');
+  // If a user disconnected:
+  if (data.startsWith('revision=')) {
     // Revise the entire list.
-    playerUL.innerHTML = event.data;
+    playerUL.innerHTML = rawData;
   }
-  // Otherwise, i.e. if a player joins:
-  else {
+  // Otherwise, i.e. if a player joined:
+  else if (data.startsWith('addition=')) {
     // Append the player to the list.
-    const playerData = event.data.split('\t');
+    const playerData = rawData.split('\t');
     const newPlayer = document.createElement('li');
     newPlayer.innerHTML = `[<span class="mono">${playerData[0]}</span>] ${playerData[1]}`;
     playerUL.appendChild(newPlayer);
