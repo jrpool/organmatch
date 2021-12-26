@@ -50,7 +50,6 @@ startForm.onsubmit = async event => {
   // Notify the server.
   const response = await fetch(`/startSession?sessionCode=${sessionCode}`);
   // Permanently remove the start-session button.
-  console.log(`response:\n${JSON.stringify(response, null, 2)}`);
   if (response.ok) {
     startForm.textContent = '';
   }
