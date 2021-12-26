@@ -133,7 +133,7 @@ const requestHandler = (req, res) => {
         const {sessionCode, userID} = params;
         // Send the stream headers to the client.
         serveEventStart(res);
-        // Add the request and response to the new-player streams.
+        // Add the response to the new-player streams.
         newPlayerStreams[sessionCode][userID] = res;
         // If the user later closes the request:
         req.on('close', () => {
@@ -207,9 +207,9 @@ const requestHandler = (req, res) => {
               playerID => `<li>[<span class="mono">${playerID}</span>] ${playerData[playerID]}</li>`
             );
             const playerList = playerListItems.join('\n');
-            // Send the new player’s name to all other players and the leader.
+            // Send the new player’s ID and name to all other players and the leader.
             Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
-              sendEventMsg(newPlayerStreams[sessionCode][userID], playerName);
+              sendEventMsg(newPlayerStreams[sessionCode][userID], `${playerID}\t${playerName}`);
             });
             // Serve a session-status page.
             serveTemplate('playerStatus', {sessionCode, playerList, playerID, playerName}, res);

@@ -5,22 +5,27 @@ const {sessionCode, playerID, playerName} = params;
 document.getElementById('sessionCode').textContent = sessionCode;
 document.getElementById('playerID').textContent = playerID;
 document.getElementById('playerName').textContent = playerName;
-const playerOL = document.getElementById('playerList');
-playerOL.innerHTML = params.playerList;
+const playerUL = document.getElementById('playerList');
+playerUL.innerHTML = params.playerList;
 const newPlayerLI = document.createElement('li');
 newPlayerLI.innerHTML = `[<span class="mono">${playerID}</span>] ${playerName}`;
-playerOL.appendChild(newPlayerLI);
-// Add players to the list when they join.
+playerUL.appendChild(newPlayerLI);
+// Revise the list when a user joins or disconnects.
 const playerLister = new EventSource(
   `/playerJoined?sessionCode=${sessionCode}&userID=${playerID}`
 );
 playerLister.onmessage = event => {
+  // If a user disconnects:
   if (event.event === 'revision') {
-    playerOL.innerHTML = event.data;
+    // Revise the entire list.
+    playerUL.innerHTML = event.data;
   }
+  // Otherwise, i.e. if a player joins:
   else {
+    // Append the player to the list.
+    const playerData = event.data.split('\t');
     const newPlayer = document.createElement('li');
-    newPlayer.textContent = event.data;
-    playerOL.appendChild(newPlayer);
+    newPlayer.innerHTML = `[<span class="mono">${playerData[0]}</span>] ${playerData[1]}`;
+    playerUL.appendChild(newPlayer);
   }
 };
