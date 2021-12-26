@@ -234,20 +234,24 @@ const requestHandler = (req, res) => {
           }
           // Otherwise, i.e. if the user is permitted to join the session:
           else {
-            // Add the player to the session data.
+            // Assign an ID to the player.
             const playerID = String.fromCharCode(++playerIDCode);
-            require('./addPlayer')(versionData, sessionData, playerID, playerName, 'strategy0');
-            const {playerIDs} = sessionData;
-            const playerListItems = playerIDs.map(
-              playerID => `<li>[<span class="mono">${playerID}</span>] ${playerData[playerID]}</li>`
-            );
-            const playerList = playerListItems.join('\n');
             // Send the new player’s ID and name to all other players and the leader.
             Object.keys(newsStreams[sessionCode]).forEach(userID => {
               sendEventMsg(
                 newsStreams[sessionCode][userID], `addition=${playerID}\t${playerName}`
               );
             });
+            // Add the player to the session data.
+            require('./addPlayer')(versionData, sessionData, playerID, playerName, 'strategy0');
+            const {playerIDs} = sessionData;
+            const playerListItems = playerIDs.map(
+              playerID => {
+                const {playerName} = sessionData.players[playerID];
+                return `<li>[<span class="mono">${playerID}</span>] ${playerName}</li>`;
+              }
+            );
+            const playerList = playerListItems.join('\n');
             // Serve a session-status page.
             serveTemplate('playerStatus', {sessionCode, playerList, playerID, playerName}, res);
           }

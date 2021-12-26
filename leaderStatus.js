@@ -25,9 +25,9 @@ news.onmessage = event => {
     newPlayer.innerHTML = `[<span class="mono">${playerData[0]}</span>] ${playerData[1]}`;
     playerUL.appendChild(newPlayer);
   }
-  // Otherwise, if the session started:
+  // Otherwise, if the stage changed:
   else if (data.startsWith('sessionStage')) {
-    // Change the status accordingly.
+    // Change the stage accordingly.
     const stageP = document.getElementById('stage');
     stageP.textContent = rawData;
   }
