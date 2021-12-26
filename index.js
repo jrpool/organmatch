@@ -174,7 +174,9 @@ const requestHandler = (req, res) => {
         const {sessionCode} = params;
         // Notify all users.
         Object.keys(newsStreams[sessionCode]).forEach(userID => {
-          sendEventMsg(newsStreams[sessionCode][userID], 'sessionStage=Started');
+          sendEventMsg(
+            newsStreams[sessionCode][userID], 'sessionStage=Started and players shuffled'
+          );
         });
         // Shuffle the players.
         const {playerIDs} = sessions[sessionCode];
