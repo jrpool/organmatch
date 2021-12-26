@@ -149,8 +149,8 @@ const requestHandler = (req, res) => {
         req.on('close', () => {
           // Delete the user’s news stream.
           delete sessionStreams[userID];
-          let userNews;
           const sessionData = sessions[sessionCode];
+          let userNews;
           // If the user was the leader:
           if (userID === 'Leader') {
             userNews = 'The leader';
@@ -164,6 +164,8 @@ const requestHandler = (req, res) => {
             userNews = `Player ${userID} (${sessionData.players[userID].playerName})`;
             // Remove the player from the session data.
             delete sessionData.players[userID];
+            const {playerIDs} = sessionData;
+            playerIDs.splice(playerIDs.indexOf(userID), 1);
             // Notify all users.
             revisePlayerLists(sessionCode);
           }
