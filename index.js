@@ -80,9 +80,10 @@ const getPlayers = sessionData => {
 };
 // Notifies all users of a revised list of players.
 const revisePlayerLists = sessionCode => {
-  const playerData = getPlayers(sessions[sessionCode]);
-  const playerList = Object
-  .keys(playerData)
+  const sessionData = sessions[sessionCode];
+  const {playerIDs} = sessionData;
+  const playerData = getPlayers(sessionData);
+  const playerList = playerIDs
   .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
   .join('#newline#');
   Object.keys(newsStreams[sessionCode]).forEach(userID => {
@@ -178,7 +179,7 @@ const requestHandler = (req, res) => {
             newsStreams[sessionCode][userID], 'sessionStage=Started and players shuffled'
           );
         });
-        // Shuffle the players.
+        // Shuffle the player IDs in the session data.
         const {playerIDs} = sessions[sessionCode];
         const shuffler = playerIDs.map(id => [id, Math.random()]);
         shuffler.sort((a, b) => a[1] - b[1]);
