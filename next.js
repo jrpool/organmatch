@@ -40,10 +40,10 @@ module.exports = (versionData, sessionData) => {
       }
     }
     else {
-      if (sessionData.playersJoined < versionData.limits.playerCount.min) {
+      if (sessionData.playerIDs.length < versionData.limits.playerCount.min) {
         return ['addPlayer'];
       }
-      else if (sessionData.playersJoined === versionData.limits.playerCount.max) {
+      else if (sessionData.playerIDs.length === versionData.limits.playerCount.max) {
         return ['startSession'];
       }
       else {

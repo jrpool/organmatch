@@ -133,11 +133,11 @@ module.exports = versionData => {
       versionID: versionData.versionID,
       sessionCode: createCode(),
       creationTime: (new Date()).toISOString(),
-      playersJoined: 0,
+      playerIDs: [],
       startTime: null,
       roundsEnded: 0,
       endTime: null,
-      winners: [],
+      winnerIDs: [],
       piles: {
         organs: {
           latent: [],

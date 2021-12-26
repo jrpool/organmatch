@@ -26,10 +26,10 @@ news.onmessage = event => {
     playerUL.appendChild(newPlayer);
   }
   // Otherwise, if the session started:
-  else if (data.startsWith('sessionStart')) {
+  else if (data.startsWith('sessionStage')) {
     // Change the status accordingly.
-    const statusP = document.getElementById('status');
-    statusP.textContent = rawData;
+    const stageP = document.getElementById('stage');
+    stageP.textContent = rawData;
   }
   // If the count of players is the minimum permitted:
   if (playerUL.childElementCount === minPlayerCount) {

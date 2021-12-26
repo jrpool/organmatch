@@ -78,6 +78,17 @@ const getPlayers = sessionData => {
   });
   return data;
 };
+// Notifies all users of a revised list of players.
+const revisePlayerLists = sessionCode => {
+  const playerData = getPlayers(sessions[sessionCode]);
+  const playerList = Object
+  .keys(playerData)
+  .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
+  .join('#newline#');
+  Object.keys(newsStreams[sessionCode]).forEach(userID => {
+    sendEventMsg(newsStreams[sessionCode][userID], `revision=${playerList}`);
+  });
+};
 // Handles requests.
 const requestHandler = (req, res) => {
   const {method} = req;
@@ -131,37 +142,31 @@ const requestHandler = (req, res) => {
         // Send the stream headers to the client.
         serveEventStart(res);
         // Add the response to the news streams.
-        newsStreams[sessionCode][userID] = res;
+        const sessionStreams = newsStreams[sessionCode];
+        sessionStreams[userID] = res;
         // If the user later closes the request:
         req.on('close', () => {
-          let playerData = {};
+          // Delete the user’s news stream.
+          delete sessionStreams[userID];
           let userNews;
           const sessionData = sessions[sessionCode];
-          // If the user is the leader:
+          // If the user was the leader:
           if (userID === 'Leader') {
             userNews = 'The leader';
-            // Empty the list of players.
-            sessionData.players = {};
+            // Notify all users.
+            Object.keys(sessionStreams).forEach(userID => {
+              sendEventMsg(sessionStreams[userID], 'sessionStage=Aborted');
+            });
           }
-          // Otherwise, i.e. if the user is a player:
+          // Otherwise, i.e. if the user was a player:
           else {
-            playerData = getPlayers(sessions[sessionCode]);
-            userNews = `Player ${userID} (${playerData[userID]})`;
+            userNews = `Player ${userID} (${sessionData.players[userID].playerName})`;
             // Remove the player from the session data.
             delete sessionData.players[userID];
-            delete playerData[userID];
+            // Notify all users.
+            revisePlayerLists(sessionCode);
           }
           console.log(`${userNews} in session ${sessionCode} has closed the connection`);
-          // Delete the user’s news stream.
-          delete newsStreams[sessionCode][userID];
-          // Send a revised player list to all remaining users.
-          const playerList = Object
-          .keys(playerData)
-          .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
-          .join('#newline#');
-          Object.keys(newsStreams[sessionCode]).forEach(userID => {
-            sendEventMsg(newsStreams[sessionCode][userID], `revision=${playerList}`);
-          });
         });
       }
       // Otherwise, if the session was started:
@@ -169,8 +174,16 @@ const requestHandler = (req, res) => {
         const {sessionCode} = params;
         // Notify all users.
         Object.keys(newsStreams[sessionCode]).forEach(userID => {
-          sendEventMsg(newsStreams[sessionCode][userID], 'sessionStart=Started');
+          sendEventMsg(newsStreams[sessionCode][userID], 'sessionStage=Started');
         });
+        // Shuffle the players.
+        const {playerIDs} = sessions[sessionCode];
+        const shuffler = playerIDs.map(id => [id, Math.random()]);
+        shuffler.sort((a, b) => a[1] - b[1]);
+        sessions[sessionCode].playerIDs = shuffler.map(pair => pair[0]);
+        // Notify all users of the shuffling.
+        revisePlayerLists(sessionCode);
+        // Close the response.
         res.end('Started');
       }
     }
@@ -224,7 +237,7 @@ const requestHandler = (req, res) => {
             // Add the player to the session data.
             const playerID = String.fromCharCode(++playerIDCode);
             require('./addPlayer')(versionData, sessionData, playerID, playerName, 'strategy0');
-            const playerIDs = Object.keys(playerData);
+            const {playerIDs} = sessionData;
             const playerListItems = playerIDs.map(
               playerID => `<li>[<span class="mono">${playerID}</span>] ${playerData[playerID]}</li>`
             );

@@ -7,7 +7,7 @@
 module.exports = (versionData, sessionData, playerID, playerName, strategyName) => {
   try {
     // Increment the player count.
-    sessionData.playersJoined++;
+    sessionData.playerIDs.push(playerID);
     // Remove patients from the patient pile.
     const patients = sessionData.piles.patients.splice(0, versionData.handSize.count);
     // Add data on the player to the session data.
