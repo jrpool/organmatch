@@ -20,8 +20,10 @@
         <p class="summary">Your patient&rsquo;s life depends on you&mdash;and luck</p>
       </header>
       <p>You have created session <span id="sessionCode"></span>.</p>
-      <p>Players can join the session at <a id="joinLink"></a>.</p>
-      <p>When there are 3 to 8 players, you may start the session.</p>
+      <div id="startInfo">
+        <p>Players can join the session at <a id="joinLink"></a>.</p>
+        <p>When there are 3 to 8 players, you may start the session.</p>
+      </div>
       <h2>Players</h2>
       <div class="listbox">
         <ol id="playerList" aria-live="polite"></ol>
@@ -31,7 +33,7 @@
       </form>
       <h2>Session stage</h2>
       <p id="stage">Not yet started</p>
-      <p><a href="/" target="_blank">OrganMatch home</a></p>
+      <p><a href="about" target="_blank">About OrganMatch (new tab)</a></p>
     </main>
   </body>
 </html>

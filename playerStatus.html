@@ -20,15 +20,17 @@
         <p class="summary">Your patient&rsquo;s life depends on you&mdash;and luck</p>
       </header>
       <p>You have joined session <span id="sessionCode"></span> as player <span id="playerID"></span> (<span id="playerName"></span>).</p>
-      <p>You can begin to play when the organizer starts the session.</p>
-      <p>The allowed number of players is from 3 to 8.</p>
+      <div id="startInfo">
+        <p>When the organizer starts the session, you can begin to play.</p>
+        <p>The allowed number of players is from 3 to 8.</p>
+      </div>
       <h2>Players</h2>
       <div class="listbox">
         <ol id="playerList" aria-live="polite"></ol>
       </div>
       <h2>Session stage</h2>
       <p id="stage">Not yet started</p>
-      <p><a href="/" target="_blank">OrganMatch home</a></p>
+      <p><a href="about" target="_blank">About OrganMatch (new tab)</a></p>
     </main>
   </body>
 </html>

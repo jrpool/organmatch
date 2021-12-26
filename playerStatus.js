@@ -30,5 +30,10 @@ news.onmessage = event => {
     // Change the stage accordingly.
     const stageP = document.getElementById('stage');
     stageP.textContent = rawData;
+    // If the change was a session start:
+    if (rawData.startsWith('Started')) {
+      // Remove the starting information from the page.
+      document.getElementById('startInfo').remove();
+    }
   }
 };

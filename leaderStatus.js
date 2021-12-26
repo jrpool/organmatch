@@ -49,8 +49,9 @@ startForm.onsubmit = async event => {
   event.preventDefault();
   // Notify the server.
   const response = await fetch(`/startSession?sessionCode=${sessionCode}`);
-  // Permanently remove the start-session button.
+  // Permanently remove the start-session button and the how-to-start information.
   if (response.ok) {
-    startForm.textContent = '';
+    document.getElementById('startInfo').remove();
+    startForm.remove();
   }
 };

@@ -175,10 +175,17 @@ const requestHandler = (req, res) => {
       // Otherwise, if the session was started:
       else if (url.startsWith('/startSession')) {
         const {sessionCode} = params;
+        const sessionData = sessions[sessionCode];
+        // Set the start time in the session data.
+        sessionData.startTime = (new Date()).toISOString();
         // Notify all users.
+        const creationTime = (new Date(sessionData.creationTime)).getTime();
+        const minutesElapsed = Math.round(((Date.now() - creationTime)) / 60000);
+        const minutesLeft = versionData.limits.sessionTime.max - minutesElapsed;
         Object.keys(newsStreams[sessionCode]).forEach(userID => {
           sendEventMsg(
-            newsStreams[sessionCode][userID], 'sessionStage=Started and players shuffled'
+            newsStreams[sessionCode][userID],
+            `sessionStage=Started; players shuffled; ${minutesLeft} minutes left`
           );
         });
         // Shuffle the player IDs in the session data.
