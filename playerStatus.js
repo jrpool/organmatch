@@ -14,7 +14,7 @@ playerUL.appendChild(newPlayerLI);
 const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
 news.onmessage = event => {
   const {data} = event;
-  const rawData = event.data.replace(/^[a-z]+=/, '');
+  const rawData = event.data.replace(/^[A-Za-z]+=/, '');
   // If a user disconnected:
   if (data.startsWith('revision=')) {
     // Revise the entire list.

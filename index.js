@@ -169,8 +169,9 @@ const requestHandler = (req, res) => {
         const {sessionCode} = params;
         // Notify all users.
         Object.keys(newsStreams[sessionCode]).forEach(userID => {
-          sendEventMsg(newsStreams[sessionCode][userID], 'sessionStart=Session started');
+          sendEventMsg(newsStreams[sessionCode][userID], 'sessionStart=Started');
         });
+        res.end('Started');
       }
     }
     // Otherwise, if the request method was POST:

@@ -11,7 +11,7 @@ const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=Lea
 const playerUL = document.getElementById('playerList');
 news.onmessage = event => {
   const {data} = event;
-  const rawData = event.data.replace(/^[a-z]+=/, '');
+  const rawData = event.data.replace(/^[A-Za-z]+=/, '');
   // If a user disconnected:
   if (data.startsWith('revision=')) {
     // Revise the entire list.
@@ -50,6 +50,7 @@ startForm.onsubmit = async event => {
   // Notify the server.
   const response = await fetch(`/startSession?sessionCode=${sessionCode}`);
   // Permanently remove the start-session button.
+  console.log(`response:\n${JSON.stringify(response, null, 2)}`);
   if (response.ok) {
     startForm.textContent = '';
   }
