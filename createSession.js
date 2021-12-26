@@ -43,7 +43,7 @@ const createInfluenceCards = versionData => {
   cardTypes.forEach(type => {
     for (let i = 0; i < type.count; i++) {
       cards.push({
-        name: type.name,
+        influenceName: type.influenceName,
         impact: type.impact
       });
     }

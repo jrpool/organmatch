@@ -29,11 +29,11 @@ module.exports = (versionData, sessionData)  => {
       const usable = require('./usable');
       let usables = usable(versionData, sessionData);
       while (usables.length) {
-        console.log(`Player ${player.name} may exercise influence`);
+        console.log(`Player ${player.playerName} may exercise influence`);
         // Get the player’s next use choice.
         const useWant = strategy('use', versionData, sessionData);
         if (useWant) {
-          const bidPlayerName = turn.bids.current[useWant.bidIndex].player.name;
+          const bidPlayerName = turn.bids.current[useWant.bidIndex].player.playerName;
           const {impact} = turn.hand.current.influences[useWant.handIndex];
           const impactTerm = impact > 0 ? `+${impact}` : impact;
           console.log(`Proposal to influence the bid of ${bidPlayerName} by ${impactTerm}`);
@@ -48,7 +48,7 @@ module.exports = (versionData, sessionData)  => {
               turnIndex: turn.index,
               player: {
                 index: turn.player.index,
-                name: turn.player.name
+                name: turn.player.playerName
               },
               influence: turn.hand.current.influences.splice(handIndex, handIndex + 1)[0]
             };

@@ -23,7 +23,7 @@ module.exports = sessionData => {
     console.log(
       `Started at ${sessionData.startTime} with ${sessionData.players.length} players, shuffled:`
     );
-    console.log(JSON.stringify(sessionData.players.map(player => player.name), null, 2));
+    console.log(JSON.stringify(sessionData.players.map(player => player.playerName), null, 2));
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);

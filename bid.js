@@ -24,7 +24,7 @@ module.exports = (sessionData, matchIndex) => {
       queuePosition: patient.organNeed.find(need => need.organ === organ.organ).queuePosition,
       player: {
         index: turn.player.index,
-        name: turn.player.name
+        name: turn.player.playerName
       },
       patient,
       influences: [],
@@ -38,7 +38,7 @@ module.exports = (sessionData, matchIndex) => {
     player.hand.current.patients.push(drawn);
     turn.hand.current.patients.push(drawn);
     console.log(
-      `Player ${player.name} bid a priority-${patient.priority} and drew a priority-${drawn.priority}`
+      `Player ${player.playerName} bid a priority-${patient.priority} and drew a priority-${drawn.priority}`
     );
   }
   catch (error) {

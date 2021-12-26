@@ -12,7 +12,7 @@ module.exports = sessionData => {
       ? (round.turns[round.turns.length - 1].player.index + 1) % sessionData.players.length
       : round.starter;
     const player = sessionData.players[playerIndex];
-    const playerName = player.name;
+    const playerName = player.playerName;
     // Make all hands independently modifiable.
     const currentHand = player.hand.current;
     const initial = {

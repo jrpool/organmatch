@@ -24,7 +24,7 @@ module.exports = (sessionData, index) => {
     player.hand.current.patients.push(drawn);
     turn.hand.current.patients.push(drawn);
     console.log(
-      `Player ${player.name} surrendered a priority-${patient.priority} and drew a priority-${drawn.priority}`
+      `Player ${player.playerName} surrendered a priority-${patient.priority} and drew a priority-${drawn.priority}`
     );
   }
   catch (error) {

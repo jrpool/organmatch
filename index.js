@@ -75,9 +75,9 @@ const parse = queryString => {
 // Returns an object describing player IDs and names.
 const getPlayers = sessionData => {
   const data = {};
-  Object.values(sessionData.players).forEach(player => {
-    const {playerID, playerName} = player;
-    data[playerID] = playerName;
+  const {players} = sessionData;
+  Object.keys(players).forEach(playerID => {
+    data[playerID] = players[playerID].playerName;
   });
   return data;
 };
@@ -141,7 +141,7 @@ const requestHandler = (req, res) => {
           // Stop sending new player notices to the user.
           delete newPlayerStreams[sessionCode][userID];
           // Send a revised player list to all remaining users.
-          const playerData = userID === 'Leader' ? {} : getPlayers(sessionCode);
+          const playerData = userID === 'Leader' ? {} : getPlayers(sessions[sessionCode]);
           const playerList = Object
           .keys(playerData)
           .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)

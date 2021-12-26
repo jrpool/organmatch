@@ -25,17 +25,17 @@ module.exports = (versionData, sessionData)  => {
       const winnerIndex = round.bids[0].player.index;
       const winner = sessionData.players[winnerIndex];
       round.nextStarter = round.winner.index = winnerIndex;
-      round.winner.name = winner.name;
+      round.winner.playerName = winner.playerName;
       const {wins} = winner;
       wins.push(round.bids[0]);
-      console.log(`The round winner was ${winner.name}`);
+      console.log(`The round winner was ${winner.playerName}`);
       // Return any influence cards on the winning bid to the pile.
       const winInfluenceCount = round.bids[0].influences.length;
       if (winInfluenceCount) {
         const winReturnNews = winInfluenceCount === 1
           ? '1 influence card'
           : `${winInfluenceCount} influence cards`;
-        console.log(`Winning bidder ${winner.name} returned ${winReturnNews}`);
+        console.log(`Winning bidder ${winner.playerName} returned ${winReturnNews}`);
       }
       sessionData.piles.influences.push(...round.bids[0].influences.map(use => use.influence));
       // For each losing bid:
@@ -49,7 +49,7 @@ module.exports = (versionData, sessionData)  => {
         const impactTerm = impact > 0 ? `+${impact}` : impact;
         sessionData.players[losingBid.player.index].hand.current.influences.push(drawn);
         console.log(
-          `Bidder ${losingBid.player.name} returned the bid cards and drew a ${impactTerm} influence card`
+          `Bidder ${losingBid.player.playerName} returned the bid cards and drew a ${impactTerm} influence card`
         );
       });
       // If the victory ends the session:
@@ -57,7 +57,7 @@ module.exports = (versionData, sessionData)  => {
         // Add the winner to the session data.
         sessionData.winners.push({
           index: winnerIndex,
-          name: sessionData.players[winnerIndex].name
+          name: sessionData.players[winnerIndex].playerName
         });
         // End the session.
         sessionEnded = true;
@@ -83,16 +83,17 @@ module.exports = (versionData, sessionData)  => {
       const winners = sessionData.players.filter(player => player.wins.length === maxCount);
       sessionData.winners = winners.map(winner => ({
         index: winner.index,
-        name: winner.name
+        name: winner.playerName
       }));
       fs.writeFileSync(`on/${sessionData.sessionCode}.json`, JSON.stringify(sessionData, null, 2));
       console.log(`Session ended at ${sessionData.endTime}`);
       let winnerNews = '';
       if (sessionData.winners.length > 1) {
-        winnerNews = `tied by ${sessionData.winners.map(winner => winner.name).join(' and ')}`;
+        winnerNews
+        = `tied by ${sessionData.winners.map(winner => winner.playerName).join(' and ')}`;
       }
       else {
-        winnerNews = `won by ${sessionData.winners[0].name}`;
+        winnerNews = `won by ${sessionData.winners[0].playerName}`;
       }
       console.log(`\nThe session was ${winnerNews}`);
       console.log(`Organs still available: ${sessionData.piles.organs.latent.length}`);
