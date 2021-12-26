@@ -6,7 +6,7 @@
 // Returns a session code.
 const createCode = () => {
   const now = Date.now();
-  const sessionCode = now.toString().slice(5, 10)};
+  const sessionCode = now.toString().slice(5, 10);
   return sessionCode;
 };
 // Returns an array of the names of the groups of a version.

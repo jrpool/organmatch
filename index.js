@@ -140,14 +140,14 @@ const requestHandler = (req, res) => {
           console.log(`User ${userID} in session ${sessionCode} closed the connection`);
           // Stop sending new player notices to the user.
           delete newPlayerStreams[sessionCode][userID];
-          // Send a revised player list to all remaining players and the leader.
-          const playerData = getPlayers(sessionCode);
+          // Send a revised player list to all remaining users.
+          const playerData = userID === 'Leader' ? {} : getPlayers(sessionCode);
           const playerList = Object
           .keys(playerData)
           .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
           .join('\n');
           Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
-            sendEventMsg(newPlayerStreams[sessionCode][userID].res, playerList, 'revision');
+            sendEventMsg(newPlayerStreams[sessionCode][userID], playerList, 'revision');
           });
         });
       }
@@ -208,9 +208,8 @@ const requestHandler = (req, res) => {
             );
             const playerList = playerListItems.join('\n');
             // Send the new player’s name to all other players and the leader.
-            console.log(`Keys of NPS are ${Object.keys(newPlayerStreams)}`);
             Object.keys(newPlayerStreams[sessionCode]).forEach(userID => {
-              sendEventMsg(newPlayerStreams[sessionCode][userID].res, playerName);
+              sendEventMsg(newPlayerStreams[sessionCode][userID], playerName);
             });
             // Serve a session-status page.
             serveTemplate('playerStatus', {sessionCode, playerList, playerID, playerName}, res);
