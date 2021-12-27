@@ -81,7 +81,9 @@ const getPlayers = sessionData => {
 // Broadcasts messages to clients.
 const broadcast = (sessionCode, onlyPlayers, subtype, value) => {
   Object.keys(newsStreams[sessionCode]).forEach(userID => {
-    sendEventMsg(newsStreams[sessionCode][userID], `${subtype}=${value}`);
+    if (! onlyPlayers || userID !== 'Leader') {
+      sendEventMsg(newsStreams[sessionCode][userID], `${subtype}=${value}`);
+    }
   });
 };
 // Notifies all users of a revised list of players.
@@ -113,7 +115,7 @@ const runRound = sessionData => {
     roundOrgan.organ,
     roundOrgan.group
   ];
-  broadcast(sessionData[sessionData.sessionCode], false, 'round', roundNewsParts.join('\t'));
+  broadcast(sessionData.sessionCode, false, 'round', roundNewsParts.join('\t'));
   sessionData.endTime = (new Date()).toISOString();
 };
 // Handles requests.
