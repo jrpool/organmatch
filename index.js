@@ -96,13 +96,13 @@ const revisePlayerLists = sessionCode => {
 };
 // Manages a round.
 const runRound = sessionData => {
+  // Notify all users of the round facts.
   const roundNum = sessionData.roundsEnded;
   const {playerIDs, players} = sessionData;
   const playerCount = playerIDs.length;
-  const roundStarterID = round ? sessionData.rounds[roundNum - 1].nextStarterID : playerID[0];
-  const roundEnderID = playerIDs[
-    (playerIDs.indexOf(roundStarterID) + playerCount - 1) % playerCount
-  ];
+  const roundStarterID = roundNum ? sessionData.rounds[roundNum - 1].nextStarterID : playerIDs[0];
+  const roundEnderID
+    = playerIDs[(playerIDs.indexOf(roundStarterID) + playerCount - 1) % playerCount];
   const roundOrgan = sessionData.piles.organs.latent.shift;
   const roundNewsParts = [
     roundNum,
@@ -113,7 +113,8 @@ const runRound = sessionData => {
     roundOrgan.organ,
     roundOrgan.group
   ];
-  broadcast(sessionData[sessionCode], false, 'round', roundNewsParts.join('\t'));
+  broadcast(sessionData[sessionData.sessionCode], false, 'round', roundNewsParts.join('\t'));
+  sessionData.endTime = (new Date()).toISOString();
 };
 // Handles requests.
 const requestHandler = (req, res) => {
@@ -210,9 +211,8 @@ const requestHandler = (req, res) => {
           false,
           'sessionStage',
           `Started; players shuffled; ${minutesLeft} minutes left`
-        )
+        );
         // Shuffle the player IDs in the session data.
-        const sessionData = sessions[sessionCode];
         const {playerIDs} = sessionData;
         const shuffler = playerIDs.map(id => [id, Math.random()]);
         shuffler.sort((a, b) => a[1] - b[1]);
