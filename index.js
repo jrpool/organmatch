@@ -105,7 +105,7 @@ const runRound = sessionData => {
   const roundStarterID = roundNum ? sessionData.rounds[roundNum - 1].nextStarterID : playerIDs[0];
   const roundEnderID
     = playerIDs[(playerIDs.indexOf(roundStarterID) + playerCount - 1) % playerCount];
-  const roundOrgan = sessionData.piles.organs.latent.shift;
+  const roundOrgan = sessionData.piles.organs.latent.shift();
   const roundNewsParts = [
     roundNum,
     roundStarterID,
