@@ -50,6 +50,20 @@ news.onmessage = event => {
     document.getElementById('roundEnder').innerHTML = playerNews(roundData[3], roundData[4]);
     document.getElementById('organ').textContent = `${roundData[5]} (${roundData[6]})`;
   }
+  // Otherwise, if a patient was added to the hand:
+  else if (data.startsWith('handPatientAdd=')) {
+    // Add the patient.
+    const patientData = rawData.split('\t');
+    const organNewsItems = [`${patientData[0]} (${patientData[1]} in queue)`];
+    if (patientData[2]) {
+      organNewsItems.push(`${patientData[0]} (${patientData[1]} in queue)`);
+    }
+    const organNews = organNewsItems.join(' + ');
+    const news = `<li>${[organNews, rawData[4], `priority ${rawData[5]}`].join('; ')}</li>`;
+    const newPatientLI = document.createElement('li');
+    newPatientLI.textContent = news;
+    document.getElementById('handPatients').appendChild(newPatientLI);
+  }
   // Otherwise, if the turn changed:
   else if (data.startsWith('turn=')) {
     // Change the turn number and player.

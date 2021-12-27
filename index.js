@@ -102,12 +102,17 @@ const runTurn = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
   const turnNum = round.turnsEnded;
   const turnPlayerID = turnNum ? round.turns[turnNum - 1].player.playerID : round.roundStarterID;
+  const turnPlayerName = sessionData.players[turnPlayerID].playerName;
+  broadcast(
+    sessionData.sessionCode, false, 'turn', `${turnNum}\t${turnPlayerID}\t${turnPlayerName}`
+  );
+  round.endTime = (new Date()).toISOString();
 };
 // Manages a round.
 const runRound = sessionData => {
   // Notify all users of the round facts.
   const roundNum = sessionData.roundsEnded;
-  const {playerIDs, players} = sessionData;
+  const {sessionCode, playerIDs, players} = sessionData;
   const playerCount = playerIDs.length;
   const roundStarterID = roundNum ? sessionData.rounds[roundNum - 1].nextStarterID : playerIDs[0];
   const roundEnderID
@@ -122,7 +127,26 @@ const runRound = sessionData => {
     roundOrgan.organ,
     roundOrgan.group
   ];
-  broadcast(sessionData.sessionCode, false, 'round', roundNewsParts.join('\t'));
+  broadcast(sessionCode, false, 'round', roundNewsParts.join('\t'));
+  // If this is the first round:
+  if (roundNum === 0) {
+    // For each player:
+    playerIDs.foreach(id => {
+      // For each patient card in the player’s hand:
+      const {patients} = sessionData.players[id].hand.initial;
+      patients.forEach(patient => {
+        // Notify the patient of the cards in the patient’s hand.
+        const {organNeed, group, priority} = patient;
+        const organ0 = organNeed[0].organ;
+        const qP0 = organNeed[0].queuePosition;
+        const needCount = organNeed.length === 2;
+        const organ1 = needCount ? organNeed[1].organ : '';
+        const qP1 = needCount ? organNeed[1].queuePosition : '';
+        const news = [organ0, qP0, organ1, qP1, group, priority].join('\t');
+        sendEventMsg(newsStreams[sessionCode][id], `$handPatientAdd=${news}`);
+      });
+    });
+  }
   // Initialize a round record and add it to the session data.
   sessionData.rounds.push({
     roundNum,
