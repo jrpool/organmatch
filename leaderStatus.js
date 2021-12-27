@@ -8,6 +8,9 @@ const joinLink = document.getElementById('joinLink');
 joinLink.href = joinLink.textContent = `${docRoot}/joinForm?sessionCode=${sessionCode}`;
 // Ask the server for status-change messages.
 const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=Leader`);
+const playerNews = (playerID, playerName) => {
+  return `[<span class="mono">${playerID}</span>] ${playerName}`;
+};
 const playerOL = document.getElementById('playerList');
 news.onmessage = event => {
   const {data} = event;
@@ -65,9 +68,11 @@ startForm.onsubmit = async event => {
   event.preventDefault();
   // Notify the server.
   const response = await fetch(`/startSession?sessionCode=${sessionCode}`);
-  // Permanently remove the start-session button and the how-to-start information.
   if (response.ok) {
+    // Permanently remove the start-session button and the how-to-start information.
     document.getElementById('startInfo').remove();
     startForm.remove();
+    // Make the post-start facts visible.
+    document.getElementById('afterStart').classList.remove('invisible');
   }
 };

@@ -221,12 +221,12 @@ const requestHandler = (req, res) => {
         sessionData.playerIDs = shuffler.map(pair => pair[0]);
         // Notify all users of the shuffling.
         revisePlayerLists(sessionCode);
-        // Close the response.
-        res.end('Started');
         // Manage rounds.
         while (! sessionData.endTime) {
           runRound(sessionData);
         }
+        // Close the response.
+        res.end('Started');
       }
     }
     // Otherwise, if the request method was POST:

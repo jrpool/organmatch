@@ -37,6 +37,8 @@ news.onmessage = event => {
     if (rawData.startsWith('Started')) {
       // Remove the starting information from the page.
       document.getElementById('startInfo').remove();
+      // Make the post-start facts visible.
+      document.getElementById('afterStart').classList.remove('invisible');
     }
   }
   // Otherwise, if the round changed:
