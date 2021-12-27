@@ -78,6 +78,12 @@ const getPlayers = sessionData => {
   });
   return data;
 };
+// Broadcasts messages to clients.
+const broadcast = (sessionCode, onlyPlayers, subtype, value) => {
+  Object.keys(newsStreams[sessionCode]).forEach(userID => {
+    sendEventMsg(newsStreams[sessionCode][userID], `${subtype}=${value}`);
+  });
+};
 // Notifies all users of a revised list of players.
 const revisePlayerLists = sessionCode => {
   const sessionData = sessions[sessionCode];
@@ -86,9 +92,28 @@ const revisePlayerLists = sessionCode => {
   const playerList = playerIDs
   .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
   .join('#newline#');
-  Object.keys(newsStreams[sessionCode]).forEach(userID => {
-    sendEventMsg(newsStreams[sessionCode][userID], `revision=${playerList}`);
-  });
+  broadcast(sessionCode, false, 'revision', playerList);
+};
+// Manages a round.
+const runRound = sessionData => {
+  const roundNum = sessionData.roundsEnded;
+  const {playerIDs, players} = sessionData;
+  const playerCount = playerIDs.length;
+  const roundStarterID = round ? sessionData.rounds[roundNum - 1].nextStarterID : playerID[0];
+  const roundEnderID = playerIDs[
+    (playerIDs.indexOf(roundStarterID) + playerCount - 1) % playerCount
+  ];
+  const roundOrgan = sessionData.piles.organs.latent.shift;
+  const roundNewsParts = [
+    roundNum,
+    roundStarterID,
+    players[roundStarterID].playerName,
+    roundEnderID,
+    players[roundEnderID].playerName,
+    roundOrgan.organ,
+    roundOrgan.group
+  ];
+  broadcast(sessionData[sessionCode], false, 'round', roundNewsParts.join('\t'));
 };
 // Handles requests.
 const requestHandler = (req, res) => {
@@ -155,9 +180,7 @@ const requestHandler = (req, res) => {
           if (userID === 'Leader') {
             userNews = 'The leader';
             // Notify all users.
-            Object.keys(sessionStreams).forEach(userID => {
-              sendEventMsg(sessionStreams[userID], 'sessionStage=Aborted');
-            });
+            broadcast(sessionCode, false, 'sessionStage', 'Aborted');
           }
           // Otherwise, i.e. if the user was a player:
           else {
@@ -182,21 +205,26 @@ const requestHandler = (req, res) => {
         const creationTime = (new Date(sessionData.creationTime)).getTime();
         const minutesElapsed = Math.round(((Date.now() - creationTime)) / 60000);
         const minutesLeft = versionData.limits.sessionTime.max - minutesElapsed;
-        Object.keys(newsStreams[sessionCode]).forEach(userID => {
-          sendEventMsg(
-            newsStreams[sessionCode][userID],
-            `sessionStage=Started; players shuffled; ${minutesLeft} minutes left`
-          );
-        });
+        broadcast(
+          sessionCode,
+          false,
+          'sessionStage',
+          `Started; players shuffled; ${minutesLeft} minutes left`
+        )
         // Shuffle the player IDs in the session data.
-        const {playerIDs} = sessions[sessionCode];
+        const sessionData = sessions[sessionCode];
+        const {playerIDs} = sessionData;
         const shuffler = playerIDs.map(id => [id, Math.random()]);
         shuffler.sort((a, b) => a[1] - b[1]);
-        sessions[sessionCode].playerIDs = shuffler.map(pair => pair[0]);
+        sessionData.playerIDs = shuffler.map(pair => pair[0]);
         // Notify all users of the shuffling.
         revisePlayerLists(sessionCode);
         // Close the response.
         res.end('Started');
+        // Manage rounds.
+        while (! sessionData.endTime) {
+          runRound(sessionData);
+        }
       }
     }
     // Otherwise, if the request method was POST:
@@ -249,13 +277,9 @@ const requestHandler = (req, res) => {
             // Assign an ID to the player.
             const playerID = String.fromCharCode(++playerIDCode);
             // Send the new player’s ID and name to all other players and the leader.
-            Object.keys(newsStreams[sessionCode]).forEach(userID => {
-              sendEventMsg(
-                newsStreams[sessionCode][userID], `addition=${playerID}\t${playerName}`
-              );
-            });
+            broadcast(sessionCode, false, 'addition', `${playerID}\t${playerName}`);
             // Add the player to the session data.
-            require('./addPlayer')(versionData, sessionData, playerID, playerName, 'strategy0');
+            require('./addPlayer')(versionData, sessionData, playerID, playerName, '');
             const {playerIDs} = sessionData;
             const playerListItems = playerIDs.map(
               playerID => {

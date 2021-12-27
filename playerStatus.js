@@ -9,6 +9,9 @@ const playerOL = document.getElementById('playerList');
 playerOL.innerHTML = params.playerList;
 // Revise the list when a user joins or disconnects.
 const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
+const playerNews = (playerID, playerName) => {
+  return `[<span class="mono">${playerID}</span>] ${playerName}`;
+};
 news.onmessage = event => {
   const {data} = event;
   const rawData = event.data.replace(/^[A-Za-z]+=/, '');
@@ -22,7 +25,7 @@ news.onmessage = event => {
     // Append the player to the list.
     const playerData = rawData.split('\t');
     const newPlayer = document.createElement('li');
-    newPlayer.innerHTML = `[<span class="mono">${playerData[0]}</span>] ${playerData[1]}`;
+    newPlayer.innerHTML = playerNews(...playerData);
     playerOL.appendChild(newPlayer);
   }
   // Otherwise, if the stage changed:
@@ -35,5 +38,21 @@ news.onmessage = event => {
       // Remove the starting information from the page.
       document.getElementById('startInfo').remove();
     }
+  }
+  // Otherwise, if the round changed:
+  else if (data.startsWith('round=')) {
+    // Change the round and the round-dependent facts.
+    const roundData = rawData.split('\t');
+    document.getElementById('round').textContent = roundData[0];
+    document.getElementById('roundStarter').innerHTML = playerNews(roundData[1], roundData[2]);
+    document.getElementById('roundEnder').innerHTML = playerNews(roundData[3], roundData[4]);
+    document.getElementById('organ').textContent = `${roundData[5]} (${roundData[6]})`;
+  }
+  // Otherwise, if the turn changed:
+  else if (data.startsWith('turn=')) {
+    // Change the turn number and player.
+    const turnData = rawData.split('\t');
+    document.getElementById('turnNum').textContent = turnData[0];
+    document.getElementById('turnPlayer').innerHTML = playerNews(turnData[1], turnData[2]);
   }
 };

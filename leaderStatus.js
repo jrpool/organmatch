@@ -31,6 +31,22 @@ news.onmessage = event => {
     const stageP = document.getElementById('stage');
     stageP.textContent = rawData;
   }
+  // Otherwise, if the round changed:
+  else if (data.startsWith('round=')) {
+    // Change the round and the round-dependent facts.
+    const roundData = rawData.split('\t');
+    document.getElementById('round').textContent = roundData[0];
+    document.getElementById('roundStarter').innerHTML = playerNews(roundData[1], roundData[2]);
+    document.getElementById('roundEnder').innerHTML = playerNews(roundData[3], roundData[4]);
+    document.getElementById('organ').textContent = `${roundData[5]} (${roundData[6]})`;
+  }
+  // Otherwise, if the turn changed:
+  else if (data.startsWith('turn=')) {
+    // Change the turn number and player.
+    const turnData = rawData.split('\t');
+    document.getElementById('turnNum').textContent = turnData[0];
+    document.getElementById('turnPlayer').innerHTML = playerNews(turnData[1], turnData[2]);
+  }
   // If the count of players is the minimum permitted:
   if (playerOL.childElementCount === minPlayerCount) {
     // Show the start-session button.
