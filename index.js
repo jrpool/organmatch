@@ -96,6 +96,13 @@ const revisePlayerLists = sessionCode => {
   .join('#newline#');
   broadcast(sessionCode, false, 'revision', playerList);
 };
+// Manages a turn.
+const runTurn = sessionData => {
+  // Notify all users of the turn facts.
+  const round = sessionData.rounds[sessionData.roundsEnded];
+  const turnNum = round.turnsEnded;
+  const turnPlayerID = turnNum ? round.turns[turnNum - 1].player.playerID : round.roundStarterID;
+};
 // Manages a round.
 const runRound = sessionData => {
   // Notify all users of the round facts.
@@ -116,6 +123,28 @@ const runRound = sessionData => {
     roundOrgan.group
   ];
   broadcast(sessionData.sessionCode, false, 'round', roundNewsParts.join('\t'));
+  // Initialize a round record and add it to the session data.
+  sessionData.rounds.push({
+    roundNum,
+    startTime: (new Date()).toISOString(),
+    endTime: null,
+    roundStarterID,
+    roundEnderID,
+    roundOrgan,
+    winner: {
+      playerID: null,
+      playerName: null
+    },
+    nextStarterID: null,
+    turnsEnded: 0,
+    turns: [],
+    bids: []
+  });
+  sessionData.rounds.push();
+  // Manage turns.
+  while (! sessionData.rounds[roundNum].endTime) {
+    runTurn(sessionData);
+  }
   sessionData.endTime = (new Date()).toISOString();
 };
 // Handles requests.
