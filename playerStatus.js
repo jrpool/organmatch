@@ -59,9 +59,9 @@ news.onmessage = event => {
       organNewsItems.push(`${patientData[2]} (${patientData[3]} in queue)`);
     }
     const organNews = organNewsItems.join(' + ');
-    const news = `<li>${[organNews, patientData[4], `priority ${patientData[5]}`].join('; ')}</li>`;
+    const news = `${[organNews, patientData[4], `priority ${patientData[5]}`].join('; ')}`;
     const newPatientLI = document.createElement('li');
-    newPatientLI.innerHTML = news;
+    newPatientLI.textContent = news;
     document.getElementById('handPatients').appendChild(newPatientLI);
   }
   // Otherwise, if the turn changed:
