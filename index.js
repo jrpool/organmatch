@@ -101,7 +101,9 @@ const runTurn = sessionData => {
   // Notify all users of the turn facts.
   const round = sessionData.rounds[sessionData.roundsEnded];
   const turnNum = round.turnsEnded;
-  const turnPlayerID = turnNum ? round.turns[turnNum - 1].player.playerID : round.roundStarterID;
+  const turnPlayerID = turnNum
+    ? round.turns[turnNum - 1].player.playerID
+    : round.roundStarterID;
   const turnPlayerName = sessionData.players[turnPlayerID].playerName;
   broadcast(
     sessionData.sessionCode, false, 'turn', `${turnNum}\t${turnPlayerID}\t${turnPlayerName}`
@@ -131,7 +133,7 @@ const runRound = sessionData => {
   // If this is the first round:
   if (roundNum === 0) {
     // For each player:
-    playerIDs.foreach(id => {
+    playerIDs.forEach(id => {
       // For each patient card in the player’s hand:
       const {patients} = sessionData.players[id].hand.initial;
       patients.forEach(patient => {
