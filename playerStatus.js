@@ -56,12 +56,12 @@ news.onmessage = event => {
     const patientData = rawData.split('\t');
     const organNewsItems = [`${patientData[0]} (${patientData[1]} in queue)`];
     if (patientData[2]) {
-      organNewsItems.push(`${patientData[0]} (${patientData[1]} in queue)`);
+      organNewsItems.push(`${patientData[2]} (${patientData[3]} in queue)`);
     }
     const organNews = organNewsItems.join(' + ');
-    const news = `<li>${[organNews, rawData[4], `priority ${rawData[5]}`].join('; ')}</li>`;
+    const news = `<li>${[organNews, patientData[4], `priority ${patientData[5]}`].join('; ')}</li>`;
     const newPatientLI = document.createElement('li');
-    newPatientLI.textContent = news;
+    newPatientLI.innerHTML = news;
     document.getElementById('handPatients').appendChild(newPatientLI);
   }
   // Otherwise, if the turn changed:
