@@ -64,10 +64,34 @@ news.onmessage = event => {
     document.getElementById('turnNum').textContent = turnData[0];
     document.getElementById('turnPlayer').innerHTML = playerNews(turnData[1], turnData[2]);
   }
-  // Otherwise, if the turn player’s task was defined:
+  // Otherwise, if the player’s next task was defined:
   else if (data.startsWith('task=')) {
-    // Replace the task with the current one.
-    document.getElementById('task').textContent = rawData;
+    const taskDiv = document.getElementById('task');
+    // If it is to wait for the turn player’s move:
+    if (rawData.startsWith('Wait')) {
+      // Replace the next task with the message.
+      const taskP = document.createElement('p');
+      taskP.textContent = rawData;
+      taskDiv.appendChild('taskP');
+    }
+    // Otherwise, if it is to choose a player to bid:
+    else if (rawData.startsWith('bid')) {
+      // Replace the next task with a disabled choice form.
+      const taskLabelP = document.createElement('p');
+      taskLabelP.id = 'bidLabel';
+      taskLabelP.textContent = 'Choose a patient to bid.';
+      taskDiv.appendChild(taskLabelP);
+      const taskForm = document.createElement('form');
+      const buttonsP = document.createElement('p');
+      taskForm.appendChild(buttonsP);
+      rawData.split('\t').forEach(num => {
+        const numButton = document.createElement('button');
+        numButton.setAttribute('aria-labelledby', 'bidLabel');
+        numButton.setAttribute('disabled', true);
+        numButton.textContent = num;
+        buttonsP.appendChild(numButton);
+      });
+    }
   }
   // If the count of players is the minimum permitted:
   if (playerOL.childElementCount === minPlayerCount) {

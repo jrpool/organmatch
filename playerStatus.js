@@ -25,8 +25,8 @@ news.onmessage = event => {
     // Append the player to the list.
     const playerData = rawData.split('\t');
     const newPlayer = document.createElement('li');
-    newPlayer.innerHTML = playerNews(...playerData);
     playerOL.appendChild(newPlayer);
+    newPlayer.innerHTML = playerNews(...playerData);
   }
   // Otherwise, if the stage changed:
   else if (data.startsWith('sessionStage=')) {
@@ -61,8 +61,8 @@ news.onmessage = event => {
     const organNews = organNewsItems.join(' + ');
     const news = `${[organNews, patientData[4], `priority ${patientData[5]}`].join('; ')}`;
     const newPatientLI = document.createElement('li');
-    newPatientLI.textContent = news;
     document.getElementById('handPatients').appendChild(newPatientLI);
+    newPatientLI.textContent = news;
   }
   // Otherwise, if the turn changed:
   else if (data.startsWith('turn=')) {
@@ -71,9 +71,44 @@ news.onmessage = event => {
     document.getElementById('turnNum').textContent = turnData[0];
     document.getElementById('turnPlayer').innerHTML = playerNews(turnData[1], turnData[2]);
   }
-  // Otherwise, if the player’s task was defined:
+  // Otherwise, if the player’s next task was defined:
   else if (data.startsWith('task=')) {
-    // Replace the task with the current one.
-    document.getElementById('task').textContent = rawData;
+    const taskDiv = document.getElementById('task');
+    // If it is to wait for the turn player’s move:
+    if (rawData.startsWith('Wait')) {
+      // Replace the next task with the message.
+      const taskP = document.createElement('p');
+      taskDiv.appendChild('taskP');
+      taskP.textContent = rawData;
+    }
+    // Otherwise, if it is to choose a player to bid:
+    else if (rawData.startsWith('bid')) {
+      // Replace the next task with a bid form.
+      const taskLabelP = document.createElement('p');
+      taskDiv.appendChild(taskLabelP);
+      taskLabelP.id = 'bidLabel';
+      taskLabelP.textContent = 'Choose a patient to bid.';
+      const bidForm = document.createElement('form');
+      taskDiv.appendChild(bidForm);
+      const buttonsP = document.createElement('p');
+      bidForm.appendChild(buttonsP);
+      rawData.split('\t').forEach(num => {
+        const numButton = document.createElement('button');
+        numButton.setAttribute('aria-labelledby', 'bidLabel');
+        numButton.textContent = num;
+        buttonsP.appendChild(numButton);
+      });
+      // When the bid form is submitted:
+      bidForm.onsubmit = async event => {
+        // Prevent a reload.
+        event.preventDefault();
+        // Notify the server.
+        const response = await fetch(`/bid?patientNum=${event.target.textContent}`);
+        if (response.ok) {
+          // Permanently remove the bid form.
+          document.getElementById('taskDiv').textContent = '';
+        }
+      };
+    }
   }
 };

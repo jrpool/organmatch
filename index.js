@@ -96,6 +96,40 @@ const revisePlayerLists = sessionCode => {
   .join('#newline#');
   broadcast(sessionCode, false, 'revision', playerList);
 };
+// Returns whether a patient matches an organ.
+const isMatch = (organ, patient) => {
+  const isGroupMatch = organ.group === patient.group;
+  if (isGroupMatch) {
+    return patient.organNeed.map(need => need.organ).includes(organ.organ);
+  }
+  else {
+    return false;
+  }
+};
+// Returns specifications for a turn player’s next move.
+const nextMove = (influenceLimits, round, hand, moveNum) => {
+  // If the next move is an influence use:
+  if (moveNum) {
+    return '';
+  }
+  // Otherwise, i.e. if the next move is a patient bid action:
+  else {
+    const {patients} = hand;
+    const matchNums = patients
+    .map((patient, index) => isMatch(round.organ, patient) ? index + 1 : 0)
+    .filter(index => index);
+    // If there are any matches between patients and the organ:
+    if (matchNums.length) {
+      // Return the patient numbers.
+      return `bid\t${matchNums.join('\t')}`;
+    }
+    // Otherwise, i.e. if there are no patient matches:
+    else {
+      // Return that the player must choose a patient to replace.
+      return 'swap';
+    }
+  }
+};
 // Manages a turn.
 const runTurn = sessionData => {
   // Notify all users of the turn facts.
@@ -105,26 +139,29 @@ const runTurn = sessionData => {
     ? round.turns[turnNum - 1].player.playerID
     : round.roundStarterID;
   const turnPlayerName = sessionData.players[turnPlayerID].playerName;
-  broadcast(
-    sessionData.sessionCode, false, 'turn', `${turnNum}\t${turnPlayerID}\t${turnPlayerName}`
-  );
-  round.endTime = (new Date()).toISOString();
   const {sessionCode} = sessionData;
+  broadcast(
+    sessionCode, false, 'turn', `${turnNum}\t${turnPlayerID}\t${turnPlayerName}`
+  );
   // For each player:
   sessionData.playerIDs.forEach(id=> {
     // If the player is the turn player:
     if (id === turnPlayerID) {
-      const taskMsg = 'task=Do something';
-      // Notify the leader and the player of the player’s task.
+      const moveSpec = nextMove(
+        versionData.limits.influences, round, sessionData.players[id].hand.current, 0
+      );
+      // Notify the leader and the player of the player’s next task.
+      const taskMsg = `task=${moveSpec}`;
       sendEventMsg(newsStreams[sessionCode].Leader, taskMsg);
       sendEventMsg(newsStreams[sessionCode][id], taskMsg);
     }
     // Otherwise, i.e. if the player is not the turn player:
     else {
       // Notify the player of the player’s task.
-      sendEventMsg(newsStreams[sessionCode][id], 'task=Wait');
+      sendEventMsg(newsStreams[sessionCode][id], 'task=Wait for the turn player to move');
     }
   });
+  round.endTime = (new Date()).toISOString();
 };
 // Manages a round.
 const runRound = sessionData => {
