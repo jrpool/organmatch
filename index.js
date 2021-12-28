@@ -146,6 +146,10 @@ const runRound = sessionData => {
         const qP1 = needCount ? organNeed[1].queuePosition : '';
         const news = [organ0, qP0, organ1, qP1, group, priority].join('\t');
         sendEventMsg(newsStreams[sessionCode][id], `handPatientAdd=${news}`);
+        // If the player is the round’s starter:
+        if (id === roundStarterID) {
+          sendEventMsg(newsStreams[sessionCode].Leader, `handPatientAdd=${news}`);
+        }
       });
     });
   }
