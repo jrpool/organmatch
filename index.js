@@ -109,6 +109,22 @@ const runTurn = sessionData => {
     sessionData.sessionCode, false, 'turn', `${turnNum}\t${turnPlayerID}\t${turnPlayerName}`
   );
   round.endTime = (new Date()).toISOString();
+  const {sessionCode} = sessionData;
+  // For each player:
+  sessionData.playerIDs.forEach(id=> {
+    // If the player is the turn player:
+    if (id === turnPlayerID) {
+      const taskMsg = 'task=Do something';
+      // Notify the leader and the player of the player’s task.
+      sendEventMsg(newsStreams[sessionCode].Leader, taskMsg);
+      sendEventMsg(newsStreams[sessionCode][id], taskMsg);
+    }
+    // Otherwise, i.e. if the player is not the turn player:
+    else {
+      // Notify the player of the player’s task.
+      sendEventMsg(newsStreams[sessionCode][id], 'task=Wait');
+    }
+  });
 };
 // Manages a round.
 const runRound = sessionData => {
@@ -130,29 +146,6 @@ const runRound = sessionData => {
     roundOrgan.group
   ];
   broadcast(sessionCode, false, 'round', roundNewsParts.join('\t'));
-  // If this is the first round:
-  if (roundNum === 0) {
-    // For each player:
-    playerIDs.forEach(id => {
-      // For each patient card in the player’s hand:
-      const {patients} = sessionData.players[id].hand.initial;
-      patients.forEach(patient => {
-        // Notify the patient of the cards in the patient’s hand.
-        const {organNeed, group, priority} = patient;
-        const organ0 = organNeed[0].organ;
-        const qP0 = organNeed[0].queuePosition;
-        const needCount = organNeed.length === 2;
-        const organ1 = needCount ? organNeed[1].organ : '';
-        const qP1 = needCount ? organNeed[1].queuePosition : '';
-        const news = [organ0, qP0, organ1, qP1, group, priority].join('\t');
-        sendEventMsg(newsStreams[sessionCode][id], `handPatientAdd=${news}`);
-        // If the player is the round’s starter:
-        if (id === roundStarterID) {
-          sendEventMsg(newsStreams[sessionCode].Leader, `handPatientAdd=${news}`);
-        }
-      });
-    });
-  }
   // Initialize a round record and add it to the session data.
   sessionData.rounds.push({
     roundNum,
@@ -280,6 +273,27 @@ const requestHandler = (req, res) => {
         sessionData.playerIDs = shuffler.map(pair => pair[0]);
         // Notify all users of the shuffling.
         revisePlayerLists(sessionCode);
+        // For each player:
+        playerIDs.forEach((id, index) => {
+          // For each patient card in the player’s hand:
+          const {patients} = sessionData.players[id].hand.initial;
+          patients.forEach(patient => {
+            // Notify the patient of the cards in the patient’s hand.
+            const {organNeed, group, priority} = patient;
+            const organ0 = organNeed[0].organ;
+            const qP0 = organNeed[0].queuePosition;
+            const needCount = organNeed.length === 2;
+            const organ1 = needCount ? organNeed[1].organ : '';
+            const qP1 = needCount ? organNeed[1].queuePosition : '';
+            const news = [organ0, qP0, organ1, qP1, group, priority].join('\t');
+            sendEventMsg(newsStreams[sessionCode][id], `handPatientAdd=${news}`);
+            // If the player is the session’s starter:
+            if (index === 0) {
+              // Notify the leader of the cards in the player’s hand.
+              sendEventMsg(newsStreams[sessionCode].Leader, `handPatientAdd=${news}`);
+            }
+          });
+        });
         // Manage rounds.
         while (! sessionData.endTime) {
           runRound(sessionData);

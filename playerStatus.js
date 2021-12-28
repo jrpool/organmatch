@@ -71,4 +71,9 @@ news.onmessage = event => {
     document.getElementById('turnNum').textContent = turnData[0];
     document.getElementById('turnPlayer').innerHTML = playerNews(turnData[1], turnData[2]);
   }
+  // Otherwise, if the player’s task was defined:
+  else if (data.startsWith('task=')) {
+    // Replace the task with the current one.
+    document.getElementById('task').textContent = rawData;
+  }
 };

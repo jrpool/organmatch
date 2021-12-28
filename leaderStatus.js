@@ -64,6 +64,11 @@ news.onmessage = event => {
     document.getElementById('turnNum').textContent = turnData[0];
     document.getElementById('turnPlayer').innerHTML = playerNews(turnData[1], turnData[2]);
   }
+  // Otherwise, if the turn player’s task was defined:
+  else if (data.startsWith('task=')) {
+    // Replace the task with the current one.
+    document.getElementById('task').textContent = rawData;
+  }
   // If the count of players is the minimum permitted:
   if (playerOL.childElementCount === minPlayerCount) {
     // Show the start-session button.
