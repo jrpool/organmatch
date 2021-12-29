@@ -208,6 +208,16 @@ const runRound = sessionData => {
   }
   sessionData.endTime = (new Date()).toISOString();
 };
+// Returns the specification of a patient.
+const patientSpec = patient => {
+  const {organNeed, group, priority} = patient;
+  const organ0 = organNeed[0].organ;
+  const qP0 = organNeed[0].queuePosition;
+  const needCount = organNeed.length === 2;
+  const organ1 = needCount ? organNeed[1].organ : '';
+  const qP1 = needCount ? organNeed[1].queuePosition : '';
+  return [organ0, qP0, organ1, qP1, group, priority];
+};
 // Handles requests.
 const requestHandler = (req, res) => {
   const {method} = req;
@@ -316,13 +326,7 @@ const requestHandler = (req, res) => {
           const {patients} = sessionData.players[id].hand.initial;
           patients.forEach(patient => {
             // Notify the patient of the cards in the patient’s hand.
-            const {organNeed, group, priority} = patient;
-            const organ0 = organNeed[0].organ;
-            const qP0 = organNeed[0].queuePosition;
-            const needCount = organNeed.length === 2;
-            const organ1 = needCount ? organNeed[1].organ : '';
-            const qP1 = needCount ? organNeed[1].queuePosition : '';
-            const news = [organ0, qP0, organ1, qP1, group, priority].join('\t');
+            const news = patientSpec(patient).join('\t');
             sendEventMsg(newsStreams[sessionCode][id], `handPatientAdd=${news}`);
             // If the player is the session’s starter:
             if (index === 0) {
@@ -340,6 +344,12 @@ const requestHandler = (req, res) => {
       }
       // Otherwise, if a bid was made:
       else if (url.startsWith('/bid')) {
+        const {sessionCode, playerID, patientNum} = params;
+        // Notify all users of the bid.
+        const sessionData = sessions[sessionCode];
+        const patient = sessionData.players[playerID].hand.current.patients[patientNum - 1];
+        const news = patientSpec(patient).join('\t');
+        broadcast(sessionCode, false, 'bidAdd', news);
         // Close the response.
         res.end();
       }

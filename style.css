@@ -56,13 +56,13 @@ body.cardlet {
 button {
   min-height: 44px;
   min-width: 44px;
-  margin: auto 1rem;
+  margin: auto 0.5rem;
   padding: 0 1rem;
   font-size: 1.5rem;
   border-radius: 1rem;
   border-width: 0.25rem;
   border-style: solid;
-  border-color: #000;
+  border-color: #00c;
   color: #fff;
   background-color: #00c;
 }

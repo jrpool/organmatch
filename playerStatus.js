@@ -12,6 +12,16 @@ const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=${p
 const playerNews = (playerID, playerName) => {
   return `[<span class="mono">${playerID}</span>] ${playerName}`;
 };
+// Returns a patient description.
+const patientDigest = patientNews => {
+  const patientData = patientNews.split('\t');
+  const organNewsItems = [`${patientData[0]} (${patientData[1]} in queue)`];
+  if (patientData[2]) {
+    organNewsItems.push(`${patientData[2]} (${patientData[3]} in queue)`);
+  }
+  const organNews = organNewsItems.join(' + ');
+  return `${[organNews, patientData[4], `priority ${patientData[5]}`].join('; ')}`;
+};
 news.onmessage = event => {
   const {data} = event;
   const rawData = event.data.replace(/^[A-Za-z]+=/, '');
@@ -53,16 +63,9 @@ news.onmessage = event => {
   // Otherwise, if a patient was added to the hand:
   else if (data.startsWith('handPatientAdd=')) {
     // Add the patient.
-    const patientData = rawData.split('\t');
-    const organNewsItems = [`${patientData[0]} (${patientData[1]} in queue)`];
-    if (patientData[2]) {
-      organNewsItems.push(`${patientData[2]} (${patientData[3]} in queue)`);
-    }
-    const organNews = organNewsItems.join(' + ');
-    const news = `${[organNews, patientData[4], `priority ${patientData[5]}`].join('; ')}`;
     const newPatientLI = document.createElement('li');
     document.getElementById('handPatients').appendChild(newPatientLI);
-    newPatientLI.textContent = news;
+    newPatientLI.textContent = patientDigest(rawData);
   }
   // Otherwise, if the turn changed:
   else if (data.startsWith('turn=')) {
@@ -107,12 +110,22 @@ news.onmessage = event => {
         // Prevent a reload.
         event.preventDefault();
         // Notify the server.
-        const response = await fetch(`/${taskType}?patientNum=${event.target.textContent}`);
+        const patientNum = event.target.textContent;
+        const response = await fetch(
+          `/${taskType}?sessionCode=${sessionCode}&playerID=${playerID}&patientNum=${patientNum}`
+        );
         if (response.ok) {
           // Remove the form.
           taskDiv.textContent = '';
         }
       };
     }
+  }
+  // Otherwise, if a bid was made:
+  else if (data.startsWith('bidAdd=')) {
+    // Add the bid to the list of bids.
+    const bidLI = document.createElement('li');
+    document.getElementById('bids').appendChild(bidLI);
+    bidLI.textContent = patientDigest(rawData);
   }
 };
