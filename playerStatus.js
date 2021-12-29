@@ -78,7 +78,7 @@ news.onmessage = event => {
   else if (data.startsWith('turn=')) {
     // Change the status of the turn.
     const turnData = rawData.split('\t');
-    document.getElementById(`turn${turnData[0]}`).textContent(turnData[1]);
+    document.getElementById(`turn${turnData[0]}`).textContent = turnData[1];
   }
   // Otherwise, if the player’s next task was defined:
   else if (data.startsWith('task=')) {
