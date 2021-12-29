@@ -56,9 +56,16 @@ news.onmessage = event => {
     // Change the round and the round-dependent facts.
     const roundData = rawData.split('\t');
     document.getElementById('round').textContent = roundData[0];
-    document.getElementById('roundStarter').innerHTML = playerNews(roundData[1], roundData[2]);
-    document.getElementById('roundEnder').innerHTML = playerNews(roundData[3], roundData[4]);
-    document.getElementById('organ').textContent = `${roundData[5]} (${roundData[6]})`;
+    document.getElementById('organ').textContent = `${roundData[1]} (${roundData[2]})`;
+  }
+  // Otherwise, if a round turn was initialized:
+  else if (data.startsWith('turnInit=')) {
+    // Add the turn to the list of round turns.
+    const turnData = rawData.split('\t');
+    const turnLI = document.createElement('li');
+    document.getElementById('turns').appendChild(turnLI);
+    turnLI.innerHTML
+      = `Turn ${turnData[0]} (player ${turnData[1]})<span id=turn${turnData[0]}></span>`;
   }
   // Otherwise, if a patient was added to the hand:
   else if (data.startsWith('handPatientAdd=')) {
@@ -67,12 +74,11 @@ news.onmessage = event => {
     document.getElementById('handPatients').appendChild(newPatientLI);
     newPatientLI.textContent = patientDigest(rawData);
   }
-  // Otherwise, if the turn changed:
+  // Otherwise, if a turn status changed:
   else if (data.startsWith('turn=')) {
-    // Change the turn number and player.
+    // Change the status of the turn.
     const turnData = rawData.split('\t');
-    document.getElementById('turnNum').textContent = turnData[0];
-    document.getElementById('turnPlayer').innerHTML = playerNews(turnData[1], turnData[2]);
+    document.getElementById(`turn${turnData[0]}`).textContent(turnData[1]);
   }
   // Otherwise, if the player’s next task was defined:
   else if (data.startsWith('task=')) {

@@ -139,11 +139,11 @@ const runTurn = sessionData => {
   const turnPlayerID = turnNum
     ? round.turns[turnNum - 1].player.playerID
     : round.roundStarterID;
-  const turnPlayerName = sessionData.players[turnPlayerID].playerName;
   const {sessionCode} = sessionData;
-  broadcast(
-    sessionCode, false, 'turn', `${turnNum}\t${turnPlayerID}\t${turnPlayerName}`
-  );
+  broadcast(sessionCode, false, 'turn', `${turnNum}\t: current`);
+  if (turnNum) {
+    broadcast(sessionCode, false, 'turn', `${turnNum - 1}\t: done`);
+  }
   // For each player:
   sessionData.playerIDs.forEach(id => {
     // If the player is the turn player:
@@ -168,22 +168,18 @@ const runTurn = sessionData => {
 const runRound = sessionData => {
   // Notify all users of the round facts.
   const roundNum = sessionData.roundsEnded;
-  const {sessionCode, playerIDs, players} = sessionData;
+  const {sessionCode, playerIDs} = sessionData;
   const playerCount = playerIDs.length;
   const roundStarterID = roundNum ? sessionData.rounds[roundNum - 1].nextStarterID : playerIDs[0];
-  const roundEnderID
-    = playerIDs[(playerIDs.indexOf(roundStarterID) + playerCount - 1) % playerCount];
+  const starterIndex = playerIDs.indexOf(roundStarterID);
+  const roundEnderID = playerIDs[(starterIndex + playerCount - 1) % playerCount];
   const roundOrgan = sessionData.piles.organs.latent.shift();
-  const roundNewsParts = [
-    roundNum,
-    roundStarterID,
-    players[roundStarterID].playerName,
-    roundEnderID,
-    players[roundEnderID].playerName,
-    roundOrgan.organ,
-    roundOrgan.group
-  ];
+  const roundNewsParts = [roundNum, roundOrgan.organ, roundOrgan.group];
   broadcast(sessionCode, false, 'round', roundNewsParts.join('\t'));
+  const turnPlayerIDs = playerIDs.slice(starterIndex).concat(playerIDs.slice(0, starterIndex));
+  turnPlayerIDs.forEach((id, index) => {
+    broadcast(sessionCode, false, 'turnInit', `${index}\t${id}`);
+  });
   // Initialize a round record and add it to the session data.
   sessionData.rounds.push({
     roundNum,
