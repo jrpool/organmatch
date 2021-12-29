@@ -321,7 +321,7 @@ const requestHandler = (req, res) => {
           // For each patient card in the player’s hand:
           const {patients} = sessionData.players[id].hand.initial;
           patients.forEach(patient => {
-            // Notify the patient of the cards in the patient’s hand.
+            // Notify the player of the cards in the player’s hand.
             const news = patientSpec(patient).join('\t');
             sendEventMsg(newsStreams[sessionCode][id], `handPatientAdd=${news}`);
             // If the player is the session’s starter:
@@ -344,8 +344,16 @@ const requestHandler = (req, res) => {
         // Notify all users of the bid.
         const sessionData = sessions[sessionCode];
         const patient = sessionData.players[playerID].hand.current.patients[patientNum - 1];
-        const news = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
-        broadcast(sessionCode, false, 'bidAdd', news);
+        const bidNews = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
+        broadcast(sessionCode, false, 'bidAdd', bidNews);
+        // Draw a patient to replace the bid patient.
+        const newPatient = sessionData.piles.patients.shift();
+        sessionData.players[playerID].hand.current.patients[patientNum - 1] = newPatient;
+        // Notify the player and the leader of the replacement.
+        const replacementNews = [patientNum].concat(patientSpec(newPatient)).join('\t');
+        const replacementMsg = `handPatientReplace=${replacementNews}`;
+        sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
+        sendEventMsg(newsStreams[sessionCode].Leader, replacementMsg);
         // Close the response.
         res.end();
       }

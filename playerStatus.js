@@ -9,9 +9,6 @@ const playerOL = document.getElementById('playerList');
 playerOL.innerHTML = params.playerList;
 // Revise the list when a user joins or disconnects.
 const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
-const playerNews = (playerID, playerName) => {
-  return `[<span class="mono">${playerID}</span>] ${playerName}`;
-};
 // Returns a patient description.
 const patientDigest = patientNews => {
   const patientData = patientNews.split('\t');
@@ -36,7 +33,7 @@ news.onmessage = event => {
     const playerData = rawData.split('\t');
     const newPlayer = document.createElement('li');
     playerOL.appendChild(newPlayer);
-    newPlayer.innerHTML = playerNews(...playerData);
+    newPlayer.innerHTML = `[<span class="mono">${playerData[0]}</span>] ${playerData[1]}`;
   }
   // Otherwise, if the stage changed:
   else if (data.startsWith('sessionStage=')) {
@@ -73,6 +70,15 @@ news.onmessage = event => {
     const newPatientLI = document.createElement('li');
     document.getElementById('handPatients').appendChild(newPatientLI);
     newPatientLI.textContent = patientDigest(rawData);
+  }
+  // Otherwise, if a patient was replaced in the hand:
+  else if (data.startsWith('handPatientReplace=')) {
+    // Replace the old patient with the new one.
+    const replacementData = rawData.split('\t');
+    const patientLI = document
+    .getElementById('handPatients')
+    .querySelector(`li:nth-child(${replacementData[0]})`);
+    patientLI.textContent = patientDigest(replacementData.slice(1).join('\t'));
   }
   // Otherwise, if a turn status changed:
   else if (data.startsWith('turn=')) {

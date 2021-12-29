@@ -8,9 +8,6 @@ const joinLink = document.getElementById('joinLink');
 joinLink.href = joinLink.textContent = `${docRoot}/joinForm?sessionCode=${sessionCode}`;
 // Ask the server for status-change messages.
 const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=Leader`);
-const playerNews = (playerID, playerName) => {
-  return `[<span class="mono">${playerID}</span>] ${playerName}`;
-};
 const playerOL = document.getElementById('playerList');
 // Returns a patient description.
 const patientDigest = patientNews => {
@@ -66,6 +63,15 @@ news.onmessage = event => {
     const newPatientLI = document.createElement('li');
     document.getElementById('handPatients').appendChild(newPatientLI);
     newPatientLI.textContent = patientDigest(rawData);
+  }
+  // Otherwise, if a patient was replaced in the hand:
+  else if (data.startsWith('handPatientReplace=')) {
+    // Replace the old patient with the new one.
+    const replacementData = rawData.split('\t');
+    const patientLI = document
+    .getElementById('handPatients')
+    .querySelector(`li:nth-child(${replacementData[0]})`);
+    patientLI.textContent = patientDigest(replacementData.slice(1).join('\t'));
   }
   // Otherwise, if a turn status changed:
   else if (data.startsWith('turn=')) {
