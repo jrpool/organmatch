@@ -131,8 +131,8 @@ const nextMove = (influenceLimits, round, hand, moveNum) => {
     }
   }
 };
-// Manages a turn.
-const runTurn = sessionData => {
+// Starts a turn.
+const startTurn = sessionData => {
   // Notify all users of the turn facts.
   const round = sessionData.rounds[sessionData.roundsEnded];
   const turnNum = round.turnsEnded;
@@ -162,10 +162,11 @@ const runTurn = sessionData => {
       sendEventMsg(newsStreams[sessionCode][id], 'task=wait');
     }
   });
-  round.endTime = (new Date()).toISOString();
 };
-// Manages a round.
-const runRound = sessionData => {
+// Returns a date-time string.
+const nowString = () => (new Date()).toISOString();
+// Starts a round.
+const startRound = sessionData => {
   // Notify all users of the round facts.
   const roundNum = sessionData.roundsEnded;
   const {sessionCode, playerIDs} = sessionData;
@@ -183,7 +184,7 @@ const runRound = sessionData => {
   // Initialize a round record and add it to the session data.
   sessionData.rounds.push({
     roundNum,
-    startTime: (new Date()).toISOString(),
+    startTime: nowString(),
     endTime: null,
     roundStarterID,
     roundEnderID,
@@ -197,12 +198,34 @@ const runRound = sessionData => {
     turns: [],
     bids: []
   });
-  sessionData.rounds.push();
-  // Manage turns.
-  while (! sessionData.rounds[roundNum].endTime) {
-    runTurn(sessionData);
+  // Start the first turn.
+  startTurn(sessionData);
+};
+// Ends a round.
+const endRound = sessionData => {
+  const round = sessionData.rounds[sessionData.roundsEnded];
+  round.endTime = nowString();
+  sessionData.roundsEnded++;
+};
+// Ends a turn.
+const endTurn = sessionData => {
+  const round = sessionData.rounds[sessionData.roundsEnded];
+  const turnNum = round.turnsEnded;
+  const turn = round.turns[turnNum - 1];
+  // Add the turn’s end time to the session data.
+  turn.endTime = nowString();
+  // Increment the turn count in the session data.
+  round.turnsEnded++;
+  // If the round’s turns are not yet exhausted:
+  if (turnNum < sessionData.playerCount) {
+    // Start the next turn.
+    startTurn(sessionData);
   }
-  sessionData.endTime = (new Date()).toISOString();
+  // Otherwise, i.e. if this was the last turn in the round:
+  else {
+    // End the round.
+    endRound(sessionData);
+  }
 };
 // Returns the specification of a patient.
 const patientSpec = patient => {
@@ -299,7 +322,7 @@ const requestHandler = (req, res) => {
         const {sessionCode} = params;
         const sessionData = sessions[sessionCode];
         // Set the start time in the session data.
-        sessionData.startTime = (new Date()).toISOString();
+        sessionData.startTime = nowString();
         // Notify all users.
         const creationTime = (new Date(sessionData.creationTime)).getTime();
         const minutesElapsed = Math.round(((Date.now() - creationTime)) / 60000);
@@ -331,12 +354,8 @@ const requestHandler = (req, res) => {
             }
           });
         });
-        // Manage rounds.
-        while (! sessionData.endTime) {
-          runRound(sessionData);
-        }
-        // Close the response.
-        res.end('Started');
+        // Start the first round.
+        startRound(sessionData);
       }
       // Otherwise, if a bid was made:
       else if (url.startsWith('/bid')) {
@@ -354,13 +373,15 @@ const requestHandler = (req, res) => {
         const replacementMsg = `handPatientReplace=${replacementNews}`;
         sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
         sendEventMsg(newsStreams[sessionCode].Leader, replacementMsg);
+        // End the turn and start the next turn or round.
+        endTurn(sessionData);
         // Close the response.
-        res.end();
+        // res.end();
       }
       // Otherwise, if a replacement was made:
       else if (url.startsWith('/swap')) {
         // Close the response.
-        res.end();
+        // res.end();
       }
     }
     // Otherwise, if the request method was POST:
