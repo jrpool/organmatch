@@ -56,9 +56,18 @@ body.cardlet {
 button {
   min-height: 44px;
   min-width: 44px;
+  margin: auto 1rem;
   padding: 0 1rem;
   border-radius: 1rem;
-  border-style: none;
+  border-width: 0.25rem;
+  border-style: solid;
+  border-color: #000;
+  color: #fff;
+  background-color: #00c;
+}
+button:hover {
+  color: #000;
+  background-color: #ccf;
 }
 caption {
   margin: 1rem 0;
