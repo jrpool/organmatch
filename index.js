@@ -348,7 +348,7 @@ const requestHandler = (req, res) => {
         // Notify all users of the bid.
         const sessionData = sessions[sessionCode];
         const patient = sessionData.players[playerID].hand.current.patients[patientNum - 1];
-        const news = patientSpec(patient).join('\t');
+        const news = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
         broadcast(sessionCode, false, 'bidAdd', news);
         // Close the response.
         res.end();

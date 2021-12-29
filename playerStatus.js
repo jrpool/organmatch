@@ -110,7 +110,7 @@ news.onmessage = event => {
         // Prevent a reload.
         event.preventDefault();
         // Notify the server.
-        const patientNum = event.target.textContent;
+        const patientNum = event.submitter.textContent;
         const response = await fetch(
           `/${taskType}?sessionCode=${sessionCode}&playerID=${playerID}&patientNum=${patientNum}`
         );
