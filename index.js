@@ -305,14 +305,13 @@ const requestHandler = (req, res) => {
           `Started; players shuffled; ${minutesLeft} minutes left`
         );
         // Shuffle the player IDs in the session data.
-        const {playerIDs} = sessionData;
-        const shuffler = playerIDs.map(id => [id, Math.random()]);
+        const shuffler = sessionData.playerIDs.map(id => [id, Math.random()]);
         shuffler.sort((a, b) => a[1] - b[1]);
         sessionData.playerIDs = shuffler.map(pair => pair[0]);
         // Notify all users of the shuffling.
         revisePlayerLists(sessionCode);
         // For each player:
-        playerIDs.forEach((id, index) => {
+        sessionData.playerIDs.forEach((id, index) => {
           // For each patient card in the player’s hand:
           const {patients} = sessionData.players[id].hand.initial;
           patients.forEach(patient => {

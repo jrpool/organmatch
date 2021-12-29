@@ -77,27 +77,28 @@ news.onmessage = event => {
     const taskDiv = document.getElementById('task');
     taskDiv.textContent = '';
     const taskParts = rawData.split('\t');
+    const taskType = taskParts.shift();
     // If the next task is to wait for the turn player’s move:
-    if (taskParts[0] === 'wait') {
+    if (taskType === 'wait') {
       // Display it.
       const taskP = document.createElement('p');
-      taskDiv.appendChild('taskP');
+      taskDiv.appendChild(taskP);
       taskP.textContent = 'Wait for the turn player to move';
     }
     // Otherwise, if it is to choose a player to bid or replace:
-    else if (['bid', 'swap'].includes(taskParts[0])) {
+    else if (['bid', 'swap'].includes(taskType)) {
       // Replace the next task with a choice form.
       const taskLabelP = document.createElement('p');
       taskDiv.appendChild(taskLabelP);
       taskLabelP.id = 'choiceLabel';
-      taskLabelP.textContent = `${taskParts[0] === 'bid' ? 'Bid' : 'Replace'} a patient:`;
+      taskLabelP.textContent = `${taskType === 'bid' ? 'Bid' : 'Replace'} a patient:`;
       const choiceForm = document.createElement('form');
       taskDiv.appendChild(choiceForm);
       const buttonsP = document.createElement('p');
       choiceForm.appendChild(buttonsP);
-      rawData.split('\t').forEach(num => {
+      taskParts.forEach(num => {
         const numButton = document.createElement('button');
-        numButton.setAttribute('aria-labelledby', 'bidLabel');
+        numButton.setAttribute('aria-labelledby', 'choiceLabel');
         numButton.textContent = num;
         buttonsP.appendChild(numButton);
       });
@@ -109,7 +110,7 @@ news.onmessage = event => {
         const response = await fetch(`/${taskParts[0]}?patientNum=${event.target.textContent}`);
         if (response.ok) {
           // Remove the form.
-          document.getElementById('task').textContent = '';
+          taskDiv.textContent = '';
         }
       };
     }

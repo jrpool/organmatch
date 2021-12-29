@@ -64,33 +64,27 @@ news.onmessage = event => {
     document.getElementById('turnNum').textContent = turnData[0];
     document.getElementById('turnPlayer').innerHTML = playerNews(turnData[1], turnData[2]);
   }
-  // Otherwise, if the player’s next task was defined:
+  // Otherwise, if the turn player’s next task was defined:
   else if (data.startsWith('task=')) {
     // Remove any existing next task.
     const taskDiv = document.getElementById('task');
     taskDiv.textContent = '';
     const taskParts = rawData.split('\t');
-    // If the next task is to wait for the turn player’s move:
-    if (taskParts[0] === 'wait') {
-      // Display it.
-      const taskP = document.createElement('p');
-      taskDiv.appendChild('taskP');
-      taskP.textContent = 'Wait for the turn player to move';
-    }
-    // Otherwise, if it is to choose a player to bid or replace:
-    else if (['bid', 'swap'].includes(taskParts[0])) {
+    const taskType = taskParts.shift();
+    // If the task is to choose a player to bid or replace:
+    if (['bid', 'swap'].includes(taskType)) {
       // Replace the next task with a choice form.
       const taskLabelP = document.createElement('p');
       taskDiv.appendChild(taskLabelP);
       taskLabelP.id = 'choiceLabel';
-      taskLabelP.textContent = `${taskParts[0] === 'bid' ? 'Bid' : 'Replace'} a patient:`;
+      taskLabelP.textContent = `${taskType === 'bid' ? 'Bid' : 'Replace'} a patient:`;
       const choiceForm = document.createElement('form');
       taskDiv.appendChild(choiceForm);
       const buttonsP = document.createElement('p');
       choiceForm.appendChild(buttonsP);
-      rawData.split('\t').forEach(num => {
+      taskParts.forEach(num => {
         const numButton = document.createElement('button');
-        numButton.setAttribute('aria-labelledby', 'bidLabel');
+        numButton.setAttribute('aria-labelledby', 'choiceLabel');
         numButton.setAttribute('disabled', true);
         numButton.textContent = num;
         buttonsP.appendChild(numButton);
