@@ -385,6 +385,7 @@ const requestHandler = (req, res) => {
         // Close the response.
         res.end();
       }
+    }
     // Otherwise, if the request method was POST:
     else if (method === 'POST') {
       // Get the data as an object.
