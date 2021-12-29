@@ -71,7 +71,7 @@ news.onmessage = event => {
   else if (data.startsWith('turn=')) {
     // Change the status of the turn.
     const turnData = rawData.split('\t');
-    document.getElementById(`turn${turnData[0]}`).textContent(turnData[1]);
+    document.getElementById(`turn${turnData[0]}`).textContent = turnData[1];
   }
   // Otherwise, if the turn player’s next task was defined:
   else if (data.startsWith('task=')) {
@@ -107,15 +107,21 @@ news.onmessage = event => {
     document.getElementById('bids').appendChild(bidLI);
     bidLI.textContent = patientDigest(rawData);
   }
-  // If the count of players is the minimum permitted:
-  if (playerOL.childElementCount === minPlayerCount) {
-    // Show the start-session button.
-    document.getElementById('startSession').classList.remove('invisible');
-  }
-  // Otherwise, if the count is less than the minimum:
-  else if (playerOL.childElementCount < minPlayerCount) {
-    // Hide the start-session button.
-    document.getElementById('startSession').classList.add('invisible');
+  // If the start-session button has not been permanently removed:
+  if (document.getElementById('startSession')) {
+    // If a player joined or disconnected:
+    if (data.startsWith('revision') || data.startsWith('addition')) {
+      // If the count of players is the minimum permitted:
+      if (playerOL.childElementCount === minPlayerCount) {
+        // Show the start-session button.
+        document.getElementById('startSession').classList.remove('invisible');
+      }
+      // Otherwise, if the count is less than the minimum:
+      else if (playerOL.childElementCount < minPlayerCount) {
+        // Hide the start-session button.
+        document.getElementById('startSession').classList.add('invisible');
+      }
+    }
   }
 };
 // When the start-session form is submitted:
