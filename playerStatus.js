@@ -73,40 +73,43 @@ news.onmessage = event => {
   }
   // Otherwise, if the player’s next task was defined:
   else if (data.startsWith('task=')) {
+    // Remove any existing next task.
     const taskDiv = document.getElementById('task');
-    // If it is to wait for the turn player’s move:
-    if (rawData.startsWith('Wait')) {
-      // Replace the next task with the message.
+    taskDiv.textContent = '';
+    const taskParts = rawData.split('\t');
+    // If the next task is to wait for the turn player’s move:
+    if (taskParts[0] === 'wait') {
+      // Display it.
       const taskP = document.createElement('p');
       taskDiv.appendChild('taskP');
-      taskP.textContent = rawData;
+      taskP.textContent = 'Wait for the turn player to move';
     }
-    // Otherwise, if it is to choose a player to bid:
-    else if (rawData.startsWith('bid')) {
-      // Replace the next task with a bid form.
+    // Otherwise, if it is to choose a player to bid or replace:
+    else if (['bid', 'swap'].includes(taskParts[0])) {
+      // Replace the next task with a choice form.
       const taskLabelP = document.createElement('p');
       taskDiv.appendChild(taskLabelP);
-      taskLabelP.id = 'bidLabel';
-      taskLabelP.textContent = 'Choose a patient to bid.';
-      const bidForm = document.createElement('form');
-      taskDiv.appendChild(bidForm);
+      taskLabelP.id = 'choiceLabel';
+      taskLabelP.textContent = `${taskParts[0] === 'bid' ? 'Bid' : 'Replace'} a patient:`;
+      const choiceForm = document.createElement('form');
+      taskDiv.appendChild(choiceForm);
       const buttonsP = document.createElement('p');
-      bidForm.appendChild(buttonsP);
+      choiceForm.appendChild(buttonsP);
       rawData.split('\t').forEach(num => {
         const numButton = document.createElement('button');
         numButton.setAttribute('aria-labelledby', 'bidLabel');
         numButton.textContent = num;
         buttonsP.appendChild(numButton);
       });
-      // When the bid form is submitted:
-      bidForm.onsubmit = async event => {
+      // When the form is submitted:
+      choiceForm.onsubmit = async event => {
         // Prevent a reload.
         event.preventDefault();
         // Notify the server.
-        const response = await fetch(`/bid?patientNum=${event.target.textContent}`);
+        const response = await fetch(`/${taskParts[0]}?patientNum=${event.target.textContent}`);
         if (response.ok) {
-          // Permanently remove the bid form.
-          document.getElementById('taskDiv').textContent = '';
+          // Remove the form.
+          document.getElementById('task').textContent = '';
         }
       };
     }

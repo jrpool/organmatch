@@ -120,13 +120,14 @@ const nextMove = (influenceLimits, round, hand, moveNum) => {
     .filter(index => index);
     // If there are any matches between patients and the organ:
     if (matchNums.length) {
-      // Return the patient numbers.
+      // Return the bid specifications.
       return `bid\t${matchNums.join('\t')}`;
     }
     // Otherwise, i.e. if there are no patient matches:
     else {
-      // Return that the player must choose a patient to replace.
-      return 'swap';
+      // Return the replacement specifications.
+      const patientNums = patients.map((patient, index) => index + 1);
+      return `swap\t${patientNums.join('\t')}`;
     }
   }
 };
@@ -147,10 +148,10 @@ const runTurn = sessionData => {
   sessionData.playerIDs.forEach(id=> {
     // If the player is the turn player:
     if (id === turnPlayerID) {
+      // Notify the leader and the player of the player’s next task.
       const moveSpec = nextMove(
         versionData.limits.influences, round, sessionData.players[id].hand.current, 0
       );
-      // Notify the leader and the player of the player’s next task.
       const taskMsg = `task=${moveSpec}`;
       sendEventMsg(newsStreams[sessionCode].Leader, taskMsg);
       sendEventMsg(newsStreams[sessionCode][id], taskMsg);
@@ -158,7 +159,7 @@ const runTurn = sessionData => {
     // Otherwise, i.e. if the player is not the turn player:
     else {
       // Notify the player of the player’s task.
-      sendEventMsg(newsStreams[sessionCode][id], 'task=Wait for the turn player to move');
+      sendEventMsg(newsStreams[sessionCode][id], 'task=wait');
     }
   });
   round.endTime = (new Date()).toISOString();
