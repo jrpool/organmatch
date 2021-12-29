@@ -338,6 +338,16 @@ const requestHandler = (req, res) => {
         // Close the response.
         res.end('Started');
       }
+      // Otherwise, if a bid was made:
+      else if (url.startsWith('/bid')) {
+        // Close the response.
+        res.end();
+      }
+      // Otherwise, if a replacement was made:
+      else if (url.startsWith('/swap')) {
+        // Close the response.
+        res.end();
+      }
     }
     // Otherwise, if the request method was POST:
     else if (method === 'POST') {

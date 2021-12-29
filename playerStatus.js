@@ -107,7 +107,7 @@ news.onmessage = event => {
         // Prevent a reload.
         event.preventDefault();
         // Notify the server.
-        const response = await fetch(`/${taskParts[0]}?patientNum=${event.target.textContent}`);
+        const response = await fetch(`/${taskType}?patientNum=${event.target.textContent}`);
         if (response.ok) {
           // Remove the form.
           taskDiv.textContent = '';
