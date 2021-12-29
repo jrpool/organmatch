@@ -116,7 +116,7 @@ const nextMove = (influenceLimits, round, hand, moveNum) => {
   else {
     const {patients} = hand;
     const matchNums = patients
-    .map((patient, index) => isMatch(round.organ, patient) ? index + 1 : 0)
+    .map((patient, index) => isMatch(round.roundOrgan, patient) ? index + 1 : 0)
     .filter(index => index);
     // If there are any matches between patients and the organ:
     if (matchNums.length) {
@@ -145,7 +145,7 @@ const runTurn = sessionData => {
     sessionCode, false, 'turn', `${turnNum}\t${turnPlayerID}\t${turnPlayerName}`
   );
   // For each player:
-  sessionData.playerIDs.forEach(id=> {
+  sessionData.playerIDs.forEach(id => {
     // If the player is the turn player:
     if (id === turnPlayerID) {
       // Notify the leader and the player of the player’s next task.
