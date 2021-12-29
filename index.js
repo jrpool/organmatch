@@ -211,7 +211,7 @@ const endRound = sessionData => {
 const endTurn = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
   const turnNum = round.turnsEnded;
-  const turn = round.turns[turnNum - 1];
+  const turn = round.turns[turnNum];
   // Add the turn’s end time to the session data.
   turn.endTime = nowString();
   // Increment the turn count in the session data.
@@ -259,33 +259,35 @@ const requestHandler = (req, res) => {
     if (method === 'GET') {
       // Get any query parameters as an object.
       const absURL = `https://${process.env.HOST}:${process.env.PORT}${url}`;
+      const urlBase = url.replace(/^\/|\?.+/g, '');
       const params = parse((new URL(absURL)).search);
       // If a script was requested:
       if (url.endsWith('.js')) {
+        // Serve it.
         serveScript(url.slice(1), res);
       }
       // Otherwise, if the home page was requested:
-      else if (['/home', '/'].includes(url)) {
+      else if (['home', ''].includes(urlBase)) {
         // Serve it.
         serveTemplate('home', {}, res);
       }
       // Otherwise, if the game documentation was requested:
-      else if (url === '/about') {
+      else if (urlBase === 'about') {
         // Serve it.
         serveTemplate('about', {}, res);
       }
       // Otherwise, if the session-creation form was requested:
-      else if (url === '/createForm') {
+      else if (urlBase === 'createForm') {
         // Serve it.
         serveTemplate('createForm', {}, res);
       }
       // Otherwise, if the session-joining form was requested:
-      else if (url.startsWith('/joinForm')) {
+      else if (urlBase === 'joinForm') {
         // Serve it.
         serveTemplate('joinForm', {}, res);
       }
       // Otherwise, if adding a news stream was requested:
-      else if (url.startsWith('/newsRequest')) {
+      else if (urlBase === 'newsRequest') {
         const {sessionCode, userID} = params;
         // Send the stream headers to the client.
         serveEventStart(res);
@@ -317,8 +319,8 @@ const requestHandler = (req, res) => {
           console.log(`${userNews} in session ${sessionCode} has closed the connection`);
         });
       }
-      // Otherwise, if the session was started:
-      else if (url.startsWith('/startSession')) {
+      // Otherwise, if the session was started by the leader:
+      else if (urlBase === 'startSession') {
         const {sessionCode} = params;
         const sessionData = sessions[sessionCode];
         // Set the start time in the session data.
@@ -354,18 +356,23 @@ const requestHandler = (req, res) => {
             }
           });
         });
+        // Close the response, allowing updates to the leader page.
+        res.end(`Session ${sessionCode} started`);
         // Start the first round.
         startRound(sessionData);
       }
-      // Otherwise, if a bid was made:
-      else if (url.startsWith('/bid')) {
+      // Otherwise, if a bid or replacement was made:
+      else if (['bid', 'swap'].includes(urlBase)) {
         const {sessionCode, playerID, patientNum} = params;
-        // Notify all users of the bid.
         const sessionData = sessions[sessionCode];
-        const patient = sessionData.players[playerID].hand.current.patients[patientNum - 1];
-        const bidNews = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
-        broadcast(sessionCode, false, 'bidAdd', bidNews);
-        // Draw a patient to replace the bid patient.
+        // If the move was a bid:
+        if (urlBase === 'bid') {
+          // Notify all users of the bid.
+          const patient = sessionData.players[playerID].hand.current.patients[patientNum - 1];
+          const bidNews = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
+          broadcast(sessionCode, false, 'bidAdd', bidNews);
+        }
+        // Draw a patient to replace the lost patient.
         const newPatient = sessionData.piles.patients.shift();
         sessionData.players[playerID].hand.current.patients[patientNum - 1] = newPatient;
         // Notify the player and the leader of the replacement.
@@ -376,14 +383,8 @@ const requestHandler = (req, res) => {
         // End the turn and start the next turn or round.
         endTurn(sessionData);
         // Close the response.
-        // res.end();
+        res.end();
       }
-      // Otherwise, if a replacement was made:
-      else if (url.startsWith('/swap')) {
-        // Close the response.
-        // res.end();
-      }
-    }
     // Otherwise, if the request method was POST:
     else if (method === 'POST') {
       // Get the data as an object.
