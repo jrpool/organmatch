@@ -131,6 +131,8 @@ const nextMove = (influenceLimits, round, hand, moveNum) => {
     }
   }
 };
+// Returns a date-time string.
+const nowString = () => (new Date()).toISOString();
 // Starts a turn.
 const startTurn = sessionData => {
   // Notify all users of the turn facts.
@@ -139,6 +141,13 @@ const startTurn = sessionData => {
   const turnPlayerID = turnNum
     ? round.turns[turnNum - 1].player.playerID
     : round.roundStarterID;
+  const turn = {
+    turnNum,
+    turnPlayerID,
+    startTime: nowString(),
+    endTime: null
+  };
+  round.turns.push(turn);
   const {sessionCode} = sessionData;
   broadcast(sessionCode, false, 'turn', `${turnNum}\t: current`);
   if (turnNum) {
@@ -163,8 +172,6 @@ const startTurn = sessionData => {
     }
   });
 };
-// Returns a date-time string.
-const nowString = () => (new Date()).toISOString();
 // Starts a round.
 const startRound = sessionData => {
   // Notify all users of the round facts.
