@@ -138,9 +138,9 @@ const startTurn = sessionData => {
   // Notify all users of the turn facts.
   const round = sessionData.rounds[sessionData.roundsEnded];
   const turnNum = round.turnsEnded;
-  const turnPlayerID = turnNum
-    ? round.turns[turnNum - 1].turnPlayer.playerID
-    : round.roundStarterID;
+  const {playerIDs} = sessionData;
+  const turnPlayerID
+    = playerIDs[(playerIDs.indexOf(round.roundStarterID) + turnNum) % playerIDs.length];
   const turn = {
     turnNum,
     turnPlayerID,
