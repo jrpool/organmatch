@@ -56,9 +56,6 @@ news.onmessage = event => {
     document.getElementById('turns').appendChild(turnLI);
     turnLI.innerHTML
       = `Turn ${turnData[0]} (player ${turnData[1]})<span id=turn${turnData[0]}></span>`;
-    // Empty the lists describing the turn-player hand.
-    document.getElementById('handPatients').textContent = '';
-    document.getElementById('handInfluences').textContent = '';
   }
   // Otherwise, if a patient was added to the turn player’s hand:
   else if (data.startsWith('handPatientAdd=')) {
@@ -81,6 +78,9 @@ news.onmessage = event => {
     // Change the status of the turn.
     const turnData = rawData.split('\t');
     document.getElementById(`turn${turnData[0]}`).textContent = turnData[1];
+    // Empty the lists describing the turn-player hand.
+    document.getElementById('handPatients').textContent = '';
+    document.getElementById('handInfluences').textContent = '';
   }
   // Otherwise, if the turn player’s next task was defined:
   else if (data.startsWith('task=')) {
