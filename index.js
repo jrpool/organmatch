@@ -139,7 +139,7 @@ const startTurn = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
   const turnNum = round.turnsEnded;
   const turnPlayerID = turnNum
-    ? round.turns[turnNum - 1].player.playerID
+    ? round.turns[turnNum - 1].turnPlayer.playerID
     : round.roundStarterID;
   const turn = {
     turnNum,
