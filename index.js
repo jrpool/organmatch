@@ -131,6 +131,16 @@ const nextMove = (influenceLimits, round, hand, moveNum) => {
     }
   }
 };
+// Returns the specification of a patient.
+const patientSpec = patient => {
+  const {organNeed, group, priority} = patient;
+  const organ0 = organNeed[0].organ;
+  const qP0 = organNeed[0].queuePosition;
+  const needCount = organNeed.length === 2;
+  const organ1 = needCount ? organNeed[1].organ : '';
+  const qP1 = needCount ? organNeed[1].queuePosition : '';
+  return [organ0, qP0, organ1, qP1, group, priority];
+};
 // Returns a date-time string.
 const nowString = () => (new Date()).toISOString();
 // Starts a turn.
@@ -162,8 +172,15 @@ const startTurn = sessionData => {
         versionData.limits.influences, round, sessionData.players[id].hand.current, 0
       );
       const taskMsg = `task=${moveSpec}`;
-      sendEventMsg(newsStreams[sessionCode].Leader, taskMsg);
-      sendEventMsg(newsStreams[sessionCode][id], taskMsg);
+      const streams = newsStreams[sessionCode];
+      sendEventMsg(streams.Leader, taskMsg);
+      sendEventMsg(streams[id], taskMsg);
+      // Notify the leader of the new turn player’s hand.
+      const {patients} = sessionData.players[id].hand.current;
+      patients.forEach(patient => {
+        const news = patientSpec(patient).join('\t');
+        sendEventMsg(newsStreams[sessionCode].Leader, `handPatientAdd=${news}`);
+      });
     }
     // Otherwise, i.e. if the player is not the turn player:
     else {
@@ -233,16 +250,6 @@ const endTurn = sessionData => {
     // End the round.
     endRound(sessionData);
   }
-};
-// Returns the specification of a patient.
-const patientSpec = patient => {
-  const {organNeed, group, priority} = patient;
-  const organ0 = organNeed[0].organ;
-  const qP0 = organNeed[0].queuePosition;
-  const needCount = organNeed.length === 2;
-  const organ1 = needCount ? organNeed[1].organ : '';
-  const qP1 = needCount ? organNeed[1].queuePosition : '';
-  return [organ0, qP0, organ1, qP1, group, priority];
 };
 // Handles requests.
 const requestHandler = (req, res) => {
