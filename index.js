@@ -224,7 +224,7 @@ const endTurn = sessionData => {
   // Increment the turn count in the session data.
   round.turnsEnded++;
   // If the round’s turns are not yet exhausted:
-  if (turnNum < sessionData.playerCount) {
+  if (turnNum < sessionData.playerIDs.length) {
     // Start the next turn.
     startTurn(sessionData);
   }
