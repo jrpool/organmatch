@@ -215,7 +215,7 @@ const startRound = sessionData => {
     roundOrgan,
     winner: {
       playerID: null,
-      playerName: null
+      patient: null
     },
     nextStarterID: null,
     turnsEnded: 0,
@@ -228,8 +228,52 @@ const startRound = sessionData => {
 // Ends a round.
 const endRound = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
+  const {bids} = round;
+  // If there were any bids in the round:
+  if (bids.length) {
+    // Add the winner and its patient to the round data.
+    const scores = bids.map(bid => {
+      const {netPriority} = bid;
+      const qP = bid
+      .patient
+      .organNeed
+      .filter(need => need.organ === round.organ.organ)[0]
+      .queuePosition;
+      return 100 * netPriority - qP;
+    });
+    const winningBidIndex = scores.reduce(
+      (windex, score, index) => score > scores[windex] ? index : windex, 0
+    );
+    const winningBid = bids[winningBidIndex];
+    const winningPlayerID = winningBid.playerID;
+    round.winner = {
+      playerID: winningPlayerID,
+      patient: winningBid.patient
+    };
+    sessionData.players[winningPlayerID].roundsWon++;
+    // Return the other bid cards to the latent piles.
+    bids.forEach((bid, index) => {
+      if (index !== winningBidIndex) {
+        sessionData.piles.patients.push(bid.patient);
+      }
+      sessionData.piles.influences.push(...bid.influences);
+    });
+  }
   round.endTime = nowString();
   sessionData.roundsEnded++;
+  // If the round did not end the session:
+  const maxRoundsWon = Math.max(...sessionData.players.map(player => player.roundsWon));
+  if (
+    maxRoundsWon < versionData.limits.winningRounds.max && sessionData.piles.organs.latent.length
+  ) {
+    // Start the next round.
+    startRound(sessionData);
+  }
+  // Otherwise, i.e. if the round ended the session:
+  else {
+    // End the session.
+    sessionData.endTime = nowString();
+  }
 };
 // Ends a turn.
 const endTurn = sessionData => {
@@ -385,6 +429,14 @@ const requestHandler = (req, res) => {
           const patient = sessionData.players[playerID].hand.current.patients[patientNum - 1];
           const bidNews = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
           broadcast(sessionCode, false, 'bidAdd', bidNews);
+          // Add the bid to the round data.
+          const {bids} = sessionData.rounds[sessionData.roundsEnded];
+          bids.push({
+            playerID,
+            patient,
+            influences: [],
+            netPriority: patient.priority
+          });
         }
         // Draw a patient to replace the lost patient.
         const newPatient = sessionData.piles.patients.shift();

@@ -29,7 +29,7 @@ module.exports = (versionData, sessionData, playerID, playerName, strategyName) 
           influences: []
         }
       },
-      wins: []
+      roundsWon: 0
     };
     const strategyNews = strategyName ? ` with strategy ${strategyName}` : '';
     console.log(`Added player ${playerName}${strategyNews}`);
