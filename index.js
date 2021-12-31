@@ -227,6 +227,7 @@ const startRound = sessionData => {
 };
 // Ends a round.
 const endRound = sessionData => {
+  console.log('Ending the round');
   const round = sessionData.rounds[sessionData.roundsEnded];
   const {bids} = round;
   // If there were any bids in the round:
@@ -288,15 +289,15 @@ const endTurn = sessionData => {
   turn.endTime = nowString();
   // Increment the turn count in the session data.
   round.turnsEnded++;
-  // If the round’s turns are not yet exhausted:
-  if (turnNum < sessionData.playerIDs.length) {
-    // Start the next turn.
-    startTurn(sessionData);
-  }
-  // Otherwise, i.e. if this was the last turn in the round:
-  else {
+  // If this was the last turn in the round:
+  if (turnNum === sessionData.playerIDs.length - 1) {
     // End the round.
     endRound(sessionData);
+  }
+  // Otherwise, i.e. if the round’s turns are not yet exhausted:
+  else {
+    // Start the next turn.
+    startTurn(sessionData);
   }
 };
 // Handles requests.
