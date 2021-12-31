@@ -227,7 +227,6 @@ const startRound = sessionData => {
 };
 // Ends a round.
 const endRound = sessionData => {
-  console.log('Ending the round');
   const round = sessionData.rounds[sessionData.roundsEnded];
   const {bids} = round;
   // If there were any bids in the round:
@@ -238,7 +237,7 @@ const endRound = sessionData => {
       const qP = bid
       .patient
       .organNeed
-      .filter(need => need.organ === round.organ.organ)[0]
+      .filter(need => need.organ === round.roundOrgan.organ)[0]
       .queuePosition;
       return 100 * netPriority - qP;
     });
