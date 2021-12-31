@@ -19,6 +19,20 @@ const patientDigest = patientNews => {
   const organNews = organNewsItems.join(' + ');
   return `${[organNews, patientData[4], `priority ${patientData[5]}`].join('; ')}`;
 };
+// Returns an influence-card description.
+const influenceDigest = influenceNews => {
+  const influenceData = influenceNews.split('\t');
+  const impact = influenceData[1];
+  const impactNews = impact.startsWith('-') ? impact : `+${impact}`;
+  return `${influenceData[0]} (${impactNews})`;
+};
+// Returns an initial player list item.
+const playerInit = (id, playerName) => {
+  const idSpan = `<span class="mono">${id}</span>`;
+  const winCountSpan = `<span id="winCount${id}}">0</span>`;
+  const winListSpan = `<span id="winList${id}"></span>`;
+  return `[${idSpan}] ${playerName}; rounds won: ${winCountSpan} (${winListSpan})`;
+};
 news.onmessage = event => {
   const {data} = event;
   const rawData = event.data.replace(/^[A-Za-z]+=/, '');
@@ -33,7 +47,7 @@ news.onmessage = event => {
     const playerData = rawData.split('\t');
     const newPlayer = document.createElement('li');
     playerOL.appendChild(newPlayer);
-    newPlayer.innerHTML = `[<span class="mono">${playerData[0]}</span>] ${playerData[1]}`;
+    newPlayer.innerHTML = playerInit(...playerData);
   }
   // Otherwise, if the stage changed:
   else if (data.startsWith('sessionStage=')) {
@@ -80,6 +94,13 @@ news.onmessage = event => {
     .querySelector(`li:nth-child(${replacementData[0]})`);
     patientLI.textContent = patientDigest(replacementData.slice(1).join('\t'));
   }
+  // Otherwise, if an influence card was added to the hand:
+  else if (data.startsWith('handInfluenceAdd=')) {
+    // Add the card.
+    const newInfluenceLI = document.createElement('li');
+    document.getElementById('handInfluences').appendChild(newInfluenceLI);
+    newInfluenceLI.textContent = influenceDigest(rawData);
+  }
   // Otherwise, if a turn status changed:
   else if (data.startsWith('turn=')) {
     // Change the status of the turn.
@@ -100,31 +121,48 @@ news.onmessage = event => {
       taskDiv.appendChild(taskP);
       taskP.textContent = 'Wait for the turn player to move';
     }
-    // Otherwise, if it is to choose a player to bid or replace:
-    else if (['bid', 'swap'].includes(taskType)) {
+    // Otherwise, if it is to choose a player to bid or replace or an influence card to act on:
+    else if (['bid', 'swap', 'use'].includes(taskType)) {
       // Replace the next task with a choice form.
       const taskLabelP = document.createElement('p');
       taskDiv.appendChild(taskLabelP);
       taskLabelP.id = 'choiceLabel';
-      taskLabelP.textContent = `${taskType === 'bid' ? 'Bid' : 'Replace'} a patient:`;
+      let cardNum;
+      let labelText = 'Bid a patient';
+      if (taskType === 'swap') {
+        labelText = 'Replace a patient';
+      }
+      else if (taskType === 'use') {
+        cardNum = taskParts.shift();
+        labelText = `Decide on influence card ${cardNum}`;
+        taskParts.unshift('keep');
+      }
+      taskLabelP.textContent = labelText;
       const choiceForm = document.createElement('form');
       taskDiv.appendChild(choiceForm);
       const buttonsP = document.createElement('p');
       choiceForm.appendChild(buttonsP);
       taskParts.forEach(num => {
         const numButton = document.createElement('button');
+        buttonsP.appendChild(numButton);
         numButton.setAttribute('aria-labelledby', 'choiceLabel');
         numButton.textContent = num;
-        buttonsP.appendChild(numButton);
       });
       // When the form is submitted:
       choiceForm.onsubmit = async event => {
         // Prevent a reload.
         event.preventDefault();
         // Notify the server.
-        const patientNum = event.submitter.textContent;
+        const buttonText = event.submitter.textContent;
+        let detail;
+        if (taskType === 'use') {
+          detail = `cardNum=${cardNum}&targetNum=${buttonText}`;
+        }
+        else {
+          detail = `cardNum=${buttonText}`;
+        }
         const response = await fetch(
-          `/${taskType}?sessionCode=${sessionCode}&playerID=${playerID}&patientNum=${patientNum}`
+          `/${taskType}?sessionCode=${sessionCode}&playerID=${playerID}&${detail}`
         );
         if (response.ok) {
           // Remove the form.

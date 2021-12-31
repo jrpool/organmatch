@@ -19,6 +19,20 @@ const patientDigest = patientNews => {
   const organNews = organNewsItems.join(' + ');
   return `${[organNews, patientData[4], `priority ${patientData[5]}`].join('; ')}`;
 };
+// Returns an influence-card description.
+const influenceDigest = influenceNews => {
+  const influenceData = influenceNews.split('\t');
+  const impact = influenceData[1];
+  const impactNews = impact.startsWith('-') ? impact : `+${impact}`;
+  return `${influenceData[0]} (${impactNews})`;
+};
+// Returns an initial player list item.
+const playerInit = (id, playerName) => {
+  const idSpan = `<span class="mono">${id}</span>`;
+  const winCountSpan = `<span id="winCount${id}}">0</span>`;
+  const winListSpan = `<span id="winList${id}"></span>`;
+  return `[${idSpan}] ${playerName}; rounds won: ${winCountSpan} (${winListSpan})`;
+};
 news.onmessage = event => {
   const {data} = event;
   const rawData = event.data.replace(/^[A-Za-z]+=/, '');
@@ -32,11 +46,11 @@ news.onmessage = event => {
     // Append the player to the list.
     const playerData = rawData.split('\t');
     const newPlayer = document.createElement('li');
-    newPlayer.innerHTML = `[<span class="mono">${playerData[0]}</span>] ${playerData[1]}`;
     playerOL.appendChild(newPlayer);
+    newPlayer.innerHTML = playerInit(...playerData);
   }
   // Otherwise, if the stage changed:
-  else if (data.startsWith('sessionStage')) {
+  else if (data.startsWith('sessionStage=')) {
     // Change the stage accordingly.
     const stageP = document.getElementById('stage');
     stageP.textContent = rawData;
@@ -64,14 +78,12 @@ news.onmessage = event => {
     document.getElementById('handPatients').appendChild(newPatientLI);
     newPatientLI.textContent = patientDigest(rawData);
   }
-  // Otherwise, if a patient was replaced in the hand:
-  else if (data.startsWith('handPatientReplace=')) {
-    // Replace the old patient with the new one.
-    const replacementData = rawData.split('\t');
-    const patientLI = document
-    .getElementById('handPatients')
-    .querySelector(`li:nth-child(${replacementData[0]})`);
-    patientLI.textContent = patientDigest(replacementData.slice(1).join('\t'));
+  // Otherwise, if an influence card was added to the hand:
+  else if (data.startsWith('handInfluenceAdd=')) {
+    // Add the card.
+    const newInfluenceLI = document.createElement('li');
+    document.getElementById('handInfluences').appendChild(newInfluenceLI);
+    newInfluenceLI.textContent = influenceDigest(rawData);
   }
   // Otherwise, if a turn status changed:
   else if (data.startsWith('turn=')) {

@@ -54,9 +54,9 @@ const serveEventStart = res => {
   res.setHeader('Cache-Control', 'no-cache');
 };
 // Returns an event-stream message.
-const sendEventMsg = (res, data) => {
+const sendEventMsg = (streamRes, data) => {
   const msg = `data: ${data}\n\n`;
-  res.write(msg);
+  streamRes.write(msg);
 };
 // Parses a query string into a query-parameters object.
 const parse = queryString => {
@@ -229,6 +229,8 @@ const startRound = sessionData => {
 const endRound = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
   const {bids} = round;
+  let isLastRound = false;
+  const {players} = sessionData;
   // If there were any bids in the round:
   if (bids.length) {
     // Add the winner and its patient to the round data.
@@ -250,33 +252,57 @@ const endRound = sessionData => {
       playerID: winningPlayerID,
       patient: winningBid.patient
     };
-    sessionData.players[winningPlayerID].roundsWon++;
+    const player = players[winningPlayerID];
+    player.roundsWon++;
     // Return the other bid cards to the latent piles.
     bids.forEach((bid, index) => {
       if (index !== winningBidIndex) {
         sessionData.piles.patients.push(bid.patient);
       }
-      sessionData.piles.influences.push(...bid.influences);
+      sessionData.piles.influences.push(...bid.influences.map(card => card.influence));
     });
+    // If the winner has won enough rounds to win the session:
+    if (player.roundsWon === versionData.limits.winningRounds.max) {
+      // Make this the final round.
+      isLastRound = true;
+    }
+    // Otherwise, if the session will continue and there are losing bidders:
+    else if (bids.length > 1) {
+      // For each losing bidder:
+      const losingPlayerIDs = bids.map(bid => bid.playerID).filter(id => id !== winningPlayerID);
+      losingPlayerIDs.forEach(id => {
+        // Draw an influence card.
+        const card = sessionData.piles.influences.shift;
+        players[id].hand.current.influences.push(card);
+        // Notify the player about it.
+        sendEventMsg(newsStreams[id], `handInfluenceAdd=${card.influenceName}\t${card.impact}`);
+      });
+    }
   }
   round.endTime = nowString();
   sessionData.roundsEnded++;
-  const {playerIDs} = sessionData;
-  // If the round did not end the session:
-  const playerWins = playerIDs.map(id => sessionData.players[id].roundsWon);
-  const maxRoundsWon = Math.max(...playerWins);
-  if (
-    maxRoundsWon < versionData.limits.winningRounds.max && sessionData.piles.organs.latent.length
-  ) {
-    // Start the next round.
-    startRound(sessionData);
+  // If the round exhausted the organ cards:
+  if (! sessionData.piles.organs.latent.length) {
+    // Make this the final round.
+    isLastRound = true;
   }
-  // Otherwise, i.e. if the round ended the session:
-  else {
+  // If this is the final round:
+  if (isLastRound) {
     // Add the session winners to the session data.
-    sessionData.winners = playerIDs.filter((id, index) => playerWins[index] === maxRoundsWon);
+    const playerScores = players.map(player => [player.playerID, player.roundsWon]);
+    const maxScore = Math.max(...playerScores.map(pair => pair[1]));
+    const {sessionCode, winners} = sessionData;
+    winners.push(...playerScores.filter(pair => pair[1] === maxScore).map(pair => pair[0]));
+    // Notify the users.
+    broadcast(sessionCode, false, 'sessionStage', `Ended; won by ${winners.join(', ')}`, );
     // End the session.
     sessionData.endTime = nowString();
+    console.log(`Session ${sessionCode} ended; won by ${winners}`);
+  }
+  // Otherwise, i.e. if this is not the final round:
+  else {
+    // Start the next round.
+    startRound(sessionData);
   }
 };
 // Ends a turn.
@@ -298,6 +324,34 @@ const endTurn = sessionData => {
     // Start the next turn.
     startTurn(sessionData);
   }
+};
+// Returns the indexes of the bids a player can use an influence on.
+const targets = (versionData, sessionData, playerID, influence, bids) => {
+  const limits = versionData.limits.influences;
+  const turnUseCount = bids.reduce(
+    (count, bid) => count + bid.influences.filter(use => use.playerID === playerID).length, 0
+  );
+  const targetIndexes = [];
+  // If the player is still permitted to use an influence:
+  if (turnUseCount < limits.perTurn.max) {
+    // For each bid made in the turn:
+    bids.forEach((bid, index) => {
+      const {influences} = bid;
+      // If any player is still permitted to influence it:
+      if (influences.length < limits.perBid.max) {
+        // If the turn’s player is still permitted to influence it:
+        const playerBidUseCount = influences.filter(use => use.playerID === playerID).length;
+        if (playerBidUseCount < limits.perTurnBid.max) {
+          // If the influence type differs from that of all existing influences on the bid:
+          if (influences.every(use => use.impact !== influence.impact)) {
+            // Add the bid’s index to the eligible bids’ indexes.
+            targetIndexes.push(index);
+          }
+        }
+      }
+    });
+  }
+  return targetIndexes;
 };
 // Handles requests.
 const requestHandler = (req, res) => {
@@ -405,36 +459,49 @@ const requestHandler = (req, res) => {
         revisePlayerLists(sessionCode);
         // For each player:
         sessionData.playerIDs.forEach((id, index) => {
+          const {patients, influences} = sessionData.players[id].hand.initial;
           // For each patient card in the player’s hand:
-          const {patients} = sessionData.players[id].hand.initial;
           patients.forEach(patient => {
-            // Notify the player of the cards in the player’s hand.
+            // Notify the player of the card.
             const news = patientSpec(patient).join('\t');
             sendEventMsg(newsStreams[sessionCode][id], `handPatientAdd=${news}`);
             // If the player is the session’s starter:
             if (index === 0) {
-              // Notify the leader of the cards in the player’s hand.
+              // Notify the leader of the card.
               sendEventMsg(newsStreams[sessionCode].Leader, `handPatientAdd=${news}`);
             }
           });
+          // For each influence card in the player’s hand:
+          influences.forEach(influence => {
+            // Notify the player of the card.
+            const {influenceName, impact} = influence;
+            const news = [influenceName, impact].join('\t');
+            sendEventMsg(newsStreams[sessionCode][id], `handInfluenceAdd=${news}`);
+            // If the player is the session’s starter:
+            if (index === 0) {
+              // Notify the leader of the card.
+              sendEventMsg(newsStreams[sessionCode].Leader, `handInfluenceAdd=${news}`);
+            }
+          });
         });
-        // Close the response, allowing updates to the leader page.
-        res.end(`Session ${sessionCode} started`);
+        // Close the response, so the leader page can be updated.
+        res.end();
         // Start the first round.
         startRound(sessionData);
       }
       // Otherwise, if a bid or replacement was made:
       else if (['bid', 'swap'].includes(urlBase)) {
-        const {sessionCode, playerID, patientNum} = params;
+        const {sessionCode, playerID, cardNum} = params;
         const sessionData = sessions[sessionCode];
+        const player = sessionData.players[playerID];
+        const {bids} = sessionData.rounds[sessionData.roundsEnded];
         // If the move was a bid:
         if (urlBase === 'bid') {
           // Notify all users of the bid.
-          const patient = sessionData.players[playerID].hand.current.patients[patientNum - 1];
+          const patient = player.hand.current.patients[cardNum - 1];
           const bidNews = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
           broadcast(sessionCode, false, 'bidAdd', bidNews);
           // Add the bid to the round data.
-          const {bids} = sessionData.rounds[sessionData.roundsEnded];
           bids.push({
             playerID,
             patient,
@@ -444,16 +511,70 @@ const requestHandler = (req, res) => {
         }
         // Draw a patient to replace the lost patient.
         const newPatient = sessionData.piles.patients.shift();
-        sessionData.players[playerID].hand.current.patients[patientNum - 1] = newPatient;
-        // Notify the player and the leader of the replacement.
-        const replacementNews = [patientNum].concat(patientSpec(newPatient)).join('\t');
+        player.hand.current.patients[cardNum - 1] = newPatient;
+        // Notify the player of the replacement.
+        const replacementNews = [cardNum].concat(patientSpec(newPatient)).join('\t');
         const replacementMsg = `handPatientReplace=${replacementNews}`;
         sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
-        sendEventMsg(newsStreams[sessionCode].Leader, replacementMsg);
-        // End the turn and start the next turn or round.
-        endTurn(sessionData);
+        // If the player has any influence cards and there are any bids in the turn:
+        const {influences} = player.hand.current;
+        if (influences.length && bids.length) {
+          // For each card until a usable one is found:
+          let index = 0;
+          while (index > -1 && index < influences.length) {
+            // If the player can use it on any bids:
+            const targetIndexes = targets(
+              versionData, sessionData, playerID, influences[index], bids
+            );
+            if (targetIndexes.length) {
+              // Notify the player and the leader of the task.
+              const taskNews
+                = `use\t${index + 1}\t${targetIndexes.map(index => index + 1).join('\t')}`;
+              sendEventMsg(newsStreams[sessionCode][playerID], `task=${taskNews}`);
+              sendEventMsg(newsStreams[sessionCode].Leader, `task=${taskNews}`);
+              index = -1;
+            }
+            else {
+              index++;
+            }
+          }
+        }
+        // Otherwise, i.e. if the player cannot use any influence cards:
+        else {
+          // End the turn and start the next turn or round.
+          endTurn(sessionData);
+        }
         // Close the response.
         res.end();
+      }
+      // Otherwise, if a decision was made about an influence card:
+      else if (urlBase === 'use') {
+        const {sessionCode, playerID, cardNum, targetNum} = params;
+        const sessionData = sessions[sessionCode];
+        const player = sessionData.players[playerID];
+        const {bids} = sessionData.rounds[sessionData.roundsEnded];
+        // If the decision was to use the card:
+        if (targetNum !== 'keep') {
+          // Add the use to the session data.
+          const use = {
+            playerID,
+            influence: player.hand.current.influences[cardNum - 1]
+          };
+          bids[cardNum - 1].influences.push(use);
+          // Notify all users of the decision.
+          const {impact} = use.influence;
+          const
+          const impactNews = impact > 0 ? ` + ${impact} by ${playerID} (net ${})`
+          const useNews = `${playerID}: ${patientSpec(patient).join('\t')}`;
+          broadcast(sessionCode, false, 'bidAdd', bidNews);
+          // Add the bid to the round data.
+          bids.push({
+            playerID,
+            patient,
+            influences: [],
+            netPriority: patient.priority
+          });
+        }
       }
     }
     // Otherwise, if the request method was POST:
@@ -509,6 +630,7 @@ const requestHandler = (req, res) => {
             broadcast(sessionCode, false, 'addition', `${playerID}\t${playerName}`);
             // Add the player to the session data.
             require('./addPlayer')(versionData, sessionData, playerID, playerName, '');
+            // Compile a list of players, including the added one.
             const {playerIDs} = sessionData;
             const playerListItems = playerIDs.map(
               playerID => {
@@ -517,7 +639,7 @@ const requestHandler = (req, res) => {
               }
             );
             const playerList = playerListItems.join('\n');
-            // Serve a session-status page.
+            // Serve a session-status page, including the list.
             serveTemplate('playerStatus', {sessionCode, playerList, playerID, playerName}, res);
           }
         }
