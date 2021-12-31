@@ -261,8 +261,10 @@ const endRound = sessionData => {
   }
   round.endTime = nowString();
   sessionData.roundsEnded++;
+  const {playerIDs} = sessionData;
   // If the round did not end the session:
-  const maxRoundsWon = Math.max(...sessionData.players.map(player => player.roundsWon));
+  const playerWins = playerIDs.map(id => sessionData.players[id].roundsWon);
+  const maxRoundsWon = Math.max(...playerWins);
   if (
     maxRoundsWon < versionData.limits.winningRounds.max && sessionData.piles.organs.latent.length
   ) {
@@ -271,6 +273,8 @@ const endRound = sessionData => {
   }
   // Otherwise, i.e. if the round ended the session:
   else {
+    // Add the session winners to the session data.
+    sessionData.winners = playerIDs.filter((id, index) => playerWins[index] === maxRoundsWon);
     // End the session.
     sessionData.endTime = nowString();
   }
