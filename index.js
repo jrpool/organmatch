@@ -366,21 +366,21 @@ const targets = (versionData, playerID, influence, bids) => {
   return targetIndexes;
 };
 // Manages an influence decision.
-const runInfluence = (versionData, sessionData, player, bids, startIndex) => {
+const runInfluence = (versionData, sessionData, playerID, bids, startIndex) => {
   // If the player has any more influence cards and there are any bids in the turn:
-  const {influences} = player.hand.current;
+  const {influences} = sessionData.players[playerID].hand.current;
   if (influences.length > startIndex && bids.length) {
     // For each card until a usable one is found:
     let index = startIndex;
     while (index > -1 && index < influences.length) {
       // If the player can use it on any bids:
-      const targetIndexes = targets(versionData, player.playerID, influences[index], bids);
+      const targetIndexes = targets(versionData, playerID, influences[index], bids);
       if (targetIndexes.length) {
         // Notify the player and the leader of the task.
         const {sessionCode} = sessionData;
         const taskNews
           = `use\t${index + 1}\t${targetIndexes.map(index => index + 1).join('\t')}`;
-        sendEventMsg(newsStreams[sessionCode][player.playerID], `task=${taskNews}`);
+        sendEventMsg(newsStreams[sessionCode][playerID], `task=${taskNews}`);
         sendEventMsg(newsStreams[sessionCode].Leader, `task=${taskNews}`);
         index = -1;
       }
@@ -570,7 +570,7 @@ const requestHandler = (req, res) => {
         const replacementMsg = `handPatientReplace=${replacementNews}`;
         sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
         // Manage a possible influence decision by the player.
-        runInfluence(versionData, sessionData, player, bids, 0);
+        runInfluence(versionData, sessionData, playerID, bids, 0);
         // Close the response.
         res.end();
       }
@@ -599,12 +599,12 @@ const requestHandler = (req, res) => {
           // Notify all users of the decision.
           const {impact} = use.influence;
           const signedImpact = impact > 0 ? `+ ${impact}` : `- ${Math.abs(impact)}`;
-          const useNews = `${signedImpact} by ${playerID} (net ${bid.netPriority})`;
-          broadcast(sessionCode, false, 'use', useNews);
+          const useNews = ` ${signedImpact} by ${playerID} (net ${bid.netPriority})`;
+          broadcast(sessionCode, false, 'use', `${targetNum}\t${useNews}`);
         }
         // Manage another possible influence decision by the player.
         runInfluence(
-          versionData, sessionData, player, bids, cardNum + (targetNum === 'keep' ? 1 : 0)
+          versionData, sessionData, playerID, bids, cardNum + (targetNum === 'keep' ? 1 : 0)
         );
         // Close the response.
         res.end();

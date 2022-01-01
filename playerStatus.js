@@ -180,6 +180,13 @@ news.onmessage = event => {
     document.getElementById('bids').appendChild(bidLI);
     bidLI.textContent = patientDigest(rawData);
   }
+  // Otherwise, if an influence card was used:
+  else if (data.startswith('use=')) {
+    // Append that use to the bid.
+    const useData = rawData.split('\t');
+    const bidLI = document.getElementById('bids').querySelector(`li:nth-child(${useData[0]}`);
+    bidLI.textContent += useData[1];
+  }
   // Otherwise, if a player won a round:
   else if (data.startsWith('roundWinner=')) {
     const winnerData = rawData.split('\t');
