@@ -374,9 +374,7 @@ const runInfluence = (versionData, sessionData, player, bids, startIndex) => {
     let index = startIndex;
     while (index > -1 && index < influences.length) {
       // If the player can use it on any bids:
-      const targetIndexes = targets(
-        versionData, sessionData, player.playerID, influences[index], bids
-      );
+      const targetIndexes = targets(versionData, player.playerID, influences[index], bids);
       if (targetIndexes.length) {
         // Notify the player and the leader of the task.
         const {sessionCode} = versionData;

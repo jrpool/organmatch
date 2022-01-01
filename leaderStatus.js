@@ -132,7 +132,6 @@ news.onmessage = event => {
   }
   // Otherwise, if a player won a round:
   else if (data.startsWith('roundWinner=')) {
-    console.log('Got a winner message');
     const winnerData = rawData.split('\t');
     // Update the winner’s item in the player list.
     const countSpan = document.getElementById(`winCount${winnerData[1]}`);
@@ -144,6 +143,11 @@ news.onmessage = event => {
     else {
       listSpan.textContent = winnerData[0];
     }
+  }
+  // Otherwise, if the time left was updated:
+  else if (data.startsWith('timeLeft=')) {
+    // Update it in the session stage.
+    document.getElementById('timeLeft').textContent = rawData;
   }
   // If the start-session button has not been permanently removed:
   if (document.getElementById('startSession')) {
