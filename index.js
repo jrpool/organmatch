@@ -402,6 +402,12 @@ const runInfluence = (versionData, sessionData, player, bids, startIndex) => {
     endTurn(sessionData);
   }
 };
+// Returns the time in minutes before a session is stopped.
+const minutesLeft = (versionData, sessionData) => {
+  const creationTime = (new Date(sessionData.creationTime)).getTime();
+  const minutesElapsed = Math.round(((Date.now() - creationTime)) / 60000);
+  return versionData.limits.sessionTime.max - minutesElapsed;
+};
 // Handles requests.
 const requestHandler = (req, res) => {
   const {method} = req;
@@ -491,14 +497,12 @@ const requestHandler = (req, res) => {
         // Set the start time in the session data.
         sessionData.startTime = nowString();
         // Notify all users.
-        const creationTime = (new Date(sessionData.creationTime)).getTime();
-        const minutesElapsed = Math.round(((Date.now() - creationTime)) / 60000);
-        const minutesLeft = versionData.limits.sessionTime.max - minutesElapsed;
+        const minutes = minutesLeft(versionData, sessionData);
         broadcast(
           sessionCode,
           false,
           'sessionStage',
-          `Started; players shuffled; ${minutesLeft} minutes left`
+          `Started; players shuffled; <span id="timeLeft">${minutes}</span> minutes left`
         );
         // Shuffle the player IDs in the session data.
         const shuffler = sessionData.playerIDs.map(id => [id, Math.random()]);
@@ -542,6 +546,8 @@ const requestHandler = (req, res) => {
       else if (['bid', 'swap'].includes(urlBase)) {
         const {sessionCode, playerID, cardNum} = params;
         const sessionData = sessions[sessionCode];
+        // Notify all users of the amount of time left.
+        broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
         const player = sessionData.players[playerID];
         const {bids} = sessionData.rounds[sessionData.roundsEnded];
         // If the move was a bid:
@@ -574,6 +580,8 @@ const requestHandler = (req, res) => {
       else if (urlBase === 'use') {
         const {sessionCode, playerID, cardNum, targetNum} = params;
         const sessionData = sessions[sessionCode];
+        // Notify all users of the amount of time left.
+        broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
         const player = sessionData.players[playerID];
         const {bids} = sessionData.rounds[sessionData.roundsEnded];
         // If the decision was to use the card:

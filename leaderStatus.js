@@ -53,7 +53,7 @@ news.onmessage = event => {
   else if (data.startsWith('sessionStage=')) {
     // Change the stage accordingly.
     const stageP = document.getElementById('stage');
-    stageP.textContent = rawData;
+    stageP.innerHTML = rawData;
   }
   // Otherwise, if the round changed:
   else if (data.startsWith('round=')) {

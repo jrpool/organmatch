@@ -53,7 +53,7 @@ news.onmessage = event => {
   else if (data.startsWith('sessionStage=')) {
     // Change the stage accordingly.
     const stageP = document.getElementById('stage');
-    stageP.textContent = rawData;
+    stageP.innerHTML = rawData;
     // If the change was a session start:
     if (rawData.startsWith('Started')) {
       // Remove the starting information from the page.
@@ -182,7 +182,6 @@ news.onmessage = event => {
   }
   // Otherwise, if a player won a round:
   else if (data.startsWith('roundWinner=')) {
-    console.log('Got a winner message');
     const winnerData = rawData.split('\t');
     // Update the winner’s item in the player list.
     const countSpan = document.getElementById(`winCount${winnerData[1]}`);
@@ -194,5 +193,10 @@ news.onmessage = event => {
     else {
       listSpan.textContent = winnerData[0];
     }
+  }
+  // Otherwise, if the time left was updated:
+  else if (data.startsWith('timeLeft=')) {
+    // Update it in the session stage.
+    document.getElementById('timeLeft').textContent = rawData;
   }
 };
