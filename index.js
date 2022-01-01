@@ -275,7 +275,9 @@ const endRound = sessionData => {
         const card = sessionData.piles.influences.shift;
         players[id].hand.current.influences.push(card);
         // Notify the player about it.
-        sendEventMsg(newsStreams[id], `handInfluenceAdd=${card.influenceName}\t${card.impact}`);
+        sendEventMsg(
+          newsStreams[sessionCode][id], `handInfluenceAdd=${card.influenceName}\t${card.impact}`
+        );
       });
     }
   }
