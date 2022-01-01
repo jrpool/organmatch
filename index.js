@@ -590,16 +590,15 @@ const requestHandler = (req, res) => {
       }
       // Otherwise, if a decision was made about an influence card:
       else if (urlBase === 'use') {
-        const {sessionCode, playerID} = params;
+        const {sessionCode, playerID, targetNum} = params;
         const cardNum = Number.parseInt(params.cardNum);
-        const targetNum = Number.parseInt(params.targetNum);
         const sessionData = sessions[sessionCode];
         // Notify all users of the amount of time left.
         broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
         const player = sessionData.players[playerID];
         const {bids} = sessionData.rounds[sessionData.roundsEnded];
         // If the decision was to use the card:
-        if (targetNum !== 'keep') {
+        if (params.targetNum !== 'keep') {
           const bid = bids[targetNum - 1];
           // Add the use to the session data.
           const {influences} = player.hand.current;
