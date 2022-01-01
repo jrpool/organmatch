@@ -276,7 +276,7 @@ const endRound = sessionData => {
         const losingPlayerIDs = bids.map(bid => bid.playerID).filter(id => id !== winningPlayerID);
         losingPlayerIDs.forEach(id => {
           // Draw an influence card.
-          const card = sessionData.piles.influences.shift;
+          const card = sessionData.piles.influences.shift();
           players[id].hand.current.influences.push(card);
           // Notify the player about it.
           sendEventMsg(
