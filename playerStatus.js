@@ -29,7 +29,7 @@ const influenceDigest = influenceNews => {
 // Returns an initial player list item.
 const playerInit = (id, playerName) => {
   const idSpan = `<span class="mono">${id}</span>`;
-  const winCountSpan = `<span id="winCount${id}}">0</span>`;
+  const winCountSpan = `<span id="winCount${id}">0</span>`;
   const winListSpan = `<span id="winList${id}"></span>`;
   return `[${idSpan}] ${playerName}; rounds won: ${winCountSpan} (${winListSpan})`;
 };
@@ -182,11 +182,17 @@ news.onmessage = event => {
   }
   // Otherwise, if a player won a round:
   else if (data.startsWith('roundWinner=')) {
+    console.log('Got a winner message');
     const winnerData = rawData.split('\t');
     // Update the winner’s item in the player list.
     const countSpan = document.getElementById(`winCount${winnerData[0]}`);
     countSpan.textContent++;
     const listSpan = document.getElementById(`winList${winnerData[0]}`);
-    listSpan.textContent += `, ${winnerData[1]}`;
+    if (listSpan.textContent) {
+      listSpan.textContent += `, ${winnerData[1]}`;
+    }
+    else {
+      listSpan.textContent = winnerData[1];
+    }
   }
 };

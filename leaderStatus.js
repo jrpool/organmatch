@@ -29,7 +29,7 @@ const influenceDigest = influenceNews => {
 // Returns an initial player list item.
 const playerInit = (id, playerName) => {
   const idSpan = `<span class="mono">${id}</span>`;
-  const winCountSpan = `<span id="winCount${id}}">0</span>`;
+  const winCountSpan = `<span id="winCount${id}">0</span>`;
   const winListSpan = `<span id="winList${id}"></span>`;
   return `[${idSpan}] ${playerName}; rounds won: ${winCountSpan} (${winListSpan})`;
 };
@@ -137,7 +137,12 @@ news.onmessage = event => {
     const countSpan = document.getElementById(`winCount${winnerData[0]}`);
     countSpan.textContent++;
     const listSpan = document.getElementById(`winList${winnerData[0]}`);
-    listSpan.textContent += `, ${winnerData[1]}`;
+    if (listSpan.textContent) {
+      listSpan.textContent += `, ${winnerData[1]}`;
+    }
+    else {
+      listSpan.textContent = winnerData[1];
+    }
   }
   // If the start-session button has not been permanently removed:
   if (document.getElementById('startSession')) {
