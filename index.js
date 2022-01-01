@@ -107,28 +107,21 @@ const isMatch = (organ, patient) => {
   }
 };
 // Returns specifications for a turn player’s next move.
-const nextMove = (influenceLimits, round, hand, moveNum) => {
-  // If the next move is an influence use:
-  if (moveNum) {
-    return '';
+const nextPatientMove = (round, hand) => {
+  const {patients} = hand;
+  const matchNums = patients
+  .map((patient, index) => isMatch(round.roundOrgan, patient) ? index + 1 : 0)
+  .filter(index => index);
+  // If there are any matches between patients and the organ:
+  if (matchNums.length) {
+    // Return the bid specifications.
+    return `bid\t${matchNums.join('\t')}`;
   }
-  // Otherwise, i.e. if the next move is a patient bid action:
+  // Otherwise, i.e. if there are no patient matches:
   else {
-    const {patients} = hand;
-    const matchNums = patients
-    .map((patient, index) => isMatch(round.roundOrgan, patient) ? index + 1 : 0)
-    .filter(index => index);
-    // If there are any matches between patients and the organ:
-    if (matchNums.length) {
-      // Return the bid specifications.
-      return `bid\t${matchNums.join('\t')}`;
-    }
-    // Otherwise, i.e. if there are no patient matches:
-    else {
-      // Return the replacement specifications.
-      const patientNums = patients.map((patient, index) => index + 1);
-      return `swap\t${patientNums.join('\t')}`;
-    }
+    // Return the replacement specifications.
+    const patientNums = patients.map((patient, index) => index + 1);
+    return `swap\t${patientNums.join('\t')}`;
   }
 };
 // Returns the specification of a patient.
@@ -168,9 +161,7 @@ const startTurn = sessionData => {
     // If the player is the turn player:
     if (id === turnPlayerID) {
       // Notify the leader and the player of the player’s next task.
-      const moveSpec = nextMove(
-        versionData.limits.influences, round, sessionData.players[id].hand.current, 0
-      );
+      const moveSpec = nextPatientMove(round, sessionData.players[id].hand.current);
       const taskMsg = `task=${moveSpec}`;
       const streams = newsStreams[sessionCode];
       sendEventMsg(streams.Leader, taskMsg);
@@ -326,7 +317,7 @@ const endTurn = sessionData => {
   }
 };
 // Returns the indexes of the bids a player can use an influence on.
-const targets = (versionData, sessionData, playerID, influence, bids) => {
+const targets = (versionData, playerID, influence, bids) => {
   const limits = versionData.limits.influences;
   const turnUseCount = bids.reduce(
     (count, bid) => count + bid.influences.filter(use => use.playerID === playerID).length, 0
@@ -352,6 +343,43 @@ const targets = (versionData, sessionData, playerID, influence, bids) => {
     });
   }
   return targetIndexes;
+};
+// Manages an influence decision.
+const runInfluence = (versionData, sessionData, player, bids, startIndex) => {
+  // If the player has any more influence cards and there are any bids in the turn:
+  const {influences} = player.hand.current;
+  if (influences.length > startIndex && bids.length) {
+    // For each card until a usable one is found:
+    let index = startIndex;
+    while (index > -1 && index < influences.length) {
+      // If the player can use it on any bids:
+      const targetIndexes = targets(
+        versionData, sessionData, player.playerID, influences[index], bids
+      );
+      if (targetIndexes.length) {
+        // Notify the player and the leader of the task.
+        const {sessionCode} = versionData;
+        const taskNews
+          = `use\t${index + 1}\t${targetIndexes.map(index => index + 1).join('\t')}`;
+        sendEventMsg(newsStreams[sessionCode][player.playerID], `task=${taskNews}`);
+        sendEventMsg(newsStreams[sessionCode].Leader, `task=${taskNews}`);
+        index = -1;
+      }
+      else {
+        index++;
+      }
+    }
+    // If no usable influence card was found:
+    if (index > -1) {
+      // End the turn and start the next turn or round.
+      endTurn(sessionData);
+    }
+  }
+  // Otherwise, i.e. if the player cannot use any influence cards:
+  else {
+    // End the turn and start the next turn or round.
+    endTurn(sessionData);
+  }
 };
 // Handles requests.
 const requestHandler = (req, res) => {
@@ -516,34 +544,8 @@ const requestHandler = (req, res) => {
         const replacementNews = [cardNum].concat(patientSpec(newPatient)).join('\t');
         const replacementMsg = `handPatientReplace=${replacementNews}`;
         sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
-        // If the player has any influence cards and there are any bids in the turn:
-        const {influences} = player.hand.current;
-        if (influences.length && bids.length) {
-          // For each card until a usable one is found:
-          let index = 0;
-          while (index > -1 && index < influences.length) {
-            // If the player can use it on any bids:
-            const targetIndexes = targets(
-              versionData, sessionData, playerID, influences[index], bids
-            );
-            if (targetIndexes.length) {
-              // Notify the player and the leader of the task.
-              const taskNews
-                = `use\t${index + 1}\t${targetIndexes.map(index => index + 1).join('\t')}`;
-              sendEventMsg(newsStreams[sessionCode][playerID], `task=${taskNews}`);
-              sendEventMsg(newsStreams[sessionCode].Leader, `task=${taskNews}`);
-              index = -1;
-            }
-            else {
-              index++;
-            }
-          }
-        }
-        // Otherwise, i.e. if the player cannot use any influence cards:
-        else {
-          // End the turn and start the next turn or round.
-          endTurn(sessionData);
-        }
+        // Manage a possible influence decision by the player.
+        runInfluence(versionData, sessionData, player, bids, 0);
         // Close the response.
         res.end();
       }
@@ -555,26 +557,30 @@ const requestHandler = (req, res) => {
         const {bids} = sessionData.rounds[sessionData.roundsEnded];
         // If the decision was to use the card:
         if (targetNum !== 'keep') {
+          const bid = bids[targetNum - 1];
           // Add the use to the session data.
           const use = {
             playerID,
             influence: player.hand.current.influences[cardNum - 1]
           };
-          bids[cardNum - 1].influences.push(use);
+          bid.influences.push(use);
+          const freePriority = bid.patient.priority + bid.influences.reduce(
+            (change, use) => change + use.influence.impact, 0
+          );
+          const limits = versionData.limits.bidPriority;
+          bid.netPriority = Math.min(freePriority, Math.max(freePriority, limits.min));
           // Notify all users of the decision.
           const {impact} = use.influence;
-          const
-          const impactNews = impact > 0 ? ` + ${impact} by ${playerID} (net ${})`
-          const useNews = `${playerID}: ${patientSpec(patient).join('\t')}`;
-          broadcast(sessionCode, false, 'bidAdd', bidNews);
-          // Add the bid to the round data.
-          bids.push({
-            playerID,
-            patient,
-            influences: [],
-            netPriority: patient.priority
-          });
+          const signedImpact = impact > 0 ? `+ ${impact}` : `- ${Math.abs(impact)}`;
+          const useNews = `${signedImpact} by ${playerID} (net ${bid.netPriority})`;
+          broadcast(sessionCode, false, 'use', useNews);
         }
+        // Manage another possible influence decision by the player.
+        runInfluence(
+          versionData, sessionData, player, bids, cardNum + (targetNum === 'keep' ? 1 : 0)
+        );
+        // Close the response.
+        res.end();
       }
     }
     // Otherwise, if the request method was POST:
