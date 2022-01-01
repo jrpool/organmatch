@@ -221,7 +221,7 @@ const endRound = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
   const {bids} = round;
   let isLastRound = false;
-  const {players} = sessionData;
+  const {sessionCode, players} = sessionData;
   // If there were any bids in the round:
   if (bids.length) {
     // Add the winner and its patient to the round data.
@@ -245,6 +245,8 @@ const endRound = sessionData => {
     };
     const player = players[winningPlayerID];
     player.roundsWon++;
+    // Notify all users of the winner.
+    broadcast(sessionCode,  false, 'roundWinner', `${round.roundNum}\t${winningPlayerID}`);
     // Return the other bid cards to the latent piles.
     bids.forEach((bid, index) => {
       if (index !== winningBidIndex) {
@@ -282,7 +284,7 @@ const endRound = sessionData => {
     // Add the session winners to the session data.
     const playerScores = players.map(player => [player.playerID, player.roundsWon]);
     const maxScore = Math.max(...playerScores.map(pair => pair[1]));
-    const {sessionCode, winners} = sessionData;
+    const {winners} = sessionData;
     winners.push(...playerScores.filter(pair => pair[1] === maxScore).map(pair => pair[0]));
     // Notify the users.
     broadcast(sessionCode, false, 'sessionStage', `Ended; won by ${winners.join(', ')}`, );

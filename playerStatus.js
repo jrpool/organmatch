@@ -178,4 +178,13 @@ news.onmessage = event => {
     document.getElementById('bids').appendChild(bidLI);
     bidLI.textContent = patientDigest(rawData);
   }
+  // Otherwise, if a player won a round:
+  else if (data.startsWith('roundWinner=')) {
+    const winnerData = rawData.split('\t');
+    // Update the winner’s item in the player list.
+    const countSpan = document.getElementById(`winCount${winnerData[0]}`);
+    countSpan.textContent++;
+    const listSpan = document.getElementById(`winList${winnerData[0]}`);
+    listSpan.textContent += `, ${winnerData[1]}`;
+  }
 };
