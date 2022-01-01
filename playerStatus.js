@@ -111,7 +111,7 @@ news.onmessage = event => {
   else if (data.startsWith('task=')) {
     // Remove any existing next task.
     const taskDiv = document.getElementById('task');
-    taskDiv.textContent = '';
+    // taskDiv.textContent = '';
     const taskParts = rawData.split('\t');
     const taskType = taskParts.shift();
     // If the next task is to wait for the turn player’s move:
@@ -152,6 +152,10 @@ news.onmessage = event => {
       choiceForm.onsubmit = async event => {
         // Prevent a reload.
         event.preventDefault();
+        // Disable the form buttons.
+        Array.from(buttonsP.querySelectorAll('button')).forEach(button => {
+          button.setAttribute('disabled', true);
+        });
         // Notify the server.
         const buttonText = event.submitter.textContent;
         let detail;
@@ -161,13 +165,9 @@ news.onmessage = event => {
         else {
           detail = `cardNum=${buttonText}`;
         }
-        const response = await fetch(
+        await fetch(
           `/${taskType}?sessionCode=${sessionCode}&playerID=${playerID}&${detail}`
         );
-        if (response.ok) {
-          // Remove the form.
-          taskDiv.textContent = '';
-        }
       };
     }
   }
