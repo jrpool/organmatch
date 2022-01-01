@@ -586,9 +586,10 @@ const requestHandler = (req, res) => {
         if (targetNum !== 'keep') {
           const bid = bids[targetNum - 1];
           // Add the use to the session data.
+          const {influences} = player.hand.current;
           const use = {
             playerID,
-            influence: player.hand.current.influences[cardNum - 1]
+            influence: influences[cardNum - 1]
           };
           bid.influences.push(use);
           const freePriority = bid.patient.priority + bid.influences.reduce(
@@ -596,11 +597,16 @@ const requestHandler = (req, res) => {
           );
           const limits = versionData.limits.bidPriority;
           bid.netPriority = Math.min(freePriority, Math.max(freePriority, limits.min));
-          // Notify all users of the decision.
+          // Notify all users of the use.
           const {impact} = use.influence;
           const signedImpact = impact > 0 ? `+ ${impact}` : `- ${Math.abs(impact)}`;
           const useNews = ` ${signedImpact} by ${playerID} (net ${bid.netPriority})`;
           broadcast(sessionCode, false, 'use', `${targetNum}\t${useNews}`);
+          // Remove the card from the player’s hand.
+          influences.splice(cardNum - 1, 1);
+          // Notify the player and the leader of the hand change.
+          sendEventMsg(newsStreams[sessionCode][playerID], `influenceRemove=${cardNum}`);
+          sendEventMsg(newsStreams[sessionCode].Leader, `influenceRemove=${cardNum}`);
         }
         // Manage another possible influence decision by the player.
         runInfluence(

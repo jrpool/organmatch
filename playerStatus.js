@@ -187,6 +187,14 @@ news.onmessage = event => {
     const bidLI = document.getElementById('bids').querySelector(`li:nth-child(${useData[0]}`);
     bidLI.textContent += useData[1];
   }
+  // Otherwise, if an influence card was removed from the hand:
+  else if (data.startsWith('influenceRemove=')) {
+    // Remove it.
+    const influenceLI = document
+    .getElementById('handInfluences')
+    .querySelector(`li:nth-child(${rawData})`);
+    influenceLI.remove();
+  }
   // Otherwise, if a player won a round:
   else if (data.startsWith('roundWinner=')) {
     const winnerData = rawData.split('\t');
