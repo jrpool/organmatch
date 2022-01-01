@@ -388,7 +388,6 @@ const runInfluence = (versionData, sessionData, playerID, bids, startIndex) => {
     while (index > -1 && index < influences.length) {
       // If the player can use it on any bids:
       const targetIndexes = targets(versionData, playerID, influences[index], bids);
-      console.log(`Usable on bids ${targetIndexes}`);
       if (targetIndexes.length) {
         // Notify the player and the leader of the task.
         const {sessionCode} = sessionData;
@@ -624,9 +623,8 @@ const requestHandler = (req, res) => {
           sendEventMsg(newsStreams[sessionCode].Leader, `influenceRemove=${cardNum}`);
         }
         // Manage another possible influence decision by the player.
-        runInfluence(
-          versionData, sessionData, playerID, bids, cardNum + (targetNum === 'keep' ? 1 : 0)
-        );
+        const nextInfluenceIndex = cardNum - (targetNum === 'keep' ? 0 : 1);
+        runInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
         // Close the response.
         res.end();
       }
