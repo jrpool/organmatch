@@ -643,7 +643,10 @@ const requestHandler = (req, res) => {
             const playerListItems = playerIDs.map(
               playerID => {
                 const {playerName} = sessionData.players[playerID];
-                return `<li>[<span class="mono">${playerID}</span>] ${playerName}</li>`;
+                const idSpan = `<span class="mono">${playerID}</span>`;
+                const winCountSpan = `<span id="winCount${playerID}}">0</span>`;
+                const winListSpan = `<span id="winList${playerID}"></span>`;
+                return `[${idSpan}] ${playerName}; rounds won: ${winCountSpan} (${winListSpan})`;
               }
             );
             const playerList = playerListItems.join('\n');
