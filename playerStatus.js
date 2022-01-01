@@ -111,7 +111,7 @@ news.onmessage = event => {
   else if (data.startsWith('task=')) {
     // Remove any existing next task.
     const taskDiv = document.getElementById('task');
-    // taskDiv.textContent = '';
+    taskDiv.textContent = '';
     const taskParts = rawData.split('\t');
     const taskType = taskParts.shift();
     // If the next task is to wait for the turn player’s move:
