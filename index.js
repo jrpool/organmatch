@@ -266,20 +266,30 @@ const endRound = sessionData => {
       // Make this the final round.
       isLastRound = true;
     }
-    // Otherwise, if the session will continue and there are losing bidders:
-    else if (bids.length > 1) {
-      // For each losing bidder:
-      const losingPlayerIDs = bids.map(bid => bid.playerID).filter(id => id !== winningPlayerID);
-      losingPlayerIDs.forEach(id => {
-        // Draw an influence card.
-        const card = sessionData.piles.influences.shift;
-        players[id].hand.current.influences.push(card);
-        // Notify the player about it.
-        sendEventMsg(
-          newsStreams[sessionCode][id], `handInfluenceAdd=${card.influenceName}\t${card.impact}`
-        );
-      });
+    // Otherwise, i.e. if the session will continue:
+    else {
+      // Add the next round’s starter to the session data.
+      round.nextStarterID = winningPlayerID;
+      // If there are losing bidders:
+      if (bids.length > 1) {
+        // For each losing bidder:
+        const losingPlayerIDs = bids.map(bid => bid.playerID).filter(id => id !== winningPlayerID);
+        losingPlayerIDs.forEach(id => {
+          // Draw an influence card.
+          const card = sessionData.piles.influences.shift;
+          players[id].hand.current.influences.push(card);
+          // Notify the player about it.
+          sendEventMsg(
+            newsStreams[sessionCode][id], `handInfluenceAdd=${card.influenceName}\t${card.impact}`
+          );
+        });
+      }
     }
+  }
+  // Otherwise, i.e. if there were no bids in the round:
+  else {
+    // Add the next round’s starter to the session data.
+    round.nextStarterID = round.roundStarterID;
   }
   round.endTime = nowString();
   sessionData.roundsEnded++;
