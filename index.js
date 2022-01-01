@@ -377,7 +377,7 @@ const runInfluence = (versionData, sessionData, player, bids, startIndex) => {
       const targetIndexes = targets(versionData, player.playerID, influences[index], bids);
       if (targetIndexes.length) {
         // Notify the player and the leader of the task.
-        const {sessionCode} = versionData;
+        const {sessionCode} = sessionData;
         const taskNews
           = `use\t${index + 1}\t${targetIndexes.map(index => index + 1).join('\t')}`;
         sendEventMsg(newsStreams[sessionCode][player.playerID], `task=${taskNews}`);
