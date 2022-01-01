@@ -132,16 +132,17 @@ news.onmessage = event => {
   }
   // Otherwise, if a player won a round:
   else if (data.startsWith('roundWinner=')) {
+    console.log('Got a winner message');
     const winnerData = rawData.split('\t');
     // Update the winner’s item in the player list.
-    const countSpan = document.getElementById(`winCount${winnerData[0]}`);
+    const countSpan = document.getElementById(`winCount${winnerData[1]}`);
     countSpan.textContent++;
-    const listSpan = document.getElementById(`winList${winnerData[0]}`);
+    const listSpan = document.getElementById(`winList${winnerData[1]}`);
     if (listSpan.textContent) {
-      listSpan.textContent += `, ${winnerData[1]}`;
+      listSpan.textContent += `, ${winnerData[0]}`;
     }
     else {
-      listSpan.textContent = winnerData[1];
+      listSpan.textContent = winnerData[0];
     }
   }
   // If the start-session button has not been permanently removed:
