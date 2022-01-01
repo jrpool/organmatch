@@ -131,7 +131,7 @@ news.onmessage = event => {
     bidLI.textContent = patientDigest(rawData);
   }
   // Otherwise, if an influence card was used:
-  else if (data.startswith('use=')) {
+  else if (data.startsWith('use=')) {
     // Append that use to the bid.
     const useData = rawData.split('\t');
     const bidLI = document.getElementById('bids').querySelector(`li:nth-child(${useData[0]}`);
