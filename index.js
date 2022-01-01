@@ -90,7 +90,7 @@ const broadcast = (sessionCode, onlyPlayers, subtype, value) => {
 const playerListItem = (sessionData, playerID) => {
   const {playerName} = sessionData.players[playerID];
   const idNews = `[<span class="mono">${playerID}</span>]`;
-  const winCountNews = `rounds won: <span id="winCount${playerID}}">0</span>`;
+  const winCountNews = `rounds won: <span id="winCount${playerID}">0</span>`;
   const winListNews = `(<span id="winList${playerID}"></span>)`;
   return `<li>${idNews} ${playerName}; ${winCountNews} ${winListNews}</li>`;
 };
