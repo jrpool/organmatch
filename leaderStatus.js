@@ -54,6 +54,11 @@ news.onmessage = event => {
     // Change the stage accordingly.
     const stageP = document.getElementById('stage');
     stageP.innerHTML = rawData;
+    // If the new stage is completion:
+    if (rawData.startsWith('Ended')) {
+      // Remove the after-start content.
+      document.getElementById('afterStart').textContent = '';
+    }
   }
   // Otherwise, if the round changed:
   else if (data.startsWith('round=')) {
