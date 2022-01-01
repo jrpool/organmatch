@@ -301,15 +301,29 @@ const endRound = sessionData => {
   // If this is the final round:
   if (isLastRound) {
     // Add the session winners to the session data.
-    const playerScores = players.map(player => [player.playerID, player.roundsWon]);
-    const maxScore = Math.max(...playerScores.map(pair => pair[1]));
+    const winnerIDs = Object.keys(players).reduce((winners, id) => {
+      if (winners.length) {
+        if (players[id].roundsWon > players[winners[0]].roundsWon) {
+          return [id];
+        }
+        else if (players[id].roundsWon === players[winners[0]].roundsWon) {
+          return winners.concat(id);
+        }
+        else {
+          return winners;
+        }
+      }
+      else {
+        return [id];
+      }
+    }, []);
     const {winners} = sessionData;
-    winners.push(...playerScores.filter(pair => pair[1] === maxScore).map(pair => pair[0]));
+    winners.push(...winnerIDs);
     // Notify the users.
-    broadcast(sessionCode, false, 'sessionStage', `Ended; won by ${winners.join(', ')}`, );
+    broadcast(sessionCode, false, 'sessionStage', `Ended; won by ${winners.join(' and ')}`, );
     // End the session.
     sessionData.endTime = nowString();
-    console.log(`Session ${sessionCode} ended; won by ${winners}`);
+    console.log(`Session ${sessionCode} ended; won by ${winners.join(' and ')}`);
   }
   // Otherwise, i.e. if this is not the final round:
   else {
