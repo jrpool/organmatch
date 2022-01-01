@@ -317,13 +317,12 @@ const endRound = sessionData => {
         return [id];
       }
     }, []);
-    const {winners} = sessionData;
-    winners.push(...winnerIDs);
+    sessionData.winnerIDs.push(...winnerIDs);
     // Notify the users.
-    broadcast(sessionCode, false, 'sessionStage', `Ended; won by ${winners.join(' and ')}`, );
+    broadcast(sessionCode, false, 'sessionStage', `Ended; won by ${winnerIDs.join(' and ')}`, );
     // End the session.
     sessionData.endTime = nowString();
-    console.log(`Session ${sessionCode} ended; won by ${winners.join(' and ')}`);
+    console.log(`Session ${sessionCode} ended; won by ${winnerIDs.join(' and ')}`);
   }
   // Otherwise, i.e. if this is not the final round:
   else {
@@ -389,6 +388,7 @@ const runInfluence = (versionData, sessionData, playerID, bids, startIndex) => {
     while (index > -1 && index < influences.length) {
       // If the player can use it on any bids:
       const targetIndexes = targets(versionData, playerID, influences[index], bids);
+      console.log(`Usable on bids ${targetIndexes}`);
       if (targetIndexes.length) {
         // Notify the player and the leader of the task.
         const {sessionCode} = sessionData;
@@ -590,7 +590,9 @@ const requestHandler = (req, res) => {
       }
       // Otherwise, if a decision was made about an influence card:
       else if (urlBase === 'use') {
-        const {sessionCode, playerID, cardNum, targetNum} = params;
+        const {sessionCode, playerID} = params;
+        const cardNum = Number.parseInt(params.cardNum);
+        const targetNum = Number.parseInt(params.targetNum);
         const sessionData = sessions[sessionCode];
         // Notify all users of the amount of time left.
         broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
