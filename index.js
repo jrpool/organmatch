@@ -86,13 +86,20 @@ const broadcast = (sessionCode, onlyPlayers, subtype, value) => {
     }
   });
 };
-// Notifies all users of a revised list of players.
+// Returns a list item identifying a player before a session starts.
+const playerListItem = (sessionData, playerID) => {
+  const {playerName} = sessionData.players[playerID];
+  const idNews = `[<span class="mono">${playerID}</span>]`;
+  const winCountNews = `rounds won: <span id="winCount${playerID}}">0</span>`;
+  const winListNews = `(<span id="winList${playerID}"></span>)`;
+  return `<li>${idNews} ${playerName}; ${winCountNews} ${winListNews}</li>`;
+};
+// Notifies all users of a revised list of players before a session starts.
 const revisePlayerLists = sessionCode => {
   const sessionData = sessions[sessionCode];
   const {playerIDs} = sessionData;
-  const playerData = getPlayers(sessionData);
   const playerList = playerIDs
-  .map(id => `<li>[<span class="mono">${id}</span>] ${playerData[id]}</li>`)
+  .map(id => playerListItem(sessionData, id))
   .join('#newline#');
   broadcast(sessionCode, false, 'revision', playerList);
 };
@@ -641,13 +648,7 @@ const requestHandler = (req, res) => {
             // Compile a list of players, including the added one.
             const {playerIDs} = sessionData;
             const playerListItems = playerIDs.map(
-              playerID => {
-                const {playerName} = sessionData.players[playerID];
-                const idSpan = `<span class="mono">${playerID}</span>`;
-                const winCountSpan = `<span id="winCount${playerID}}">0</span>`;
-                const winListSpan = `<span id="winList${playerID}"></span>`;
-                return `[${idSpan}] ${playerName}; rounds won: ${winCountSpan} (${winListSpan})`;
-              }
+              playerID => playerListItem(sessionData, playerID)
             );
             const playerList = playerListItems.join('\n');
             // Serve a session-status page, including the list.
