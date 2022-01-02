@@ -449,7 +449,7 @@ const requestHandler = (req, res) => {
         serveScript(url.slice(1), res);
       }
       // Otherwise, if the home page was requested:
-      else if (['home', ''].includes(urlBase)) {
+      else if (['home', 'home.html', ''].includes(urlBase)) {
         // Serve it.
         serveTemplate('home', {}, res);
       }
