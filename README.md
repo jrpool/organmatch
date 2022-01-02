@@ -2,38 +2,55 @@
 
 Digital version of OrganMatch
 
+## Introduction
+
+This application is a digital implementation of the card-game OrganMatch, created by Susan Colowick.
+
 ## Server configuration
 
 ### Persistence
 
+#### Introduction
+
 OrganMatch requires persistent connections between the server and the client. Without persistence, connections with players who are waiting while it is not their turn can be cut because of time limitations.
 
-The Node server at [jpdev.pro](https://jpdev.pro) that manages OrganMatch operates with the HTTP/2 protocol, which supports persistent connections. Because connections to it are proxied through the Apache 2 server, that server, too, has been configured to support the HTTP/2 protocol. Bitnami publishes [instructions for this configuration](https://docs.bitnami.com/bch/apps/trac/administration/enable-http2-apache/). The approach applicable to this server is Approach B. It requires enabling the Apache module `mod_http2` and adding the directives
+The Node server at [jpdev.pro](https://jpdev.pro) that manages OrganMatch operates with the HTTP/2 protocol, which supports persistent connections.
 
-```markdown
-Protocols h2 h2c http/1.1
-H2Direct on
-```
+#### Unsuccessful configuration
 
-to the Bitnami-specific virtual-host configuration file.
+Attempts were made to proxy connections to it through the Apache 2 server, relying on instructions by [Bitnami](https://docs.bitnami.com/bch/apps/trac/administration/enable-http2-apache/) for “Approach B”, by [David Gibbs](https://www.geekyramblings.net/2019/02/18/http-2-apache-lightsail/), and by others, with:
 
-The Bitnami instructions are incomplete. As [David Gibbs](https://www.geekyramblings.net/2019/02/18/http-2-apache-lightsail/) states, it is also necessary to change the multi-processing module used by Apache by editing the `httpd.conf` file to become:
+- Directives in `httpd.conf`:
 
-```bash
-LoadModule mpm_event_module modules/mod_mpm_event.so
-#LoadModule mpm_prefork_module modules/mod_mpm_prefork.so
-```
+    ```bash
+    LoadModule http2_module modules/mod_http2.so
+    LoadModule mpm_event_module modules/mod_mpm_event.so
+    #LoadModule mpm_prefork_module modules/mod_mpm_prefork.so
+    ProxyPass /organmatch/ https://jpdev.pro:3003/organmatch/ timeout=1200 connectiontimeout=1200
+    ```
 
-Apache and Node have default idle timeouts that have been modified. The Apache timeouts are set with this directive in `httpd.conf`:
+- Directives in the Bitnami-specific virtual-host configuration file:
 
-```bash
-ProxyPass /organmatch/ https://jpdev.pro:3003/organmatch/ timeout=1200 connectiontimeout=1200
-```
+    ```bash
+    Protocols h2 h2c http/1.1
+    H2Direct on
+    ```
 
-The Node timeout is set with this statement in `index.js`:
+- A statement in `index.js`:
 
-```javascript
-server.setTimeout(1200000);
-```
+    ```javascript
+    server.setTimeout(1200000);
+    ```
 
-These settings make all the timeouts 20 minutes.
+This configuration was intended to ensure that the servers would maintain their connections to each other and to clients for at least 20 minutes of idleness.
+
+However, with this configuration erratic disconnections occurred.
+
+#### Successful configuration
+
+Persistence was successfully achieved with a simpler configuration. Browsers connect directly to the Node server on its port. If the port is omitted from the request, Apache redirects the browser to the port-specific URL. This configuration involves the following change in `httpd.conf`:
+
+    ```bash
+    # ProxyPass /organmatch/ https://jpdev.pro:3003/organmatch/ timeout=1200 connectiontimeout=1200
+    Redirect /organmatch https://jpdev.pro:3003/organmatch
+    ```
