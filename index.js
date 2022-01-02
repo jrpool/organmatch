@@ -22,10 +22,6 @@ const versionData = require('./getVersion')('01');
 const key = fs.readFileSync(process.env.KEY);
 const cert = fs.readFileSync(process.env.CERT);
 
-// ########## GLOBAL VARIABLES
-// Character code of the most recently joined player.
-let playerIDCode = 64;
-
 // ########## FUNCTIONS
 
 // Serves a page.
@@ -220,6 +216,17 @@ const startRound = sessionData => {
   // Start the first turn.
   startTurn(sessionData);
 };
+// Records and deletes a session.
+const exportSession = sessionData => {
+  // Record the session.
+  const {sessionCode} = sessionData;
+  fs.writeFileSync(
+    `sessions/${sessionData.endTime.slice(0, 13)}-${sessionCode}.json`,
+    `${JSON.stringify(sessionData, null, 2)}\n`
+  );
+  // Delete the session from the collection of sessions.
+  delete sessions[sessionCode];
+};
 // Ends a round.
 const endRound = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
@@ -320,6 +327,8 @@ const endRound = sessionData => {
     // End the session.
     sessionData.endTime = nowString();
     console.log(`Session ${sessionCode} ended; won by ${winnerIDs.join(' and ')}`);
+    // Record and delete the session.
+    exportSession(sessionData);
   }
   // Otherwise, i.e. if this is not the final round:
   else {
@@ -482,8 +491,11 @@ const requestHandler = (req, res) => {
           // If the user was the leader:
           if (userID === 'Leader') {
             userNews = 'The leader';
-            // Notify all users.
+            // Notify all users that the session has been aborted.
             broadcast(sessionCode, false, 'sessionStage', 'Aborted');
+            console.log(`Session ${sessionCode} aborted`);
+            // Record and delete the session.
+            exportSession(sessionData);
           }
           // Otherwise, i.e. if the user was a player:
           else {
@@ -677,8 +689,8 @@ const requestHandler = (req, res) => {
           }
           // Otherwise, i.e. if the user is permitted to join the session:
           else {
-            // Assign an ID to the player.
-            const playerID = String.fromCharCode(++playerIDCode);
+            // Assign an ID to the player, starting with “A” for the first.
+            const playerID = String.fromCharCode(64 + playerNames.length);
             // Send the new player’s ID and name to all other players and the leader.
             broadcast(sessionCode, false, 'addition', `${playerID}\t${playerName}`);
             // Add the player to the session data.
