@@ -477,6 +477,7 @@ const requestHandler = (req, res) => {
       // Otherwise, if adding a news stream was requested:
       else if (urlBase === 'newsRequest') {
         const {sessionCode, userID} = params;
+        console.log(`News stream for session ${sessionCode} requested by ${userID}`);
         // Send the stream headers to the client.
         serveEventStart(res);
         // Add the response to the news streams.
