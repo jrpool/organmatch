@@ -13,9 +13,6 @@ const fs = require('fs');
 const http2 = require('http2');
 
 // ########## GLOBAL CONSTANTS
-const {HOST, PORT} = process.env;
-const portSuffix = `:${PORT}` || '';
-const docRoot = `https://${HOST}${portSuffix}`;
 // Data on all current sessions.
 const sessions = {};
 // SSE responses for player lists.
@@ -440,7 +437,7 @@ const requestHandler = (req, res) => {
     // If the request method was GET:
     if (method === 'GET') {
       // Get any query parameters as an object.
-      const absURL = `https://${process.env.HOST}:${process.env.PORT}${url}`;
+      const absURL = `https://localhost${url}`;
       const urlBase = url.replace(/^\/|\?.+/g, '');
       const params = parse((new URL(absURL)).search);
       // If a script was requested:
@@ -644,7 +641,11 @@ const requestHandler = (req, res) => {
         // Initialize the new-player streams for the session.
         newsStreams[sessionCode] = {};
         // Serve a session-status page.
-        serveTemplate('leaderStatus', {minPlayerCount, docRoot, sessionCode}, res);
+        serveTemplate('leaderStatus', {
+          minPlayerCount,
+          proxy: process.env.PROXY,
+          sessionCode
+        }, res);
       }
       // Otherwise, if the user asked to join a session:
       else if (url === '/joinSession') {
@@ -716,7 +717,8 @@ if (key && cert) {
     requestHandler
   );
   if (server) {
+    const {PORT} = process.env;
     server.listen(PORT);
-    console.log(`OrganMatch server listening on port ${PORT} (https://${HOST}/organmatch)`);
+    console.log(`OrganMatch server listening on port ${PORT} (${process.env.PROXY})`);
   }
 }

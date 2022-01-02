@@ -8,7 +8,7 @@ document.getElementById('playerName').textContent = playerName;
 const playerOL = document.getElementById('playerList');
 playerOL.innerHTML = params.playerList;
 // Revise the list when a user joins or disconnects.
-const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
+const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
 // Returns a patient description.
 const patientDigest = patientNews => {
   const patientData = patientNews.split('\t');
@@ -173,7 +173,7 @@ news.onmessage = event => {
           detail = `cardNum=${buttonText}`;
         }
         await fetch(
-          `/${taskType}?sessionCode=${sessionCode}&playerID=${playerID}&${detail}`
+          `${taskType}?sessionCode=${sessionCode}&playerID=${playerID}&${detail}`
         );
       };
     }

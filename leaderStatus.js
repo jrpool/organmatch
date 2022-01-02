@@ -1,13 +1,13 @@
 // leaderStatus
 // Replace placeholders with values.
 const params = JSON.parse(document.getElementById('params').textContent);
-const {docRoot, sessionCode} = params;
+const {proxy, sessionCode} = params;
 const minPlayerCount = Number.parseInt(params.minPlayerCount);
 document.getElementById('sessionCode').textContent = sessionCode;
 const joinLink = document.getElementById('joinLink');
-joinLink.href = joinLink.textContent = `${docRoot}/joinForm?sessionCode=${sessionCode}`;
+joinLink.href = joinLink.textContent = `${proxy}joinForm?sessionCode=${sessionCode}`;
 // Ask the server for status-change messages.
-const news = new EventSource(`/newsRequest?sessionCode=${sessionCode}&userID=Leader`);
+const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=Leader`);
 const playerOL = document.getElementById('playerList');
 // Returns a patient description.
 const patientDigest = patientNews => {
@@ -192,7 +192,7 @@ startForm.onsubmit = async event => {
   // Prevent a reload.
   event.preventDefault();
   // Notify the server.
-  const response = await fetch(`/startSession?sessionCode=${sessionCode}`);
+  const response = await fetch(`startSession?sessionCode=${sessionCode}`);
   if (response.ok) {
     // Permanently remove the start-session button and the how-to-start information.
     document.getElementById('startInfo').remove();

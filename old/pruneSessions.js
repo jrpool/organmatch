@@ -19,6 +19,6 @@ const pruneSessions = () => {
       fs.rmSync(path);
     }
   });
-}
+};
 // OPERATION
 pruneSessions();
