@@ -32,7 +32,7 @@ module.exports = (versionData, sessionData, playerID, playerName, strategyName) 
       roundsWon: 0
     };
     const strategyNews = strategyName ? ` with strategy ${strategyName}` : '';
-    console.log(`Added player ${playerName}${strategyNews}`);
+    console.log(`Added player ${playerName}${strategyNews} to session ${sessionData.sessionCode}`);
   }
   catch (error) {
     console.log(`ERROR: ${error.message}\n${error.stack}`);
