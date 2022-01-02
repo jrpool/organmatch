@@ -141,7 +141,7 @@ news.onmessage = event => {
       }
       else if (taskType === 'use') {
         cardNum = taskParts.shift();
-        labelText = `Decide on influence card ${cardNum}`;
+        labelText = `Keep influence card ${cardNum}, or use it on a bid?`;
         taskParts.unshift('keep');
       }
       taskLabelP.textContent = labelText;
