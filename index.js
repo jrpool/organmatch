@@ -714,7 +714,7 @@ const requestHandler = (req, res) => {
           // Otherwise, i.e. if the user is permitted to join the session:
           else {
             // Assign an ID to the player, starting with “A” for the first.
-            const playerID = String.fromCharCode(64 + playerNames.length);
+            const playerID = String.fromCharCode(65 + playerNames.length);
             // Send the new player’s ID and name to all other players and the leader.
             broadcast(sessionCode, false, 'addition', `${playerID}\t${playerName}`);
             // Add the player to the session data.
