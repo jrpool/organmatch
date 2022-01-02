@@ -753,6 +753,8 @@ if (key && cert) {
     },
     requestHandler
   );
+  // Change the default idle time before the server emits a timeout event to 20 minutes.
+  server.setTimeout(1200000);
   if (server) {
     const {PORT} = process.env;
     server.listen(PORT);

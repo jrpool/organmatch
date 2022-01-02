@@ -23,3 +23,17 @@ The Bitnami instructions are incomplete. As [David Gibbs](https://www.geekyrambl
 LoadModule mpm_event_module modules/mod_mpm_event.so
 #LoadModule mpm_prefork_module modules/mod_mpm_prefork.so
 ```
+
+Apache and Node have default idle timeouts that have been modified. The Apache timeouts are set with this directive in `httpd.conf`:
+
+```bash
+ProxyPass /organmatch/ https://jpdev.pro:3003/organmatch/ timeout=1200 connectiontimeout=1200
+```
+
+The Node timeout is set with this statement in `index.js`:
+
+```javascript
+server.setTimeout(1200000);
+```
+
+These settings make all the timeouts 20 minutes.
