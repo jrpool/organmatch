@@ -710,7 +710,8 @@ if (key && cert) {
   const server = http2.createSecureServer(
     {
       key,
-      cert
+      cert,
+      allowHTTP1: true
     },
     requestHandler
   );
