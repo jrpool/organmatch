@@ -423,7 +423,7 @@ const runInfluence = (versionData, sessionData, playerID, bids, startIndex) => {
 const minutesLeft = (versionData, sessionData) => {
   const creationTime = (new Date(sessionData.creationTime)).getTime();
   const minutesElapsed = Math.round(((Date.now() - creationTime)) / 60000);
-  return versionData.limits.sessionTime.max - minutesElapsed;
+  return Math.max(0, versionData.limits.sessionTime.max - minutesElapsed);
 };
 // Handles requests.
 const requestHandler = (req, res) => {
@@ -566,76 +566,100 @@ const requestHandler = (req, res) => {
       else if (['bid', 'swap'].includes(urlBase)) {
         const {sessionCode, playerID, cardNum} = params;
         const sessionData = sessions[sessionCode];
-        // Notify all users of the amount of time left.
-        broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
-        const player = sessionData.players[playerID];
-        const {bids} = sessionData.rounds[sessionData.roundsEnded];
-        // If the move was a bid:
-        if (urlBase === 'bid') {
-          // Notify all users of the bid.
-          const patient = player.hand.current.patients[cardNum - 1];
-          const bidNews = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
-          broadcast(sessionCode, false, 'bidAdd', bidNews);
-          // Add the bid to the round data.
-          bids.push({
-            playerID,
-            patient,
-            influences: [],
-            netPriority: patient.priority
-          });
+        // If any time is left:
+        const timeLeft = minutesLeft(versionData, sessionData);
+        if (timeLeft) {
+          // Notify all users of the time left.
+          broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
+          const player = sessionData.players[playerID];
+          const {bids} = sessionData.rounds[sessionData.roundsEnded];
+          // If the move was a bid:
+          if (urlBase === 'bid') {
+            // Notify all users of the bid.
+            const patient = player.hand.current.patients[cardNum - 1];
+            const bidNews = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
+            broadcast(sessionCode, false, 'bidAdd', bidNews);
+            // Add the bid to the round data.
+            bids.push({
+              playerID,
+              patient,
+              influences: [],
+              netPriority: patient.priority
+            });
+          }
+          // Draw a patient to replace the lost patient.
+          const newPatient = sessionData.piles.patients.shift();
+          player.hand.current.patients[cardNum - 1] = newPatient;
+          // Notify the player of the replacement.
+          const replacementNews = [cardNum].concat(patientSpec(newPatient)).join('\t');
+          const replacementMsg = `handPatientReplace=${replacementNews}`;
+          sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
+          // Manage a possible influence decision by the player.
+          runInfluence(versionData, sessionData, playerID, bids, 0);
+          // Close the response.
+          res.end();
         }
-        // Draw a patient to replace the lost patient.
-        const newPatient = sessionData.piles.patients.shift();
-        player.hand.current.patients[cardNum - 1] = newPatient;
-        // Notify the player of the replacement.
-        const replacementNews = [cardNum].concat(patientSpec(newPatient)).join('\t');
-        const replacementMsg = `handPatientReplace=${replacementNews}`;
-        sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
-        // Manage a possible influence decision by the player.
-        runInfluence(versionData, sessionData, playerID, bids, 0);
-        // Close the response.
-        res.end();
+        // Otherwise, i.e. if no time is left:
+        else {
+          // Notify all users that the session has been ended.
+          broadcast(sessionCode, false, 'sessionStage', 'Stopped; allowed time exhausted');
+          console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
+          // Record and delete the session.
+          exportSession(sessionData);
+        }
       }
       // Otherwise, if a decision was made about an influence card:
       else if (urlBase === 'use') {
         const {sessionCode, playerID, targetNum} = params;
         const cardNum = Number.parseInt(params.cardNum);
         const sessionData = sessions[sessionCode];
-        // Notify all users of the amount of time left.
-        broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
-        const player = sessionData.players[playerID];
-        const {bids} = sessionData.rounds[sessionData.roundsEnded];
-        // If the decision was to use the card:
-        if (params.targetNum !== 'keep') {
-          const bid = bids[targetNum - 1];
-          // Add the use to the session data.
-          const {influences} = player.hand.current;
-          const use = {
-            playerID,
-            influence: influences[cardNum - 1]
-          };
-          bid.influences.push(use);
-          const freePriority = bid.patient.priority + bid.influences.reduce(
-            (change, use) => change + use.influence.impact, 0
-          );
-          const limits = versionData.limits.bidPriority;
-          bid.netPriority = Math.min(freePriority, Math.max(freePriority, limits.min));
-          // Notify all users of the use.
-          const {impact} = use.influence;
-          const signedImpact = impact > 0 ? `+ ${impact}` : `- ${Math.abs(impact)}`;
-          const useNews = ` ${signedImpact} by ${playerID} (net ${bid.netPriority})`;
-          broadcast(sessionCode, false, 'use', `${targetNum}\t${useNews}`);
-          // Remove the card from the player’s hand.
-          influences.splice(cardNum - 1, 1);
-          // Notify the player and the leader of the hand change.
-          sendEventMsg(newsStreams[sessionCode][playerID], `influenceRemove=${cardNum}`);
-          sendEventMsg(newsStreams[sessionCode].Leader, `influenceRemove=${cardNum}`);
+        // If any time is left:
+        const timeLeft = minutesLeft(versionData, sessionData);
+        if (timeLeft) {
+          // Notify all users of the time left.
+          broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
+          const player = sessionData.players[playerID];
+          const {bids} = sessionData.rounds[sessionData.roundsEnded];
+          // If the decision was to use the card:
+          if (params.targetNum !== 'keep') {
+            const bid = bids[targetNum - 1];
+            // Add the use to the session data.
+            const {influences} = player.hand.current;
+            const use = {
+              playerID,
+              influence: influences[cardNum - 1]
+            };
+            bid.influences.push(use);
+            const freePriority = bid.patient.priority + bid.influences.reduce(
+              (change, use) => change + use.influence.impact, 0
+            );
+            const limits = versionData.limits.bidPriority;
+            bid.netPriority = Math.min(freePriority, Math.max(freePriority, limits.min));
+            // Notify all users of the use.
+            const {impact} = use.influence;
+            const signedImpact = impact > 0 ? `+ ${impact}` : `- ${Math.abs(impact)}`;
+            const useNews = ` ${signedImpact} by ${playerID} (net ${bid.netPriority})`;
+            broadcast(sessionCode, false, 'use', `${targetNum}\t${useNews}`);
+            // Remove the card from the player’s hand.
+            influences.splice(cardNum - 1, 1);
+            // Notify the player and the leader of the hand change.
+            sendEventMsg(newsStreams[sessionCode][playerID], `influenceRemove=${cardNum}`);
+            sendEventMsg(newsStreams[sessionCode].Leader, `influenceRemove=${cardNum}`);
+          }
+          // Manage another possible influence decision by the player.
+          const nextInfluenceIndex = cardNum - (targetNum === 'keep' ? 0 : 1);
+          runInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
+          // Close the response.
+          res.end();
         }
-        // Manage another possible influence decision by the player.
-        const nextInfluenceIndex = cardNum - (targetNum === 'keep' ? 0 : 1);
-        runInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
-        // Close the response.
-        res.end();
+        // Otherwise, i.e. if no time is left:
+        else {
+          // Notify all users that the session has been ended.
+          broadcast(sessionCode, false, 'sessionStage', 'Stopped; allowed time exhausted');
+          console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
+          // Record and delete the session.
+          exportSession(sessionData);
+        }
       }
     }
     // Otherwise, if the request method was POST:
