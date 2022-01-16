@@ -510,6 +510,8 @@ const requestHandler = (req, res) => {
             // Notify all users that the session has been aborted.
             broadcast(sessionCode, false, 'sessionStage', 'Aborted');
             console.log(`Session ${sessionCode} aborted`);
+            // Add the end time to the session data.
+            sessionData.endTime = nowString();
             // Record and delete the session.
             exportSession(sessionData);
           }
@@ -680,6 +682,7 @@ const requestHandler = (req, res) => {
       // Otherwise, if a player approved finishing a round:
       else if (urlBase === 'roundOK') {
         const {sessionCode, playerID} = params;
+        console.log(`roundOK received from ${playerID}`);
         const sessionData = sessions[sessionCode];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);

@@ -98,6 +98,8 @@ news.onmessage = event => {
     // Change the status of the turn.
     const turnData = rawData.split('\t');
     document.getElementById(`turn${turnData[0]}`).textContent = turnData[1];
+    // Empty the turn-player task.
+    document.getElementById('task').textContent = '';
     // Empty the lists describing the turn-player hand.
     document.getElementById('handPatients').textContent = '';
     document.getElementById('handInfluences').textContent = '';

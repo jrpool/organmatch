@@ -149,7 +149,7 @@ news.onmessage = event => {
       roundOKForm.onsubmit = async event => {
         // Prevent a reload.
         event.preventDefault();
-        // Disable the for button.
+        // Disable the approval button.
         roundOKButton.setAttribute('disabled', true);
         // Notify the server.
         await fetch(`roundOK?sessionCode=${sessionCode}&playerID=${playerID}`);
