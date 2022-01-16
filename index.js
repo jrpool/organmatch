@@ -153,9 +153,6 @@ const startTurn = sessionData => {
   round.turns.push(turn);
   const {sessionCode} = sessionData;
   broadcast(sessionCode, false, 'turn', `${turnNum}\t: current`);
-  if (turnNum) {
-    broadcast(sessionCode, false, 'turn', `${turnNum - 1}\t: done`);
-  }
   // For each player:
   sessionData.playerIDs.forEach(id => {
     // If the player is the turn player:
@@ -361,6 +358,8 @@ const endTurn = sessionData => {
   turn.endTime = nowString();
   // Increment the turn count in the session data.
   round.turnsEnded++;
+  // Notify all users.
+  broadcast(sessionData.sessionCode, false, 'turn', `${turnNum}\t: done`);
   // If this was the last turn in the round:
   if (turnNum === sessionData.playerIDs.length - 1) {
     // End the round.
