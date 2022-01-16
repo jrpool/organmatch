@@ -295,6 +295,7 @@ const endRound = sessionData => {
     // Add the next round’s starter to the session data.
     round.nextStarterID = round.roundStarterID;
   }
+  // Add the round data to the session data.
   round.endTime = nowString();
   sessionData.roundsEnded++;
   // If the round exhausted the organ cards:
