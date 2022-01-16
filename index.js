@@ -228,6 +228,12 @@ const exportSession = sessionData => {
   );
   // Delete the session from the collection of sessions.
   delete sessions[sessionCode];
+  // Close the news streams.
+  const sessionStreams = newsStreams[sessionCode];
+  const userIDs = Object.keys(sessionStreams);
+  userIDs.forEach(id => {
+    sessionStreams[id].end();
+  });
 };
 // Ends a round.
 const endRound = sessionData => {
