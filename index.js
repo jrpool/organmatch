@@ -542,6 +542,7 @@ const requestHandler = (req, res) => {
           'sessionStage',
           `Started; players shuffled; <span id="timeLeft">${minutes}</span> minutes left`
         );
+        console.log(`Session ${sessionCode} started`);
         // Shuffle the player IDs in the session data.
         const shuffler = sessionData.playerIDs.map(id => [id, Math.random()]);
         shuffler.sort((a, b) => a[1] - b[1]);
@@ -727,6 +728,7 @@ const requestHandler = (req, res) => {
           proxy: process.env.PROXY,
           sessionCode
         }, res);
+        console.log(`Session ${sessionCode} created`);
       }
       // Otherwise, if the user asked to join a session:
       else if (url === '/joinSession') {
