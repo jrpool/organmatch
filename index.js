@@ -31,14 +31,18 @@ const serveTemplate = (name, params, res) => {
   const style = fs.readFileSync('style.css', 'utf8');
   const styledTemplate = template.replace('__style__', `<style>\n${style}\n</style>`);
   const page = styledTemplate.replace('__params__', JSON.stringify(params));
+  // Send the page.
   res.write(page);
+  // Close the response.
   res.end();
 };
 // Serves a script.
 const serveScript = (name, res) => {
   res.setHeader('Content-Type', 'text/javascript');
   const script = fs.readFileSync(name, 'utf8');
+  // Send the script.
   res.write(script);
+  // Close the response.
   res.end();
 };
 // Prepares to serve an event stream.
@@ -400,7 +404,7 @@ const targets = (versionData, playerID, influence, bids) => {
   return targetIndexes;
 };
 // Manages an influence decision.
-const runInfluence = (versionData, sessionData, playerID, bids, startIndex) => {
+const prepInfluence = (versionData, sessionData, playerID, bids, startIndex) => {
   // If the player has any more influence cards and there are any bids in the turn:
   const {influences} = sessionData.players[playerID].hand.current;
   if (influences.length > startIndex && bids.length) {
@@ -576,10 +580,10 @@ const requestHandler = (req, res) => {
             }
           });
         });
-        // Close the response, so the leader page can be updated.
-        res.end();
         // Start the first round.
         startRound(sessionData);
+        // Close the response.
+        res.end();
       }
       // Otherwise, if a bid or replacement was made:
       else if (['bid', 'swap'].includes(urlBase)) {
@@ -613,10 +617,8 @@ const requestHandler = (req, res) => {
           const replacementNews = [cardNum].concat(patientSpec(newPatient)).join('\t');
           const replacementMsg = `handPatientReplace=${replacementNews}`;
           sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
-          // Manage a possible influence decision by the player.
-          runInfluence(versionData, sessionData, playerID, bids, 0);
-          // Close the response.
-          res.end();
+          // Prepare a possible influence decision by the player.
+          prepInfluence(versionData, sessionData, playerID, bids, 0);
         }
         // Otherwise, i.e. if no time is left:
         else {
@@ -626,6 +628,8 @@ const requestHandler = (req, res) => {
           // Record and delete the session.
           exportSession(sessionData);
         }
+        // Close the response.
+        res.end();
       }
       // Otherwise, if a decision was made about an influence card:
       else if (urlBase === 'use') {
@@ -667,9 +671,7 @@ const requestHandler = (req, res) => {
           }
           // Manage another possible influence decision by the player.
           const nextInfluenceIndex = cardNum - (targetNum === 'keep' ? 0 : 1);
-          runInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
-          // Close the response.
-          res.end();
+          prepInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
         }
         // Otherwise, i.e. if no time is left:
         else {
@@ -679,6 +681,8 @@ const requestHandler = (req, res) => {
           // Record and delete the session.
           exportSession(sessionData);
         }
+        // Close the response.
+        res.end();
       }
       // Otherwise, if a player approved finishing a round:
       else if (urlBase === 'roundOK') {
@@ -706,6 +710,8 @@ const requestHandler = (req, res) => {
           // Record and delete the session.
           exportSession(sessionData);
         }
+        // Close the response.
+        res.end();
       }
     }
     // Otherwise, if the request method was POST:
