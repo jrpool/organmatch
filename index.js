@@ -211,7 +211,8 @@ const startRound = sessionData => {
     nextStarterID: null,
     turnsEnded: 0,
     turns: [],
-    bids: []
+    bids: [],
+    oksBy: new Set()
   });
   // Start the first turn.
   startTurn(sessionData);
@@ -231,7 +232,6 @@ const exportSession = sessionData => {
 const endRound = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
   const {bids} = round;
-  let isLastRound = false;
   const {sessionCode, players} = sessionData;
   // If there were any bids in the round:
   if (bids.length) {
@@ -265,13 +265,8 @@ const endRound = sessionData => {
       }
       sessionData.piles.influences.push(...bid.influences.map(card => card.influence));
     });
-    // If the winner has won enough rounds to win the session:
-    if (player.roundsWon === versionData.limits.winningRounds.max) {
-      // Make this the final round.
-      isLastRound = true;
-    }
-    // Otherwise, i.e. if the session will continue:
-    else {
+    // If the winner has not won enough rounds to win the session:
+    if (player.roundsWon < versionData.limits.winningRounds.max) {
       // Add the next round’s starter to the session data.
       round.nextStarterID = winningPlayerID;
       // If there are losing bidders:
@@ -298,13 +293,33 @@ const endRound = sessionData => {
   // Add the round data to the session data.
   round.endTime = nowString();
   sessionData.roundsEnded++;
-  // If the round exhausted the organ cards:
-  if (! sessionData.piles.organs.latent.length) {
-    // Make this the final round.
-    isLastRound = true;
+  // Notify the players of their task of approving the round end.
+  broadcast(sessionCode, true, 'task', 'roundOK');
+};
+// Handles a round-end approval and returns whether all players have approved.
+const roundOK = (sessionData, playerID) => {
+  // Add the approval to the session data.
+  const round = sessionData.rounds[sessionData.roundsEnded - 1];
+  round.oksBy.add(playerID);
+  // If this is not the last required approval:
+  const allOKd = round.oksBy.size === sessionData.playerIDs.length;
+  if (! allOKd) {
+    // Notify all users.
+    broadcast(sessionData.sessionCode, false, 'roundOKd', playerID);
   }
-  // If this is the final round:
-  if (isLastRound) {
+  // Return whether all players have approved.
+  return allOKd;
+};
+// Processes a post-approval round end.
+const finishRound = sessionData => {
+  const round = sessionData.rounds[sessionData.roundsEnded - 1];
+  // If the round has ended the session:
+  const roundWinnerID = round.winner && round.winner.playerID;
+  const {sessionCode, players} = sessionData;
+  const sessionWon
+    = roundWinnerID
+    && players[roundWinnerID].roundsWon === versionData.limits.winningRounds.max;
+  if (sessionWon || ! sessionData.piles.organs.latent.length) {
     // Add the session winners to the session data.
     const winnerIDs = Object.keys(players).reduce((winners, id) => {
       if (winners.length) {
@@ -653,6 +668,32 @@ const requestHandler = (req, res) => {
           runInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
           // Close the response.
           res.end();
+        }
+        // Otherwise, i.e. if no time is left:
+        else {
+          // Notify all users that the session has been ended.
+          broadcast(sessionCode, false, 'sessionStage', 'Stopped; allowed time exhausted');
+          console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
+          // Record and delete the session.
+          exportSession(sessionData);
+        }
+      }
+      // Otherwise, if a player approved finishing a round:
+      else if (urlBase === 'roundOK') {
+        const {sessionCode, playerID} = params;
+        const sessionData = sessions[sessionCode];
+        // If any time is left:
+        const timeLeft = minutesLeft(versionData, sessionData);
+        if (timeLeft) {
+          // Notify all users of the time left.
+          broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
+          // Process the approval.
+          const allOKd = roundOK(sessionData, playerID);
+          // If all players have approved:
+          if (allOKd) {
+            // Finish the round.
+            finishRound(sessionData);
+          }
         }
         // Otherwise, i.e. if no time is left:
         else {

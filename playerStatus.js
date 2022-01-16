@@ -33,6 +33,7 @@ const playerInit = (id, playerName) => {
   const winListSpan = `<span id="winList${id}"></span>`;
   return `[${idSpan}] ${playerName}; rounds won: ${winCountSpan} (${winListSpan})`;
 };
+// Processes an event-stream message.
 news.onmessage = event => {
   const {data} = event;
   const rawData = event.data.replace(/^[A-Za-z]+=/, '');
@@ -75,6 +76,7 @@ news.onmessage = event => {
     document.getElementById('organ').textContent = `${roundData[1]} (${roundData[2]})`;
     document.getElementById('bids').textContent = '';
     document.getElementById('turns').textContent = '';
+    document.getElementById('roundOKs').textContent = '';
   }
   // Otherwise, if a round turn was initialized:
   else if (data.startsWith('turnInit=')) {
@@ -127,6 +129,31 @@ news.onmessage = event => {
       const taskP = document.createElement('p');
       taskDiv.appendChild(taskP);
       taskP.textContent = 'Wait for the turn player to move';
+    }
+    // Otherwise, if it is to agree to ending a round:
+    else if (taskType === 'roundOK') {
+      // Replace the next task with an approval form.
+      const taskLabelP = document.createElement('p');
+      taskDiv.appendChild(taskLabelP);
+      taskLabelP.id = 'roundOKLabel';
+      taskLabelP.textContent = 'Round ended. When you have reviewed the results, press the button.';
+      const roundOKForm = document.createElement('form');
+      taskDiv.appendChild(roundOKForm);
+      const buttonP = document.createElement('p');
+      roundOKForm.appendChild(buttonP);
+      const roundOKButton = document.createElement('button');
+      buttonP.appendChild(roundOKButton);
+      roundOKButton.setAttribute('aria-labelledby', 'roundOKLabel');
+      roundOKButton.textContent = 'OK to proceed';
+      // When the form is submitted:
+      roundOKForm.onsubmit = async event => {
+        // Prevent a reload.
+        event.preventDefault();
+        // Disable the for button.
+        roundOKButton.setAttribute('disabled', true);
+        // Notify the server.
+        await fetch(`roundOK?sessionCode=${sessionCode}&playerID=${playerID}`);
+      };
     }
     // Otherwise, if it is to choose a player to bid or replace or an influence card to act on:
     else if (['bid', 'swap', 'use'].includes(taskType)) {
@@ -213,6 +240,14 @@ news.onmessage = event => {
     else {
       listSpan.textContent = winnerData[0];
     }
+  }
+  // Otherwise, if a player approved finishing a round:
+  else if (data.startsWith('roundOKd=')) {
+    const roundOKData = rawData.split('\t');
+    // Update the list of round-end approvers.
+    const roundOKP = document.getElementById('roundOKs');
+    const okList = roundOKP.textContent;
+    roundOKP.textContent = okList ? `${okList} ${roundOKData[0]}` : roundOKData[0];
   }
   // Otherwise, if the time left was updated:
   else if (data.startsWith('timeLeft=')) {
