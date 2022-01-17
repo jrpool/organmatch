@@ -152,6 +152,8 @@ const startTurn = sessionData => {
     turnNum,
     turnPlayerID,
     startTime: nowString(),
+    bid: false,
+    influenced: false,
     endTime: null
   };
   round.turns.push(turn);
@@ -369,7 +371,8 @@ const endTurn = sessionData => {
   // Increment the turn count in the session data.
   round.turnsEnded++;
   // Notify all users.
-  broadcast(sessionData.sessionCode, false, 'turn', `${turnNum}\t: done`);
+  const turnSummary = ` ${turn.bid ? 'bid' : 'replaced'}${turn.influenced ? '; influenced' : ''}`;
+  broadcast(sessionData.sessionCode, false, 'turn', `${turnNum}\t:${turnSummary}`);
   // If this was the last turn in the round:
   if (turnNum === sessionData.playerIDs.length - 1) {
     // End the round.
@@ -550,7 +553,7 @@ const requestHandler = (req, res) => {
           sessionCode,
           false,
           'sessionStage',
-          `Started; players shuffled; <span id="timeLeft">${minutes}</span> minutes left`
+          `Started; <span id="timeLeft">${minutes}</span> minutes left`
         );
         console.log(`Session ${sessionCode} started`);
         // Shuffle the player IDs in the session data.
@@ -601,7 +604,8 @@ const requestHandler = (req, res) => {
           // Notify all users of the time left.
           broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
           const player = sessionData.players[playerID];
-          const {bids} = sessionData.rounds[sessionData.roundsEnded];
+          const round = sessionData.rounds[sessionData.roundsEnded];
+          const {bids, turns} = round;
           // If the move was a bid:
           if (urlBase === 'bid') {
             // Notify all users of the bid.
@@ -615,6 +619,9 @@ const requestHandler = (req, res) => {
               influences: [],
               netPriority: patient.priority
             });
+            // Add the bid to the turn data.
+            const turn = turns[turns.length - 1];
+            turn.bid = true;
           }
           // Draw a patient to replace the lost patient.
           const newPatient = sessionData.piles.patients.shift();
@@ -648,7 +655,8 @@ const requestHandler = (req, res) => {
           // Notify all users of the time left.
           broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
           const player = sessionData.players[playerID];
-          const {bids} = sessionData.rounds[sessionData.roundsEnded];
+          const round = sessionData.rounds[sessionData.roundsEnded];
+          const {bids, turns} = round;
           // If the decision was to use the card:
           if (params.targetNum !== 'keep') {
             const bid = bids[targetNum - 1];
@@ -664,6 +672,8 @@ const requestHandler = (req, res) => {
             );
             const limits = versionData.limits.bidPriority;
             bid.netPriority = Math.min(freePriority, Math.max(freePriority, limits.min));
+            const turn = turns[turns.length - 1];
+            turn.influenced = true;
             // Notify all users of the use.
             const {impact} = use.influence;
             const signedImpact = impact > 0 ? `+ ${impact}` : `- ${Math.abs(impact)}`;
@@ -675,7 +685,7 @@ const requestHandler = (req, res) => {
             sendEventMsg(newsStreams[sessionCode][playerID], `influenceRemove=${cardNum}`);
             sendEventMsg(newsStreams[sessionCode].Leader, `influenceRemove=${cardNum}`);
           }
-          // Manage another possible influence decision by the player.
+          // Prepare another possible influence decision by the player.
           const nextInfluenceIndex = cardNum - (targetNum === 'keep' ? 0 : 1);
           prepInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
         }
