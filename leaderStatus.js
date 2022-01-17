@@ -8,7 +8,7 @@ const joinLink = document.getElementById('joinLink');
 joinLink.href = joinLink.textContent = `${proxy}joinForm?sessionCode=${sessionCode}`;
 document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
-// Ask the server for status-change messages.
+// Open a persistent messaging connection to the server.
 const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=Leader`);
 const playerOL = document.getElementById('playerList');
 // Returns a patient description.
@@ -60,6 +60,8 @@ news.onmessage = event => {
     if (rawData.startsWith('Ended')) {
       // Remove the after-start content.
       document.getElementById('afterStart').textContent = '';
+      // Close the messaging connection.
+      news.close();
     }
   }
   // Otherwise, if the round changed:
@@ -68,9 +70,9 @@ news.onmessage = event => {
     const roundData = rawData.split('\t');
     document.getElementById('round').textContent = roundData[0];
     document.getElementById('organ').textContent = `${roundData[1]} (${roundData[2]})`;
-    document.getElementById('bids').textContent = '';
-    document.getElementById('turns').textContent = '';
-    document.getElementById('roundOKs').textContent = '';
+    ['bids', 'turns', 'roundOKs', 'nextStarter', 'final'].forEach(id => {
+      document.getElementById(id).textContent = '';
+    });
   }
   // Otherwise, if a round turn was initialized:
   else if (data.startsWith('turnInit=')) {
@@ -168,6 +170,15 @@ news.onmessage = event => {
     else {
       listSpan.textContent = winnerData[0];
     }
+    // Add the winner to the round summary.
+    document.getElementById('winner').textContent = winnerData[1];
+  }
+  // Otherwise, if a round ended:
+  else if (data.startsWith('roundImpact=')) {
+    const impactData = rawData.split('\t');
+    // Add the round’s impact to the round summary.
+    document.getElementById('nextStarter').textContent = impactData[1];
+    document.getElementById('final').textContent = impactData[0];
   }
   // Otherwise, if a player approved finishing a round:
   else if (data.startsWith('roundOKd=')) {

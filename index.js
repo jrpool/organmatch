@@ -278,6 +278,8 @@ const endRound = sessionData => {
     if (player.roundsWon < versionData.limits.winningRounds.max) {
       // Add the next round’s starter to the session data.
       round.nextStarterID = winningPlayerID;
+      // Notify all users of the next round’s starter.
+      broadcast(sessionCode, false, 'roundImpact', `false\t${round.nextStarterID}`);
       // If there are losing bidders:
       if (bids.length > 1) {
         // For each losing bidder:
@@ -293,11 +295,18 @@ const endRound = sessionData => {
         });
       }
     }
+    // Otherwise, i.e. if the winner has won the session:
+    else {
+      // Notify all users of the round’s finality.
+      broadcast(sessionCode, false, 'roundImpact', 'true\t');
+    }
   }
   // Otherwise, i.e. if there were no bids in the round:
   else {
     // Add the next round’s starter to the session data.
     round.nextStarterID = round.roundStarterID;
+    // Notify all users of the next round’s starter.
+    broadcast(sessionCode, false, 'roundImpact', `false\t${round.nextStarterID}`);
   }
   // Add the round data to the session data.
   round.endTime = nowString();
