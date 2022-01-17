@@ -140,7 +140,7 @@ news.onmessage = event => {
       const taskLabelP = document.createElement('p');
       taskDiv.appendChild(taskLabelP);
       taskLabelP.id = 'roundOKLabel';
-      taskLabelP.textContent = 'Round ended. When you have reviewed the results, press the button.';
+      taskLabelP.textContent = 'Round ended. When you have reviewed the results, press the OK button.';
       const roundOKForm = document.createElement('form');
       taskDiv.appendChild(roundOKForm);
       const buttonP = document.createElement('p');
@@ -148,7 +148,7 @@ news.onmessage = event => {
       const roundOKButton = document.createElement('button');
       buttonP.appendChild(roundOKButton);
       roundOKButton.setAttribute('aria-labelledby', 'roundOKLabel');
-      roundOKButton.textContent = 'OK to proceed';
+      roundOKButton.textContent = 'OK';
       // When the form is submitted:
       roundOKForm.onsubmit = async event => {
         // Prevent a reload.
