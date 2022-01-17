@@ -1,13 +1,13 @@
 // leaderStatus
 // Replace placeholders with values.
 const params = JSON.parse(document.getElementById('params').textContent);
-const {proxy, sessionCode} = params;
-const minPlayerCount = Number.parseInt(params.minPlayerCount);
+const {proxy, sessionCode, minPlayerCount, maxPlayerCount} = params;
+const minPlayerCountNum = Number.parseInt(params.minPlayerCount);
 document.getElementById('sessionCode').textContent = sessionCode;
 const joinLink = document.getElementById('joinLink');
 joinLink.href = joinLink.textContent = `${proxy}joinForm?sessionCode=${sessionCode}`;
-document.getElementById('minPlayerCount').textContent = params.minPlayerCount;
-document.getElementById('maxPlayerCount').textContent = params.maxPlayerCount;
+document.getElementById('minPlayerCount').textContent = minPlayerCount;
+document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
 // Ask the server for status-change messages.
 const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=Leader`);
 const playerOL = document.getElementById('playerList');
@@ -187,12 +187,12 @@ news.onmessage = event => {
     // If a player joined or disconnected:
     if (data.startsWith('revision') || data.startsWith('addition')) {
       // If the count of players is the minimum permitted:
-      if (playerOL.childElementCount === minPlayerCount) {
+      if (playerOL.childElementCount === minPlayerCountNum) {
         // Show the start-session button.
         document.getElementById('startSession').classList.remove('invisible');
       }
       // Otherwise, if the count is less than the minimum:
-      else if (playerOL.childElementCount < minPlayerCount) {
+      else if (playerOL.childElementCount < minPlayerCountNum) {
         // Hide the start-session button.
         document.getElementById('startSession').classList.add('invisible');
       }

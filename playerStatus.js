@@ -1,12 +1,14 @@
 // playerStatus
 const params = JSON.parse(document.getElementById('params').textContent);
-// Add the session code, player name, and player list to the page.
-const {sessionCode, playerID, playerName} = params;
+// Add the session code, player name, player list, and player count limits to the page.
+const {sessionCode, playerID, playerName, minPlayerCount, maxPlayerCount} = params;
 document.getElementById('sessionCode').textContent = sessionCode;
 document.getElementById('playerID').textContent = playerID;
 document.getElementById('playerName').textContent = playerName;
 const playerOL = document.getElementById('playerList');
 playerOL.innerHTML = params.playerList;
+document.getElementById('minPlayerCount').textContent = minPlayerCount;
+document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
 // Revise the list when a user joins or disconnects.
 const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
 // Returns a patient description.
