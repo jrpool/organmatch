@@ -78,7 +78,7 @@ news.onmessage = event => {
     const roundData = rawData.split('\t');
     document.getElementById('round').textContent = roundData[0];
     document.getElementById('organ').textContent = `${roundData[1]} (${roundData[2]})`;
-    ['bids', 'turns', 'roundOKs', 'nextStarter', 'final'].forEach(id => {
+    ['bids', 'turns', 'roundOKs', 'winner', 'nextStarter', 'final'].forEach(id => {
       document.getElementById(id).textContent = '';
     });
   }
