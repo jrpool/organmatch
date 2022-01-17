@@ -19,7 +19,7 @@
   "limits": {
     "playerCount": {
       "description": "How many players may play a session of the game",
-      "min": 3,
+      "min": 2,
       "max": 8
     },
     "winningRounds": {
