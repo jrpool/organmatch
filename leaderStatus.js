@@ -68,6 +68,7 @@ news.onmessage = event => {
     document.getElementById('organ').textContent = `${roundData[1]} (${roundData[2]})`;
     document.getElementById('bids').textContent = '';
     document.getElementById('turns').textContent = '';
+    document.getElementById('roundOKs').textContent = '';
   }
   // Otherwise, if a round turn was initialized:
   else if (data.startsWith('turnInit=')) {
@@ -97,6 +98,8 @@ news.onmessage = event => {
     // Change the status of the turn.
     const turnData = rawData.split('\t');
     document.getElementById(`turn${turnData[0]}`).textContent = turnData[1];
+    // Empty the turn-player task.
+    document.getElementById('task').textContent = '';
     // Empty the lists describing the turn-player hand.
     document.getElementById('handPatients').textContent = '';
     document.getElementById('handInfluences').textContent = '';
@@ -163,6 +166,14 @@ news.onmessage = event => {
     else {
       listSpan.textContent = winnerData[0];
     }
+  }
+  // Otherwise, if a player approved finishing a round:
+  else if (data.startsWith('roundOKd=')) {
+    const roundOKData = rawData.split('\t');
+    // Update the list of round-end approvers.
+    const roundOKP = document.getElementById('roundOKs');
+    const okList = roundOKP.textContent;
+    roundOKP.textContent = okList ? `${okList} ${roundOKData[0]}` : roundOKData[0];
   }
   // Otherwise, if the time left was updated:
   else if (data.startsWith('timeLeft=')) {

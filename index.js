@@ -31,14 +31,18 @@ const serveTemplate = (name, params, res) => {
   const style = fs.readFileSync('style.css', 'utf8');
   const styledTemplate = template.replace('__style__', `<style>\n${style}\n</style>`);
   const page = styledTemplate.replace('__params__', JSON.stringify(params));
+  // Send the page.
   res.write(page);
+  // Close the response.
   res.end();
 };
 // Serves a script.
 const serveScript = (name, res) => {
   res.setHeader('Content-Type', 'text/javascript');
   const script = fs.readFileSync(name, 'utf8');
+  // Send the script.
   res.write(script);
+  // Close the response.
   res.end();
 };
 // Prepares to serve an event stream.
@@ -153,9 +157,6 @@ const startTurn = sessionData => {
   round.turns.push(turn);
   const {sessionCode} = sessionData;
   broadcast(sessionCode, false, 'turn', `${turnNum}\t: current`);
-  if (turnNum) {
-    broadcast(sessionCode, false, 'turn', `${turnNum - 1}\t: done`);
-  }
   // For each player:
   sessionData.playerIDs.forEach(id => {
     // If the player is the turn player:
@@ -211,7 +212,8 @@ const startRound = sessionData => {
     nextStarterID: null,
     turnsEnded: 0,
     turns: [],
-    bids: []
+    bids: [],
+    oksBy: new Set()
   });
   // Start the first turn.
   startTurn(sessionData);
@@ -226,12 +228,17 @@ const exportSession = sessionData => {
   );
   // Delete the session from the collection of sessions.
   delete sessions[sessionCode];
+  // Close the news streams.
+  const sessionStreams = newsStreams[sessionCode];
+  const userIDs = Object.keys(sessionStreams);
+  userIDs.forEach(id => {
+    sessionStreams[id].end();
+  });
 };
 // Ends a round.
 const endRound = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
   const {bids} = round;
-  let isLastRound = false;
   const {sessionCode, players} = sessionData;
   // If there were any bids in the round:
   if (bids.length) {
@@ -265,13 +272,8 @@ const endRound = sessionData => {
       }
       sessionData.piles.influences.push(...bid.influences.map(card => card.influence));
     });
-    // If the winner has won enough rounds to win the session:
-    if (player.roundsWon === versionData.limits.winningRounds.max) {
-      // Make this the final round.
-      isLastRound = true;
-    }
-    // Otherwise, i.e. if the session will continue:
-    else {
+    // If the winner has not won enough rounds to win the session:
+    if (player.roundsWon < versionData.limits.winningRounds.max) {
       // Add the next round’s starter to the session data.
       round.nextStarterID = winningPlayerID;
       // If there are losing bidders:
@@ -298,13 +300,33 @@ const endRound = sessionData => {
   // Add the round data to the session data.
   round.endTime = nowString();
   sessionData.roundsEnded++;
-  // If the round exhausted the organ cards:
-  if (! sessionData.piles.organs.latent.length) {
-    // Make this the final round.
-    isLastRound = true;
+  // Notify the players of their task of approving the round end.
+  broadcast(sessionCode, true, 'task', 'roundOK');
+};
+// Handles a round-end approval and returns whether all players have approved.
+const roundOK = (sessionData, playerID) => {
+  // Add the approval to the session data.
+  const round = sessionData.rounds[sessionData.roundsEnded - 1];
+  round.oksBy.add(playerID);
+  // If this is not the last required approval:
+  const allOKd = round.oksBy.size === sessionData.playerIDs.length;
+  if (! allOKd) {
+    // Notify all users.
+    broadcast(sessionData.sessionCode, false, 'roundOKd', playerID);
   }
-  // If this is the final round:
-  if (isLastRound) {
+  // Return whether all players have approved.
+  return allOKd;
+};
+// Processes a post-approval round end.
+const finishRound = sessionData => {
+  const round = sessionData.rounds[sessionData.roundsEnded - 1];
+  // If the round has ended the session:
+  const roundWinnerID = round.winner && round.winner.playerID;
+  const {sessionCode, players} = sessionData;
+  const sessionWon
+    = roundWinnerID
+    && players[roundWinnerID].roundsWon === versionData.limits.winningRounds.max;
+  if (sessionWon || ! sessionData.piles.organs.latent.length) {
     // Add the session winners to the session data.
     const winnerIDs = Object.keys(players).reduce((winners, id) => {
       if (winners.length) {
@@ -346,6 +368,8 @@ const endTurn = sessionData => {
   turn.endTime = nowString();
   // Increment the turn count in the session data.
   round.turnsEnded++;
+  // Notify all users.
+  broadcast(sessionData.sessionCode, false, 'turn', `${turnNum}\t: done`);
   // If this was the last turn in the round:
   if (turnNum === sessionData.playerIDs.length - 1) {
     // End the round.
@@ -386,7 +410,7 @@ const targets = (versionData, playerID, influence, bids) => {
   return targetIndexes;
 };
 // Manages an influence decision.
-const runInfluence = (versionData, sessionData, playerID, bids, startIndex) => {
+const prepInfluence = (versionData, sessionData, playerID, bids, startIndex) => {
   // If the player has any more influence cards and there are any bids in the turn:
   const {influences} = sessionData.players[playerID].hand.current;
   if (influences.length > startIndex && bids.length) {
@@ -496,6 +520,8 @@ const requestHandler = (req, res) => {
             // Notify all users that the session has been aborted.
             broadcast(sessionCode, false, 'sessionStage', 'Aborted');
             console.log(`Session ${sessionCode} aborted`);
+            // Add the end time to the session data.
+            sessionData.endTime = nowString();
             // Record and delete the session.
             exportSession(sessionData);
           }
@@ -526,6 +552,7 @@ const requestHandler = (req, res) => {
           'sessionStage',
           `Started; players shuffled; <span id="timeLeft">${minutes}</span> minutes left`
         );
+        console.log(`Session ${sessionCode} started`);
         // Shuffle the player IDs in the session data.
         const shuffler = sessionData.playerIDs.map(id => [id, Math.random()]);
         shuffler.sort((a, b) => a[1] - b[1]);
@@ -559,10 +586,10 @@ const requestHandler = (req, res) => {
             }
           });
         });
-        // Close the response, so the leader page can be updated.
-        res.end();
         // Start the first round.
         startRound(sessionData);
+        // Close the response.
+        res.end();
       }
       // Otherwise, if a bid or replacement was made:
       else if (['bid', 'swap'].includes(urlBase)) {
@@ -596,10 +623,8 @@ const requestHandler = (req, res) => {
           const replacementNews = [cardNum].concat(patientSpec(newPatient)).join('\t');
           const replacementMsg = `handPatientReplace=${replacementNews}`;
           sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
-          // Manage a possible influence decision by the player.
-          runInfluence(versionData, sessionData, playerID, bids, 0);
-          // Close the response.
-          res.end();
+          // Prepare a possible influence decision by the player.
+          prepInfluence(versionData, sessionData, playerID, bids, 0);
         }
         // Otherwise, i.e. if no time is left:
         else {
@@ -609,6 +634,8 @@ const requestHandler = (req, res) => {
           // Record and delete the session.
           exportSession(sessionData);
         }
+        // Close the response.
+        res.end();
       }
       // Otherwise, if a decision was made about an influence card:
       else if (urlBase === 'use') {
@@ -650,9 +677,7 @@ const requestHandler = (req, res) => {
           }
           // Manage another possible influence decision by the player.
           const nextInfluenceIndex = cardNum - (targetNum === 'keep' ? 0 : 1);
-          runInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
-          // Close the response.
-          res.end();
+          prepInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
         }
         // Otherwise, i.e. if no time is left:
         else {
@@ -662,6 +687,37 @@ const requestHandler = (req, res) => {
           // Record and delete the session.
           exportSession(sessionData);
         }
+        // Close the response.
+        res.end();
+      }
+      // Otherwise, if a player approved finishing a round:
+      else if (urlBase === 'roundOK') {
+        const {sessionCode, playerID} = params;
+        console.log(`roundOK received from ${playerID}`);
+        const sessionData = sessions[sessionCode];
+        // If any time is left:
+        const timeLeft = minutesLeft(versionData, sessionData);
+        if (timeLeft) {
+          // Notify all users of the time left.
+          broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
+          // Process the approval.
+          const allOKd = roundOK(sessionData, playerID);
+          // If all players have approved:
+          if (allOKd) {
+            // Finish the round.
+            finishRound(sessionData);
+          }
+        }
+        // Otherwise, i.e. if no time is left:
+        else {
+          // Notify all users that the session has been ended.
+          broadcast(sessionCode, false, 'sessionStage', 'Stopped; allowed time exhausted');
+          console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
+          // Record and delete the session.
+          exportSession(sessionData);
+        }
+        // Close the response.
+        res.end();
       }
     }
     // Otherwise, if the request method was POST:
@@ -684,6 +740,7 @@ const requestHandler = (req, res) => {
           proxy: process.env.PROXY,
           sessionCode
         }, res);
+        console.log(`Session ${sessionCode} created`);
       }
       // Otherwise, if the user asked to join a session:
       else if (url === '/joinSession') {
