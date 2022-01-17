@@ -732,6 +732,9 @@ const requestHandler = (req, res) => {
     }
     // Otherwise, if the request method was POST:
     else if (method === 'POST') {
+      // Identify the limits on player counts.
+      const minPlayerCount = versionData.limits.playerCount.min;
+      const maxPlayerCount = versionData.limits.playerCount.max;
       // Get the data as an object.
       const params = parse(Buffer.concat(bodyParts).toString());
       // If a session creation was requested:
@@ -739,7 +742,6 @@ const requestHandler = (req, res) => {
         // Create a session and get its data.
         const sessionData = require('./createSession')(versionData);
         const {sessionCode} = sessionData;
-        const minPlayerCount = versionData.limits.playerCount.min;
         // Add them to the data on all current sessions.
         sessions[sessionCode] = sessionData;
         // Initialize the new-player streams for the session.
@@ -747,6 +749,7 @@ const requestHandler = (req, res) => {
         // Serve a session-status page.
         serveTemplate('leaderStatus', {
           minPlayerCount,
+          maxPlayerCount,
           proxy: process.env.PROXY,
           sessionCode
         }, res);
@@ -795,7 +798,11 @@ const requestHandler = (req, res) => {
             );
             const playerList = playerListItems.join('\n');
             // Serve a session-status page, including the list.
-            serveTemplate('playerStatus', {sessionCode, playerList, playerID, playerName}, res);
+            serveTemplate(
+              'playerStatus',
+              {sessionCode, playerList, playerID, playerName, minPlayerCount, maxPlayerCount},
+              res
+            );
           }
         }
         // Otherwise, i.e. if the session code is invalid:

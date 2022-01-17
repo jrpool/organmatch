@@ -6,6 +6,8 @@ const minPlayerCount = Number.parseInt(params.minPlayerCount);
 document.getElementById('sessionCode').textContent = sessionCode;
 const joinLink = document.getElementById('joinLink');
 joinLink.href = joinLink.textContent = `${proxy}joinForm?sessionCode=${sessionCode}`;
+document.getElementById('minPlayerCount').textContent = params.minPlayerCount;
+document.getElementById('maxPlayerCount').textContent = params.maxPlayerCount;
 // Ask the server for status-change messages.
 const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=Leader`);
 const playerOL = document.getElementById('playerList');
