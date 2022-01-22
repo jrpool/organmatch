@@ -27,7 +27,7 @@
         <section id="playersSec">
           <h2>Players</h2>
           <ol id="playerList" aria-live="polite">
-            <li id="youBox" class="playerBox youBox">
+            <li id="playerX" class="playerBox youBox">
               <p>[<span id="playerID" class="idLetter"></span>]
                 <span id="playerName" class="playerName"></span>
               </p>
@@ -65,39 +65,22 @@
                   </fieldset>
                 </section>
               </section>
+              <p class="move invisible"></p>
+              <p class="ready invisible">Ready</p>
             </li>
-            <li id="themBoxTemplate" class="playerBox themBox invisible">
+            <li id="playerTemplate" class="playerBox themBox invisible">
               <p>[<span class="idLetter"></span>] <span class="playerName"></span></p>
               <p class="invisible">Score <span class="score"></span>; won rounds <span class="rounds"></span></p>
+              <p class="move invisible"></p>
+              <p class="ready invisible">Ready</p>
             </li>
           </ol>
         </section>
       </section>
       <section id="afterStart" class="invisible">
         <h2 id="roundH" aria-live="polite" class="invisible">Round <span id="roundID"></span></h2>
-        <ul>
-          <li>Organ: <span id="organ"></span></li>
-          <li>Winner: <span id="winner"></span></li>
-          <li>Next starter: <span id="nextStarter"></span></li>
-          <li>Final: <span id="final"></span></li>
-        </ul>
-        <h3>Bids</h3>
-        <ol id="bids"></ol>
-        <h3>Turns</h3>
-        <ul id="turns"></ul>
-        <h3>Ready to proceed after round</h3>
-        <p id="roundOKs"></p>
-        <h3>Your next task</h3>
-        <div id="task"></div>
-        <h3>Your hand</h3>
-        <h4>Patient cards</h4>
-        <p>
-          <ol id="handPatients"></ol>
-        </p>
-        <h4>Influence cards</h4>
-        <p>
-          <ol id="handInfluences"></ol>
-        </p>
+        <p class="roundOrganP">Organ: <span id="roundOrgan"></span></p>
+        <p class="roundResultP invisible">Result: <span id="roundResult"></span></p>
       </section>
       <p><a href="about" target="_blank">About OrganMatch (new tab)</a></p>
     </main>
