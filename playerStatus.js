@@ -24,6 +24,63 @@ Object.keys(playerList).forEach(id => {
   }
   populatePlayerLI(id, playerList[id]);
 });
+// When the patient form is submitted:
+const patientForm = document.getElementById('patientForm');
+patientForm.onsubmit = async event => {
+  // Prevent a reload.
+  event.preventDefault();
+  // Identify the index of the chosen patient.
+  const patientButton = event.submitter;
+  const patientButtons = Array.from(
+    event.submitter.parentElement.parentElement.querySelectorAll('button')
+  );
+  const index = patientButtons.findIndex(button => button === patientButton);
+  // Remove the selected patient from the hand.
+  patientButton.parentElement.remove();
+  // Disable the buttons in the form.
+  patientForm.querySelectorAll('button').forEach(button => {
+    button.setAttribute('disabled', true);
+  });
+  // Notify the server of the choice.
+  const task = document.getElementById('patientTask').textContent;
+  await fetch(
+    `patient?sessionCode=${sessionCode}&playerID=${playerID}&task=${task}&index=${index}`
+  );
+};
+// When the influence form is submitted:
+const influenceForm = document.getElementById('influenceForm');
+influenceForm.onsubmit = async event => {
+  // Prevent a reload.
+  event.preventDefault();
+  // Identify the index of the chosen influence card.
+  const influenceButton = event.submitter;
+  const influenceCard = influenceButton.parentElement;
+  const influenceCards = Array.from(influenceCard.parentElement.querySelectorAll('li'));
+  const index = influenceCards.findIndex(
+    card => Array.from(card.querySelectorAll('button')).includes(influenceButton)
+  );
+  const bidderID = influenceButton.textContent;
+  // Remove the selected influence card from the hand.
+  influenceCard.remove();
+  // Disable the buttons in the form.
+  influenceForm.querySelectorAll('button').forEach(button => {
+    button.setAttribute('disabled', true);
+  });
+  // Notify the server of the choice.
+  await fetch(
+    `influence?sessionCode=${sessionCode}&playerID=${playerID}&index=${index}&bidderID=${bidderID}`
+  );
+};
+// When the round-OK form is submitted:
+const roundOKForm = document.getElementById('roundOKForm');
+roundOKForm.onsubmit = async event => {
+  // Prevent a reload.
+  event.preventDefault();
+  // Hide the form.
+  roundOKForm.classList.add('invisible');
+  // Notify the server.
+  await fetch(`roundOK?sessionCode=${sessionCode}&playerID=${playerID}`);
+};
 // Open a persistent messaging connection to the server.
 const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
 // Returns a patient description in format “«heart#23 + lung#5» ∂ ★3”.
@@ -90,57 +147,41 @@ news.onmessage = event => {
   }
   // Otherwise, if an influence card was added to the hand:
   else if (params[0] === 'handInfluenceAdd') {
-    // Add the card.
-    const newInfluenceLI = document.createElement('li');
-    document.getElementById('handInfluences').appendChild(newInfluenceLI);
-    newInfluenceLI.textContent = influenceDigest(rawData);
+    // Copy the influence-card template.
+    const handInfluenceLITemplate = document.getElementById('handInfluenceLITemplate');
+    const newInfluenceLI = handInfluenceLITemplate.cloneNode(true);
+    newInfluenceLI.removeAttribute('id');
+    // Add the influence description to the list item.
+    newInfluenceLI.firstElementChild.innerHTML = influenceDigest(params.slice(1));
+    // Insert the copy into the hand.
+    handInfluenceLITemplate.before(newInfluenceLI);
   }
-  // Otherwise, if a turn status changed:
-  else if (data.startsWith('turn=')) {
-    // Change the status of the turn.
-    const turnData = rawData.split('\t');
-    document.getElementById(`turn${turnData[0]}`).textContent = turnData[1];
+  // Otherwise, if the player was told to choose a patient to replace:
+  else if (params[0] === 'replace') {
+    // Add this task to the page and enable all the player buttons.
+    document.getElementById('patientTask').textContent = 'replace';
+    document
+    .getElementById('patientForm')
+    .querySelectorAll('button')
+    .forEach(button => button.setAttribute('disabled', false));
   }
-  // Otherwise, if the player’s next task was defined:
-  else if (data.startsWith('task=')) {
-    // Remove any existing next task.
-    const taskDiv = document.getElementById('task');
-    taskDiv.textContent = '';
-    const taskParts = rawData.split('\t');
-    const taskType = taskParts.shift();
-    // If the next task is to wait for the turn player’s move:
-    if (taskType === 'wait') {
-      // Display it.
-      const taskP = document.createElement('p');
-      taskDiv.appendChild(taskP);
-      taskP.textContent = 'Wait for the turn player to move';
-    }
-    // Otherwise, if it is to approve ending a round:
-    else if (taskType === 'roundOK') {
-      // Replace the next task with an approval form.
-      const taskLabelP = document.createElement('p');
-      taskDiv.appendChild(taskLabelP);
-      taskLabelP.id = 'roundOKLabel';
-      taskLabelP.textContent = 'Round ended. When you have reviewed the results, press the OK button.';
-      const roundOKForm = document.createElement('form');
-      taskDiv.appendChild(roundOKForm);
-      const buttonP = document.createElement('p');
-      roundOKForm.appendChild(buttonP);
-      const roundOKButton = document.createElement('button');
-      buttonP.appendChild(roundOKButton);
-      roundOKButton.setAttribute('aria-labelledby', 'roundOKLabel');
-      roundOKButton.textContent = 'OK';
-      // When the form is submitted:
-      roundOKForm.onsubmit = async event => {
-        // Prevent a reload.
-        event.preventDefault();
-        // Disable the approval button.
-        roundOKButton.setAttribute('disabled', true);
-        // Notify the server.
-        await fetch(`roundOK?sessionCode=${sessionCode}&playerID=${playerID}`);
-      };
-    }
-    // Otherwise, if it is to choose a player to bid or replace or an influence card to act on:
+  // Otherwise, if the player was told to choose a patient to bid:
+  else if (params[0] === 'bid') {
+    // Add this task to the page and enable the eligible player buttons.
+    document.getElementById('patientTask').textContent = 'bid';
+    document
+    .getElementById('patientForm')
+    .querySelectorAll('button')
+    .forEach((button, index) => {
+      if (params.slice(1).includes(index)) {
+        button.setAttribute('disabled', false);
+      }
+    });
+  }
+  // Otherwise, if the player was offered bids to use an influence card on:
+  else if (params[0] === 'influence') {
+
+  }
     else if (['bid', 'swap', 'use'].includes(taskType)) {
       // Replace the next task with a choice form.
       const taskLabelP = document.createElement('p');
