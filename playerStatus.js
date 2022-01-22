@@ -26,9 +26,8 @@ Object.keys(playerList).forEach(id => {
 });
 // Open a persistent messaging connection to the server.
 const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
-// Returns a patient description.
-const patientDigest = patientNews => {
-  const patientData = patientNews.split('\t');
+// Returns a patient description in format “«heart#23 + lung#5» ∂ ★3”.
+const patientDigest = patientData => {
   const organNewsItems = [`${patientData[0]}#${patientData[1]}`];
   if (patientData[2]) {
     organNewsItems.push(`${patientData[2]}#${patientData[3]}`);
@@ -36,7 +35,7 @@ const patientDigest = patientNews => {
   const organNews = `&laquo;${organNewsItems.join(' + ')}&raquo;`;
   return `${[organNews, patientData[4], `&starf;${patientData[5]}`].join(' ')}`;
 };
-// Returns an influence-card description.
+// Returns an influence-card description in format “bribe/-2”.
 const influenceDigest = influenceNews => {
   const influenceData = influenceNews.split('\t');
   const impact = influenceData[1];
@@ -61,54 +60,36 @@ news.onmessage = event => {
   else if (params[0] === 'sessionStart') {
     // Remove the pre-start information from the page.
     document.getElementById('preStart').remove();
-      // Make the post-start facts visible.
-      document.getElementById('afterStart').classList.remove('invisible');
-    }
-    // Otherwise, if the new stage is completion:
-    else if (rawData.startsWith('Ended')) {
-      // Remove the after-start content.
-      document.getElementById('afterStart').textContent = '';
-      // Close the messaging connection.
-      news.close();
-    }
+    // Make the round information visible.
+    document.getElementById('roundInfo').classList.remove('invisible');
   }
-  // Otherwise, if the round changed:
-  else if (data.startsWith('round=')) {
-    // Change the round and the round-dependent facts.
-    const roundData = rawData.split('\t');
-    document.getElementById('round').textContent = roundData[0];
-    document.getElementById('organ').textContent = `${roundData[1]} (${roundData[2]})`;
-    ['bids', 'turns', 'roundOKs', 'winner', 'nextStarter', 'final'].forEach(id => {
-      document.getElementById(id).textContent = '';
-    });
+  // Otherwise, if the session ended:
+  else if (params[0] === 'sessionEnd') {
+    // Close the messaging connection.
+    news.close();
   }
-  // Otherwise, if a round turn was initialized:
-  else if (data.startsWith('turnInit=')) {
-    // Add the turn to the list of round turns.
-    const turnData = rawData.split('\t');
-    const turnLI = document.createElement('li');
-    document.getElementById('turns').appendChild(turnLI);
-    turnLI.innerHTML
-      = `Turn ${turnData[0]} (player ${turnData[1]})<span id=turn${turnData[0]}></span>`;
+  // Otherwise, if a round started:
+  else if (params[0] === 'roundStart') {
+    // Change the round ID and organ.
+    document.getElementById('roundID').textContent = params[1];
+    document.getElementById('roundOrgan').textContent = `${params[2]} ${params[3]}`;
+    // Hide the round-end content.
+    document.getElementById('roundResultP').classList.add('invisible');
+    document.getElementById('readyForm').classList.add('invisible');
   }
   // Otherwise, if a patient was added to the hand:
-  else if (data.startsWith('handPatientAdd=')) {
-    // Add the patient.
-    const newPatientLI = document.createElement('li');
-    document.getElementById('handPatients').appendChild(newPatientLI);
-    newPatientLI.textContent = patientDigest(rawData);
-  }
-  // Otherwise, if a patient was replaced in the hand:
-  else if (data.startsWith('handPatientReplace=')) {
-    // Replace the old patient with the new one.
-    const replacementData = rawData.split('\t');
-    const patientLI = document
-    .getElementById('handPatients')
-    .querySelector(`li:nth-child(${replacementData[0]})`);
-    patientLI.textContent = patientDigest(replacementData.slice(1).join('\t'));
+  else if (params[0] === 'handPatientAdd') {
+    // Copy the patient template.
+    const handPatientLITemplate = document.getElementById('handPatientLITemplate');
+    const newPatientLI = handPatientLITemplate.cloneNode(true);
+    newPatientLI.removeAttribute('id');
+    // Add the patient description to the button.
+    newPatientLI.firstElementChild.innerHTML = patientDigest(params.slice(1));
+    // Insert the copy into the hand.
+    handPatientLITemplate.before(newPatientLI);
   }
   // Otherwise, if an influence card was added to the hand:
-  else if (data.startsWith('handInfluenceAdd=')) {
+  else if (params[0] === 'handInfluenceAdd') {
     // Add the card.
     const newInfluenceLI = document.createElement('li');
     document.getElementById('handInfluences').appendChild(newInfluenceLI);
