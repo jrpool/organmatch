@@ -18,69 +18,66 @@
       <header>
         <h1>OrganMatch: Session <span id="sessionCode"></span></h1>
       </header>
-      <div id="startInfo">
-        <p>You are player <span id="playerID"></span> (<span id="playerName"></span>).</p>
+      <div id="preStart">
+        <p>You have joined the session.</p>
         <p>When the organizer starts the session, you can begin to play.</p>
         <p>The allowed number of players is from <span id="minPlayerCount"></span> to <span id="maxPlayerCount"></span>.</p>
       </div>
-      <section id="afterStartInfo" class="invisible">
-        <section id="playersSec">
-          <h2>Players</h2>
-          <ol id="playerList" aria-live="polite">
-            <li id="playerX" class="playerBox youBox">
-              <p>[<span id="playerID" class="idLetter"></span>]
-                <span id="playerName" class="playerName"></span>
-              </p>
-              <p id="yourScoreP" aria-live="polite" class="invisible">
-                Score <span id="sessionScore" class="score"></span>;
-                won rounds <span id="wonRoundList" class="rounds"></span>
-              </p>
-              <section id="handSec" class="invisible">
-                <h3>Patients</h3>
+      <section id="playersSec">
+        <h2>Players</h2>
+        <ol id="playerList" aria-live="polite">
+          <li id="playerX" class="playerBox youBox">
+            <p>[<span class="idLetter"></span>] <span class="playerName"></span></p>
+            <p id="yourScoreP" aria-live="polite" class="invisible">
+              Score <span id="sessionScore" class="score"></span>;
+              won rounds <span id="wonRoundList" class="rounds"></span>
+            </p>
+            <section id="handSec" class="invisible">
+              <h3>Patients</h3>
+              <fieldset>
+                <legend id="patientTaskLabel" aria-live="polite" class="invisible">
+                  Choose a patient to <span id="patientTask"></span>
+                </legend>
+                <ul id="yourPatients">
+                  <li id="patient0" aria-live="polite"><button disabled="true"></button></li>
+                  <li id="patient1" aria-live="polite"><button disabled="true"></button></li>
+                  <li id="patient2" aria-live="polite"><button disabled="true"></button></li>
+                  <li id="patient3" aria-live="polite"><button disabled="true"></button></li>
+                  <li id="patient4" aria-live="polite"><button disabled="true"></button></li>
+                  <li id="patient5" aria-live="polite"><button disabled="true"></button></li>
+                  <li id="patient6" aria-live="polite"><button disabled="true"></button></li>
+                </ul>
+              </fieldset>
+              <section id="handInfluences" class="invisible">
+                <h3>Influences</h3>
                 <fieldset>
-                  <legend id="patientTaskLabel" aria-live="polite" class="invisible">
-                    Choose a patient to <span id="patientTask"></span>
+                  <legend id="influenceTaskLabel" aria-live="polite" class="invisible">
+                    You <strong>may</strong> choose a bid to influence
                   </legend>
-                  <ul id="yourPatients">
-                    <li id="patient0" aria-live="polite"><button disabled="true"></button></li>
-                    <li id="patient1" aria-live="polite"><button disabled="true"></button></li>
-                    <li id="patient2" aria-live="polite"><button disabled="true"></button></li>
-                    <li id="patient3" aria-live="polite"><button disabled="true"></button></li>
-                    <li id="patient4" aria-live="polite"><button disabled="true"></button></li>
-                    <li id="patient5" aria-live="polite"><button disabled="true"></button></li>
-                    <li id="patient6" aria-live="polite"><button disabled="true"></button></li>
+                  <ul id="yourInfluences">
+                    <li id="influenceLITemplate" aria-live="polite" class="invisible">
+                      <span></span><button class="influenceBid"></button>
+                    </li>
                   </ul>
                 </fieldset>
-                <section id="handInfluences" class="invisible">
-                  <h3>Influences</h3>
-                  <fieldset>
-                    <legend id="influenceTaskLabel" aria-live="polite" class="invisible">
-                      You <strong>may</strong> choose a bid to influence
-                    </legend>
-                    <ul id="yourInfluences">
-                      <li id="influenceLITemplate" aria-live="polite" class="invisible">
-                        <span></span><button class="influenceBid"></button>
-                      </li>
-                    </ul>
-                  </fieldset>
-                </section>
               </section>
-              <p class="move invisible"></p>
-              <p class="ready invisible">Ready</p>
-            </li>
-            <li id="playerTemplate" class="playerBox themBox invisible">
-              <p>[<span class="idLetter"></span>] <span class="playerName"></span></p>
-              <p class="invisible">Score <span class="score"></span>; won rounds <span class="rounds"></span></p>
-              <p class="move invisible"></p>
-              <p class="ready invisible">Ready</p>
-            </li>
-          </ol>
-        </section>
+            </section>
+            <p class="move invisible"></p>
+            <p class="ready invisible">Ready</p>
+          </li>
+          <li id="playerLITemplate" class="playerBox themBox invisible">
+            <p>[<span class="idLetter"></span>] <span class="playerName"></span></p>
+            <p class="invisible">Score <span class="score"></span>; won rounds <span class="rounds"></span></p>
+            <p class="move invisible"></p>
+            <p class="ready invisible">Ready</p>
+          </li>
+        </ol>
       </section>
-      <section id="afterStart" class="invisible">
+      <section id="roundInfo" class="invisible">
         <h2 id="roundH" aria-live="polite" class="invisible">Round <span id="roundID"></span></h2>
         <p class="roundOrganP">Organ: <span id="roundOrgan"></span></p>
         <p class="roundResultP invisible">Result: <span id="roundResult"></span></p>
+        <p id="roundOK" class="invisible">Finished reviewing result? <button>OK</button></p>
       </section>
       <p><a href="about" target="_blank">About OrganMatch (new tab)</a></p>
     </main>

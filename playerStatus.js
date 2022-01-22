@@ -1,66 +1,66 @@
 // playerStatus
 const params = JSON.parse(document.getElementById('params').textContent);
-// Add the session code, player name, player list, and player count limits to the page.
-const {sessionCode, playerID, playerName, minPlayerCount, maxPlayerCount} = params;
+// Add the session code, player count limits, and data on joined players to the page.
+const {sessionCode, playerID, playerList, minPlayerCount, maxPlayerCount} = params;
 document.getElementById('sessionCode').textContent = sessionCode;
-document.getElementById('playerID').textContent = playerID;
-document.getElementById('playerName').textContent = playerName;
-const playerOL = document.getElementById('playerList');
-playerOL.innerHTML = params.playerList;
 document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
+document.getElementById('playerX').id = `player${playerID}`;
+const playerLITemplate = document.getElementById('playerLITemplate');
+const addPlayerLI = id => {
+  const newPlayerLI = playerLITemplate.cloneNode(true);
+  newPlayerLI.id = `player${id}`;
+  playerLITemplate.before(newPlayerLI);
+};
+const populatePlayerLI = (id, playerName) => {
+  const playerLI = document.getElementById(`player${id}`);
+  playerLI.querySelector('.idLetter').textContent = id;
+  playerLI.querySelector('.playerName').textContent = playerName;
+  playerLI.classList.remove('invisible');
+};
+Object.keys(playerList).forEach(id => {
+  if (id !== playerID) {
+    addPlayerLI(id);
+  }
+  populatePlayerLI(id, playerList[id]);
+});
 // Open a persistent messaging connection to the server.
 const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
 // Returns a patient description.
 const patientDigest = patientNews => {
   const patientData = patientNews.split('\t');
-  const organNewsItems = [`${patientData[0]} (${patientData[1]} in queue)`];
+  const organNewsItems = [`${patientData[0]}#${patientData[1]}`];
   if (patientData[2]) {
-    organNewsItems.push(`${patientData[2]} (${patientData[3]} in queue)`);
+    organNewsItems.push(`${patientData[2]}#${patientData[3]}`);
   }
-  const organNews = organNewsItems.join(' + ');
-  return `${[organNews, patientData[4], `priority ${patientData[5]}`].join('; ')}`;
+  const organNews = `&laquo;${organNewsItems.join(' + ')}&raquo;`;
+  return `${[organNews, patientData[4], `&starf;${patientData[5]}`].join(' ')}`;
 };
 // Returns an influence-card description.
 const influenceDigest = influenceNews => {
   const influenceData = influenceNews.split('\t');
   const impact = influenceData[1];
   const impactNews = impact.startsWith('-') ? impact : `+${impact}`;
-  return `${influenceData[0]} (${impactNews})`;
-};
-// Returns an initial player list item.
-const playerInit = (id, playerName) => {
-  const idSpan = `<span class="mono">${id}</span>`;
-  const winCountSpan = `<span id="winCount${id}">0</span>`;
-  const winListSpan = `<span id="winList${id}"></span>`;
-  return `[${idSpan}] ${playerName}; rounds won: ${winCountSpan} (${winListSpan})`;
+  return `${influenceData[0]}/${impactNews}`;
 };
 // Processes an event-stream message.
 news.onmessage = event => {
-  const {data} = event;
-  const rawData = event.data.replace(/^[A-Za-z]+=/, '');
-  // If a user disconnected:
-  if (data.startsWith('revision=')) {
-    // Revise the entire list.
-    playerOL.innerHTML = rawData.replace(/#newline#/g, '\n');
+  const params = event.data.split(/[=\t]/);
+  // If a player disconnected:
+  if (params[0] === 'playerDrop') {
+    // Remove the player.
+    document.getElementById(`player${params[1]}`).remove();
   }
   // Otherwise, if a player joined:
-  else if (data.startsWith('addition=')) {
+  else if (params[0] === 'playerAdd') {
     // Append the player to the list.
-    const playerData = rawData.split('\t');
-    const newPlayer = document.createElement('li');
-    playerOL.appendChild(newPlayer);
-    newPlayer.innerHTML = playerInit(...playerData);
+    addPlayerLI(params[1]);
+    populatePlayerLI(params[1], params[2]);
   }
-  // Otherwise, if the stage changed:
-  else if (data.startsWith('sessionStage=')) {
-    // Change the stage accordingly.
-    const stageP = document.getElementById('stage');
-    stageP.innerHTML = rawData;
-    // If the change was a session start:
-    if (rawData.startsWith('Started')) {
-      // Remove the starting information from the page.
-      document.getElementById('startInfo').remove();
+  // Otherwise, if the session started:
+  else if (params[0] === 'sessionStart') {
+    // Remove the pre-start information from the page.
+    document.getElementById('preStart').remove();
       // Make the post-start facts visible.
       document.getElementById('afterStart').classList.remove('invisible');
     }
