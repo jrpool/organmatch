@@ -17,6 +17,7 @@
     <main>
       <header>
         <h1>OrganMatch: Session <span id="sessionCode"></span></h1>
+        <p>Minutes left: <span id="timeLeft"></span></p>
       </header>
       <div id="preStart">
         <p>You have joined the session.</p>
@@ -32,8 +33,8 @@
               Score <span id="sessionScore" class="score"></span>;
               won rounds <span id="wonRoundList" class="rounds"></span>
             </p>
-            <h3>Patients</h3>
             <form id="patientForm" class="invisible">
+              <h3>Patients</h3>
               <fieldset>
                 <legend id="patientTaskLabel" aria-live="polite" class="invisible">
                   Choose a patient to <span id="patientTask"></span>
@@ -45,8 +46,8 @@
                 </ul>
               </fieldset>
             </form>
-            <h3>Influences</h3>
-            <form id="influenceForm">
+            <form id="influenceForm" class="invisible">
+              <h3>Influences</h3>
               <fieldset>
                 <legend id="influenceLabel" aria-live="polite" class="invisible">
                   You <strong>may</strong> choose to influence a player&rsquo;s bid
