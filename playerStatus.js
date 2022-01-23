@@ -6,12 +6,14 @@ document.getElementById('sessionCode').textContent = sessionCode;
 document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
 document.getElementById('playerX').id = `player${playerID}`;
+// Adds a player to the player list.
 const playerLITemplate = document.getElementById('playerLITemplate');
 const addPlayerLI = id => {
   const newPlayerLI = playerLITemplate.cloneNode(true);
   newPlayerLI.id = `player${id}`;
   playerLITemplate.before(newPlayerLI);
 };
+// Populates a newly added player in the player list.
 const populatePlayerLI = (id, playerName) => {
   const playerLI = document.getElementById(`player${id}`);
   playerLI.querySelector('.idLetter').textContent = id;
@@ -24,6 +26,17 @@ Object.keys(playerList).forEach(id => {
   }
   populatePlayerLI(id, playerList[id]);
 });
+const influenceForm = document.getElementById('influenceForm');
+// Reinitializes the influence form.
+const influenceClear = () => {
+  // Remove the card buttons from the influence form.
+  influenceForm.querySelectorAll('li > button').forEach(button => {
+    button.remove();
+  });
+  // Hide the choice content in the form.
+  document.getElementById('influenceLabel').classList.add('invisible');
+  document.getElementById('influenceNone').classList.add('invisible');
+}
 // When the patient form is submitted:
 const patientForm = document.getElementById('patientForm');
 patientForm.onsubmit = async event => {
@@ -41,8 +54,13 @@ patientForm.onsubmit = async event => {
   patientForm.querySelectorAll('button').forEach(button => {
     button.setAttribute('disabled', true);
   });
-  // Notify the server of the choice.
   const task = document.getElementById('patientTask').textContent;
+  // If the submission was a bid:
+  if (task === 'bid') {
+    // Reinitialize the influence form.
+    influenceClear();
+  }
+  // Notify the server of the choice.
   await fetch(
     `patient?sessionCode=${sessionCode}&playerID=${playerID}&task=${task}&index=${index}`
   );
@@ -62,10 +80,8 @@ influenceForm.onsubmit = async event => {
   const bidderID = influenceButton.textContent;
   // Remove the selected influence card from the hand.
   influenceCard.remove();
-  // Disable the buttons in the form.
-  influenceForm.querySelectorAll('button').forEach(button => {
-    button.setAttribute('disabled', true);
-  });
+  // Reinitialize the form.
+  influenceClear();
   // Notify the server of the choice.
   await fetch(
     `influence?sessionCode=${sessionCode}&playerID=${playerID}&index=${index}&bidderID=${bidderID}`
@@ -171,7 +187,7 @@ news.onmessage = event => {
     document.getElementById('patientTask').textContent = 'bid';
     document
     .getElementById('patientForm')
-    .querySelectorAll('button')
+    .querySelector('button')
     .forEach((button, index) => {
       if (params.slice(1).includes(index)) {
         button.setAttribute('disabled', false);
@@ -180,7 +196,15 @@ news.onmessage = event => {
   }
   // Otherwise, if the player was offered bids to use an influence card on:
   else if (params[0] === 'influence') {
-
+    // Enable the eligible buttons for the influence card.
+    document.getElementById('influenceLabel').classList.remove('invisible');
+    const influenceLI = influenceForm.querySelector(`li:nth-child(${params[1]})`);
+    params.slice(2).forEach(bidderID => {
+      const bidButton = document.createElement('button');
+      bidButton.class = 'bidButton';
+      bidButton.textContent = bidderID;
+      influenceLI.insertAdjacentElement('beforeend', bidButton);
+    });
   }
     else if (['bid', 'swap', 'use'].includes(taskType)) {
       // Replace the next task with a choice form.
