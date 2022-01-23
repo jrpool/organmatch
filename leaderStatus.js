@@ -49,6 +49,9 @@ const startable = () => {
     }
   }
 };
+
+// MESSAGE HANDLING
+
 // Open a persistent messaging connection to the server.
 const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=Leader`);
 // Processes an event-stream message.

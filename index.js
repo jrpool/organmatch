@@ -55,7 +55,7 @@ const sendEventMsg = (streamRes, data) => {
   const msg = `data: ${data}\n\n`;
   streamRes.write(msg);
 };
-// Parses a query string into a query-parameters object.
+// Parses a query string and returns a query-parameters object.
 const parse = queryString => {
   // Parse the query string into a URLSearchParams object.
   const USParams = new URLSearchParams(queryString);
@@ -66,7 +66,7 @@ const parse = queryString => {
   });
   return params;
 };
-// Returns an object describing player IDs and names.
+// Returns an object describing all player IDs and names.
 const getPlayers = sessionData => {
   const data = {};
   const {players} = sessionData;
@@ -83,23 +83,6 @@ const broadcast = (sessionCode, onlyPlayers, subtype, value) => {
     }
   });
 };
-// Returns a list item identifying a player before a session starts.
-const playerListItem = (sessionData, playerID) => {
-  const {playerName} = sessionData.players[playerID];
-  const idNews = `[<span class="mono">${playerID}</span>]`;
-  const winCountNews = `rounds won: <span id="winCount${playerID}">0</span>`;
-  const winListNews = `(<span id="winList${playerID}"></span>)`;
-  return `<li>${idNews} ${playerName}; ${winCountNews} ${winListNews}</li>`;
-};
-// Notifies all users of a revised list of players before a session starts.
-const revisePlayerLists = sessionCode => {
-  const sessionData = sessions[sessionCode];
-  const {playerIDs} = sessionData;
-  const playerList = playerIDs
-  .map(id => playerListItem(sessionData, id))
-  .join('#newline#');
-  broadcast(sessionCode, false, 'revision', playerList);
-};
 // Returns whether a patient matches an organ.
 const isMatch = (organ, patient) => {
   const isGroupMatch = organ.group === patient.group;
@@ -110,23 +93,57 @@ const isMatch = (organ, patient) => {
     return false;
   }
 };
+// Returns the IDs of the bidders a player can use an influence on the bids of.
+const influenceTargets = (versionData, round, influence) => {
+  const limits = versionData.limits.influences;
+  const {turnsEnded, bids} = round;
+  const playerID = round.turns[turnsEnded].playerID;
+  const turnUseCount = bids.reduce(
+    (count, bid) => count + bid.influences.filter(use => use.playerID === playerID).length, 0
+  );
+  const targetIndexes = [];
+  // If the player is still permitted to use an influence:
+  if (turnUseCount < limits.perTurn.max) {
+    // For each bid made in the turn:
+    bids.forEach((bid, index) => {
+      const {influences} = bid;
+      // If any player is still permitted to influence it:
+      if (influences.length < limits.perBid.max) {
+        // If the turn player is still permitted to influence it:
+        const playerBidUseCount = influences.filter(use => use.playerID === playerID).length;
+        if (playerBidUseCount < limits.perTurnBid.max) {
+          // If the influence type differs from that of all existing influences on the bid:
+          if (influences.every(use => use.impact !== influence.impact)) {
+            // Add the bid’s index to the eligible bids’ indexes.
+            targetIndexes.push(index);
+          }
+        }
+      }
+    });
+  }
+  return targetIndexes.map(index => bids[index].playerID);
+};
 // Returns specifications for a turn player’s next move.
-const nextPatientMove = (round, hand) => {
-  const {patients} = hand;
-  const matchNums = patients
-  .map((patient, index) => isMatch(round.roundOrgan, patient) ? index + 1 : 0)
-  .filter(index => index);
-  // If there are any matches between patients and the organ:
-  if (matchNums.length) {
-    // Return the bid specifications.
-    return `bid\t${matchNums.join('\t')}`;
-  }
-  // Otherwise, i.e. if there are no patient matches:
-  else {
-    // Return the replacement specifications.
-    const patientNums = patients.map((patient, index) => index + 1);
-    return `swap\t${patientNums.join('\t')}`;
-  }
+const taskSpecs = (round, hand) => {
+  const {patients, influences} = hand;
+  // Initialize the specifications.
+  const specs = {
+    bid: [],
+    influence: []
+  };
+  // Add the indexes of the patients eligible to be bid to the specifications.
+  const matchIndexes = patients
+  .map((patient, index) => isMatch(round.roundOrgan, patient) ? index : -1)
+  .filter(index => index > -1);
+  specs.bid = matchIndexes;
+  // Add the permitted influence uses to the specifications.
+  specs.influence = influences.map(
+    influence => influenceTargets(versionData, round, influence)
+  );
+};
+// Notifies a player of the specifications for the next move.
+const sendTasks = (playerID, round, hand) => {
+
 };
 // Returns the specification of a patient.
 const patientSpec = patient => {
@@ -142,7 +159,7 @@ const patientSpec = patient => {
 const nowString = () => (new Date()).toISOString();
 // Starts a turn.
 const startTurn = sessionData => {
-  // Notify all users of the turn facts.
+  // Add the turn facts to the session data.
   const round = sessionData.rounds[sessionData.roundsEnded];
   const turnNum = round.turnsEnded;
   const {playerIDs} = sessionData;
@@ -157,24 +174,19 @@ const startTurn = sessionData => {
     endTime: null
   };
   round.turns.push(turn);
+  // Notify the players of the deciding player.
   const {sessionCode} = sessionData;
-  broadcast(sessionCode, false, 'turn', `${turnNum}\t: current`);
-  // For each player:
+  broadcast(sessionCode, true, 'turnStart', turnPlayerID);
+  // Notify the deciding player of the next patient and influence tasks.
   sessionData.playerIDs.forEach(id => {
     // If the player is the turn player:
     if (id === turnPlayerID) {
-      // Notify the leader and the player of the player’s next task.
+      // Notify the player of the next task.
       const moveSpec = nextPatientMove(round, sessionData.players[id].hand.current);
       const taskMsg = `task=${moveSpec}`;
       const streams = newsStreams[sessionCode];
       sendEventMsg(streams.Leader, taskMsg);
       sendEventMsg(streams[id], taskMsg);
-      // Notify the leader of the new turn player’s hand.
-      const {patients} = sessionData.players[id].hand.current;
-      patients.forEach(patient => {
-        const news = patientSpec(patient).join('\t');
-        sendEventMsg(newsStreams[sessionCode].Leader, `handPatientAdd=${news}`);
-      });
     }
     // Otherwise, i.e. if the player is not the turn player:
     else {
@@ -392,34 +404,6 @@ const endTurn = sessionData => {
     // Start the next turn.
     startTurn(sessionData);
   }
-};
-// Returns the indexes of the bids a player can use an influence on.
-const targets = (versionData, playerID, influence, bids) => {
-  const limits = versionData.limits.influences;
-  const turnUseCount = bids.reduce(
-    (count, bid) => count + bid.influences.filter(use => use.playerID === playerID).length, 0
-  );
-  const targetIndexes = [];
-  // If the player is still permitted to use an influence:
-  if (turnUseCount < limits.perTurn.max) {
-    // For each bid made in the turn:
-    bids.forEach((bid, index) => {
-      const {influences} = bid;
-      // If any player is still permitted to influence it:
-      if (influences.length < limits.perBid.max) {
-        // If the turn’s player is still permitted to influence it:
-        const playerBidUseCount = influences.filter(use => use.playerID === playerID).length;
-        if (playerBidUseCount < limits.perTurnBid.max) {
-          // If the influence type differs from that of all existing influences on the bid:
-          if (influences.every(use => use.impact !== influence.impact)) {
-            // Add the bid’s index to the eligible bids’ indexes.
-            targetIndexes.push(index);
-          }
-        }
-      }
-    });
-  }
-  return targetIndexes;
 };
 // Manages an influence decision.
 const prepInfluence = (versionData, sessionData, playerID, bids, startIndex) => {

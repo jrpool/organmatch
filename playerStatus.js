@@ -148,6 +148,9 @@ const influenceDigest = influenceData => {
 };
 // Returns the list item of a player.
 const playerLI = id => playerOL.querySelector(`[data-playerID=${id}]`);
+
+// MESSAGE HANDLING
+
 // Open a persistent messaging connection to the server.
 const news = new EventSource(`newsRequest?sessionCode=${sessionCode}&userID=${playerID}`);
 // Processes an event-stream message.
@@ -205,6 +208,17 @@ news.onmessage = event => {
     playerOL.querySelectorAll('.replaceP, .bidP, .readyP').forEach(infoP => {
       infoP.classList.add('invisible');
     });
+  }
+  // Otherwise, if a turn started:
+  else if (params[0] === 'turnStart') {
+    // If it is not the player’s turn, show whose turn it is.
+    playerOL.querySelectorAll('.theirTurn').forEach(
+      turnPlayerSpan => turnPlayerSpan.classList.add('invisible')
+    );
+    if (params[1] !== playerID) {
+      const decidingSpan = playerOL.querySelector(`[data-playerID=${params[1]}] .deciding`);
+      decidingSpan.classList.remove('invisible');
+    }
   }
   // Otherwise, if a patient was added to the hand:
   else if (params[0] === 'handPatientAdd') {
