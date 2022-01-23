@@ -7,6 +7,9 @@ document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
 // Identify the page elements to be acted on.
 const timeLeft = document.getElementById('timeLeft');
+const sessionEnd = document.getElementById('sessionEnd');
+const whySessionEnded = document.getElementById('whySessionEnded');
+const sessionWonBy = document.getElementById('sessionWonBy');
 const preStart = document.getElementById('preStart');
 const playerOL = document.getElementById('players');
 const you = document.getElementById('you');
@@ -176,6 +179,10 @@ news.onmessage = event => {
     // Hide the player’s hand.
     patientForm.classList.add('invisible');
     influenceForm.classList.add('invisible');
+    // Add and show the session-end information.
+    whySessionEnded.textContent = params[1];
+    sessionWonBy.textContent = params[2];
+    sessionEnd.classList.add('invisible');
     // Close the messaging connection.
     news.close();
   }

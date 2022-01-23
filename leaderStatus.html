@@ -17,49 +17,32 @@
     <main>
       <header>
         <h1>OrganMatch: Session status</h1>
-        <p class="summary">Your patients&rsquo; lives depend on you&mdash;and on luck</p>
       </header>
       <p>You have created session <span id="sessionCode"></span>.</p>
-      <div id="startInfo">
+      <div id="preStart">
         <p>Players can join the session at <a id="joinLink" target="_blank"></a>.</p>
         <p>When there are <span id="minPlayerCount"></span> to <span id="maxPlayerCount"></span> players, you may start the session.</p>
       </div>
       <h2>Players</h2>
       <div class="listbox">
-        <ol id="playerList" aria-live="polite"></ol>
+        <ol id="players" aria-live="polite">
+          <li id="playerLITemplate" class="playerBox themBox invisible" data-playerID="X">
+            <p>[<span class="playerID"></span>] <span class="playerName"></span></p>
+          </li>
+        </ol>
       </div>
       <form id="startSession" class="invisible">
         <p><button class="bb">Start session now</button></p>
       </form>
-      <h2>Session stage</h2>
-      <p id="stage">Not yet started</p>
-      <div id="afterStart" aria-live="polite" class="invisible">
-        <h2>Round</h2>
-        <ul>
-          <li>Round number: <span id="round"></span></li>
-          <li>Round organ: <span id="organ"></span></li>
-          <li>Winner: <span id="winner"></span></li>
-          <li>Next starter: <span id="nextStarter"></span></li>
-          <li>Final: <span id="final"></span></li>
-        </ul>
-        <h3>Bids</h3>
-        <ol id="bids"></ol>
-        <h3>Turns</h3>
-        <ul id="turns"></ul>
-        <h3>Ready to proceed after round</h3>
-        <p id="roundOKs"></p>
-        <h3>Turn player task</h3>
-        <p id="task"></p>
-        <h3>Turn player hand</h3>
-        <h4>Patient cards</h4>
-        <p>
-          <ol id="handPatients"></ol>
-        </p>
-        <h4>Influence cards</h4>
-        <p>
-          <ol id="handInfluences"></ol>
-        </p>
-      </div>
+      <h2>Session information</h2>
+      <p>Minutes left: <span id="timeLeft"></span></p>
+      <p>Stage: <span id="stage">Not yet started</span></p>
+      <section id="sessionEnd" class="invisible">
+        <h2>Session end</h2>
+        <p>Reason: <span id="whySessionEnded"></span></p>
+        <p>Won by: <span id="sessionWonBy"></span></p>
+      </section>
+      <p>Current round: <span id="roundID"></span></p>
       <p><a href="about" target="_blank">About OrganMatch (new tab)</a></p>
     </main>
   </body>

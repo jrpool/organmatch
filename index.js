@@ -759,7 +759,7 @@ const requestHandler = (req, res) => {
         serveTemplate('leaderStatus', {
           minPlayerCount,
           maxPlayerCount,
-          proxy: process.env.PROXY,
+          proxy: process.env.PROXY || '',
           sessionCode
         }, res);
         console.log(`Session ${sessionCode} created`);
