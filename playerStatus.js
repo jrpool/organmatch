@@ -1,32 +1,49 @@
 // playerStatus
 const params = JSON.parse(document.getElementById('params').textContent);
-// Add the session code, player count limits, and data on joined players to the page.
+// Add the session code and player count limits to the page.
 const {sessionCode, playerID, playerList, minPlayerCount, maxPlayerCount} = params;
 document.getElementById('sessionCode').textContent = sessionCode;
 document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
-document.getElementById('playerX').id = `player${playerID}`;
-// Adds a player to the player list.
+// Identify the page elements to be acted on.
+const preStart = document.getElementById('preStart');
+const playerOL = document.getElementById('players');
+const you = document.getElementById('you');
+const patientForm = document.getElementById('patientForm');
+const patientTask = document.getElementById('patientTask');
+const handPatientLITemplate = document.getElementById('handPatientLITemplate');
+const influenceForm = document.getElementById('influenceForm');
+const influenceLabel = document.getElementById('influenceLabel');
+const handInfluenceLITemplate = document.getElementById('handInfluenceLITemplate');
+const influenceNone = document.getElementById('influenceNone');
+const roundOKForm = document.getElementById('roundOKForm');
 const playerLITemplate = document.getElementById('playerLITemplate');
-const addPlayerLI = id => {
-  const newPlayerLI = playerLITemplate.cloneNode(true);
-  newPlayerLI.id = `player${id}`;
-  playerLITemplate.before(newPlayerLI);
-};
-// Populates a newly added player in the player list.
-const populatePlayerLI = (id, playerName) => {
-  const playerLI = document.getElementById(`player${id}`);
-  playerLI.querySelector('.idLetter').textContent = id;
+const roundInfo = document.getElementById('roundInfo');
+const roundID = document.getElementById('roundID');
+const roundOrgan = document.getElementById('roundOrgan');
+const roundResultP = document.getElementById('roundResultP');
+const readyForm = document.getElementById('readyForm');
+// Populates and shows a newly added player in the player list.
+const populatePlayerLI = (playerLI, id, playerName) => {
+  playerLI.querySelector('.playerID').textContent = id;
   playerLI.querySelector('.playerName').textContent = playerName;
   playerLI.classList.remove('invisible');
 };
+// Adds another player to the player list.
+const addPlayerLI = (playerID, playerName) => {
+  const newPlayerLI = playerLITemplate.cloneNode(true);
+  playerLITemplate.before(newPlayerLI);
+  populatePlayerLI(newPlayerLI, playerID, playerName);
+};
+// List the players in existence when the page was created.
 Object.keys(playerList).forEach(id => {
-  if (id !== playerID) {
-    addPlayerLI(id);
+  if (id === playerID) {
+    populatePlayerLI(you, id, playerList[id]);
   }
-  populatePlayerLI(id, playerList[id]);
+  else {
+    addPlayerLI(id, playerList[id]);
+  }
 });
-const influenceForm = document.getElementById('influenceForm');
 // Reinitializes the influence form.
 const influenceClear = () => {
   // Remove the card buttons from the influence form.
@@ -34,11 +51,10 @@ const influenceClear = () => {
     button.remove();
   });
   // Hide the choice content in the form.
-  document.getElementById('influenceLabel').classList.add('invisible');
-  document.getElementById('influenceNone').classList.add('invisible');
+  influenceLabel.classList.add('invisible');
+  influenceNone.classList.add('invisible');
 }
 // When the patient form is submitted:
-const patientForm = document.getElementById('patientForm');
 patientForm.onsubmit = async event => {
   // Prevent a reload.
   event.preventDefault();
@@ -54,7 +70,7 @@ patientForm.onsubmit = async event => {
   patientForm.querySelectorAll('button').forEach(button => {
     button.setAttribute('disabled', true);
   });
-  const task = document.getElementById('patientTask').textContent;
+  const task = patientTask.textContent;
   // If the submission was a bid:
   if (task === 'bid') {
     // Reinitialize the influence form.
@@ -66,7 +82,6 @@ patientForm.onsubmit = async event => {
   );
 };
 // When the influence form is submitted:
-const influenceForm = document.getElementById('influenceForm');
 influenceForm.onsubmit = async event => {
   // Prevent a reload.
   event.preventDefault();
@@ -88,7 +103,6 @@ influenceForm.onsubmit = async event => {
   );
 };
 // When the round-OK form is submitted:
-const roundOKForm = document.getElementById('roundOKForm');
 roundOKForm.onsubmit = async event => {
   // Prevent a reload.
   event.preventDefault();
@@ -109,32 +123,32 @@ const patientDigest = patientData => {
   return `${[organNews, patientData[4], `&starf;${patientData[5]}`].join(' ')}`;
 };
 // Returns an influence-card description in format “bribe/-2”.
-const influenceDigest = influenceNews => {
-  const influenceData = influenceNews.split('\t');
+const influenceDigest = influenceData => {
   const impact = influenceData[1];
   const impactNews = impact.startsWith('-') ? impact : `+${impact}`;
   return `${influenceData[0]}/${impactNews}`;
 };
+// Returns the list item of a player.
+const playerLI = id => playerOL.querySelector(`data-playerID=${id}`);
 // Processes an event-stream message.
 news.onmessage = event => {
   const params = event.data.split(/[=\t]/);
-  // If a player disconnected:
+  // If another player disconnected:
   if (params[0] === 'playerDrop') {
     // Remove the player.
-    document.getElementById(`player${params[1]}`).remove();
+    playerLI(params[1]).remove();
   }
   // Otherwise, if a player joined:
   else if (params[0] === 'playerAdd') {
     // Append the player to the list.
-    addPlayerLI(params[1]);
-    populatePlayerLI(params[1], params[2]);
+    addPlayerLI(...params.slice(1));
   }
   // Otherwise, if the session started:
   else if (params[0] === 'sessionStart') {
     // Remove the pre-start information from the page.
-    document.getElementById('preStart').remove();
+    preStart.remove();
     // Make the round information visible.
-    document.getElementById('roundInfo').classList.remove('invisible');
+    roundInfo.classList.remove('invisible');
   }
   // Otherwise, if the session ended:
   else if (params[0] === 'sessionEnd') {
@@ -144,16 +158,25 @@ news.onmessage = event => {
   // Otherwise, if a round started:
   else if (params[0] === 'roundStart') {
     // Change the round ID and organ.
-    document.getElementById('roundID').textContent = params[1];
-    document.getElementById('roundOrgan').textContent = `${params[2]} ${params[3]}`;
+    roundID.textContent = params[1];
+    roundOrgan.textContent = `${params[2]} ${params[3]}`;
     // Hide the round-end content.
-    document.getElementById('roundResultP').classList.add('invisible');
-    document.getElementById('readyForm').classList.add('invisible');
+    roundResultP.classList.add('invisible');
+    readyForm.classList.add('invisible');
+    // Remove and hide the player round information.
+    playerOL.querySelectorAll('.bid, .bidNet').forEach(infoSpan => {
+      infoSpan.textContent = '';
+    });
+    playerOL.querySelectorAll('.bidInfluences').forEach(influenceSpan => {
+      influenceSpan.textContent = 'none';
+    });
+    playerOL.querySelectorAll('.replaceP, .bidP, .readyP').forEach(infoP => {
+      infoP.classList.add('invisible');
+    });
   }
   // Otherwise, if a patient was added to the hand:
   else if (params[0] === 'handPatientAdd') {
     // Copy the patient template.
-    const handPatientLITemplate = document.getElementById('handPatientLITemplate');
     const newPatientLI = handPatientLITemplate.cloneNode(true);
     newPatientLI.removeAttribute('id');
     // Add the patient description to the button.
@@ -164,7 +187,6 @@ news.onmessage = event => {
   // Otherwise, if an influence card was added to the hand:
   else if (params[0] === 'handInfluenceAdd') {
     // Copy the influence-card template.
-    const handInfluenceLITemplate = document.getElementById('handInfluenceLITemplate');
     const newInfluenceLI = handInfluenceLITemplate.cloneNode(true);
     newInfluenceLI.removeAttribute('id');
     // Add the influence description to the list item.
@@ -173,31 +195,28 @@ news.onmessage = event => {
     handInfluenceLITemplate.before(newInfluenceLI);
   }
   // Otherwise, if the player was told to choose a patient to replace:
-  else if (params[0] === 'replace') {
+  else if (params[0] === 'chooseReplace') {
     // Add this task to the page and enable all the player buttons.
-    document.getElementById('patientTask').textContent = 'replace';
+    patientTask.textContent = 'replace';
     document
     .getElementById('patientForm')
     .querySelectorAll('button')
     .forEach(button => button.setAttribute('disabled', false));
   }
   // Otherwise, if the player was told to choose a patient to bid:
-  else if (params[0] === 'bid') {
+  else if (params[0] === 'chooseBid') {
     // Add this task to the page and enable the eligible player buttons.
-    document.getElementById('patientTask').textContent = 'bid';
-    document
-    .getElementById('patientForm')
-    .querySelector('button')
-    .forEach((button, index) => {
+    patientTask.textContent = 'bid';
+    patientForm.querySelector('button').forEach((button, index) => {
       if (params.slice(1).includes(index)) {
         button.setAttribute('disabled', false);
       }
     });
   }
   // Otherwise, if the player was offered bids to use an influence card on:
-  else if (params[0] === 'influence') {
+  else if (params[0] === 'chooseInfluence') {
     // Enable the eligible buttons for the influence card.
-    document.getElementById('influenceLabel').classList.remove('invisible');
+    influenceLabel.classList.remove('invisible');
     const influenceLI = influenceForm.querySelector(`li:nth-child(${params[1]})`);
     params.slice(2).forEach(bidderID => {
       const bidButton = document.createElement('button');
@@ -206,92 +225,43 @@ news.onmessage = event => {
       influenceLI.insertAdjacentElement('beforeend', bidButton);
     });
   }
-    else if (['bid', 'swap', 'use'].includes(taskType)) {
-      // Replace the next task with a choice form.
-      const taskLabelP = document.createElement('p');
-      taskDiv.appendChild(taskLabelP);
-      taskLabelP.id = 'choiceLabel';
-      let cardNum;
-      let labelText = 'Bid a patient';
-      if (taskType === 'swap') {
-        labelText = 'Replace a patient';
-      }
-      else if (taskType === 'use') {
-        cardNum = taskParts.shift();
-        labelText = `Keep influence card ${cardNum}, or use it on a bid?`;
-        taskParts.unshift('keep');
-      }
-      taskLabelP.textContent = labelText;
-      const choiceForm = document.createElement('form');
-      taskDiv.appendChild(choiceForm);
-      const buttonsP = document.createElement('p');
-      choiceForm.appendChild(buttonsP);
-      taskParts.forEach(num => {
-        const numButton = document.createElement('button');
-        buttonsP.appendChild(numButton);
-        numButton.setAttribute('aria-labelledby', 'choiceLabel');
-        numButton.textContent = num;
-      });
-      // When the form is submitted:
-      choiceForm.onsubmit = async event => {
-        // Prevent a reload.
-        event.preventDefault();
-        // Disable the form buttons.
-        Array.from(buttonsP.querySelectorAll('button')).forEach(button => {
-          button.setAttribute('disabled', true);
-        });
-        // Notify the server.
-        const buttonText = event.submitter.textContent;
-        let detail;
-        if (taskType === 'use') {
-          detail = `cardNum=${cardNum}&targetNum=${buttonText}`;
-        }
-        else {
-          detail = `cardNum=${buttonText}`;
-        }
-        await fetch(
-          `${taskType}?sessionCode=${sessionCode}&playerID=${playerID}&${detail}`
-        );
-      };
-    }
-  }
   // Otherwise, if a bid was made:
-  else if (data.startsWith('bidAdd=')) {
-    // Add the bid to the list of bids.
-    const bidLI = document.createElement('li');
-    document.getElementById('bids').appendChild(bidLI);
-    bidLI.textContent = patientDigest(rawData);
+  else if (params[0] === 'didBid') {
+    // Show it.
+    const player = playerLI(params[1]);
+    const patient = patientDigest(params.slice(2));
+    player.querySelector('.bid').textContent = patient;
+    player.querySelector('.bidP').classList.remove('invisible');
+  }
+  // Otherwise, if a replacement was made:
+  else if (params[0] === 'didReplace') {
+    // Show it.
+    const player = playerLI(params[1]);
+    player.querySelector('.replaceP').classList.remove('invisible');
   }
   // Otherwise, if an influence card was used:
-  else if (data.startsWith('use=')) {
-    // Append that use to the bid.
-    const useData = rawData.split('\t');
-    const bidLI = document.getElementById('bids').querySelector(`li:nth-child(${useData[0]}`);
-    bidLI.textContent += useData[1];
-  }
-  // Otherwise, if an influence card was removed from the hand:
-  else if (data.startsWith('influenceRemove=')) {
-    // Remove it.
-    const influenceLI = document
-    .getElementById('handInfluences')
-    .querySelector(`li:nth-child(${rawData})`);
-    influenceLI.remove();
+  else if (params[0] === 'didInfluence') {
+    // Show it and the bid’s resulting net priority.
+    const bidderLI = playerOL.querySelector(`[data-playerID=${params[2]}]`);
+    const influenceSpan = bidderLI.querySelector('.bidInfluences');
+    const netSpan = bidderLI.querySelector('.bidNet');
+    const oldContent = influenceSpan.textContent;
+    const addedContent = `${params[3]}(${params[1]})`;
+    const wholeContent = oldContent === 'none' ? addedContent : `${oldContent}, ${addedContent}`;
+    influenceSpan.textContent = wholeContent;
+    netSpan.textContent = params[4];
   }
   // Otherwise, if a player won a round:
-  else if (data.startsWith('roundWinner=')) {
-    const winnerData = rawData.split('\t');
-    // Update the winner’s item in the player list.
-    const countSpan = document.getElementById(`winCount${winnerData[1]}`);
-    countSpan.textContent++;
-    const listSpan = document.getElementById(`winList${winnerData[1]}`);
-    if (listSpan.textContent) {
-      listSpan.textContent += `, ${winnerData[0]}`;
-    }
-    else {
-      listSpan.textContent = winnerData[0];
-    }
-    // Add the winner to the round summary.
-    document.getElementById('winner').textContent = winnerData[1];
+  else if (params[0] === 'roundWinner') {
+    // Update and show the winner’s score information.
+    const winnerLI = playerOL.querySelector(`[data-playerID=${params[2]}]`);
+    const scoreP = winnerLI.querySelector('.scoreP');
+    const scoreSpan = scoreP.querySelector('score');
+    const roundsSpan = scoreP.querySelector('rounds');
+    scoreSpan.textContent = params[3];
+    const roundList = roundsSpan.textContent;
+    roundsSpan.textContent = roundList ? `${roundList}, ${params[1]}` : params[1];
+    scoreP.classList.remove('invisible');
   }
   // Otherwise, if a round ended:
   else if (data.startsWith('roundImpact=')) {

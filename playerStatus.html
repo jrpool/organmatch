@@ -25,49 +25,58 @@
       </div>
       <section id="playersSec">
         <h2>Players</h2>
-        <ol id="playerList" aria-live="polite">
-          <li id="playerX" class="playerBox youBox">
-            <p>[<span class="idLetter"></span>] <span class="playerName"></span></p>
-            <p id="yourScoreP" aria-live="polite" class="invisible">
+        <ol id="players" aria-live="polite">
+          <li id="you" class="playerBox youBox" data-playerID="X">
+            <p>[<span class="playerID"></span>] <span class="playerName"></span></p>
+            <p class="scoreP invisible">
               Score <span id="sessionScore" class="score"></span>;
               won rounds <span id="wonRoundList" class="rounds"></span>
             </p>
-              <h3>Patients</h3>
-              <form id="patientForm" class="invisible">
-                <fieldset>
-                  <legend id="patientTaskLabel" aria-live="polite">
-                    Choose a patient to <span id="patientTask"></span>
-                  </legend>
-                  <ul>
-                    <li id="handPatientLITemplate" aria-live="polite" class="invisible">
-                      <button disabled="true"></button>
-                    </li>
-                  </ul>
-                </fieldset>
-              </form>
-              <h3>Influences</h3>
-              <form id="influenceForm">
-                <fieldset>
-                  <legend id="influenceLabel" aria-live="polite" class="invisible">
-                    You <strong>may</strong> choose to influence a player&rsquo;s bid
-                  </legend>
-                  <ul>
-                    <li id="influenceLITemplate" aria-live="polite" class="invisible">
-                      <span></span>
-                    </li>
-                  </ul>
-                  <p><button id="influenceNone" class="invisible">None</button></p>
-                </fieldset>
-              </form>
+            <h3>Patients</h3>
+            <form id="patientForm" class="invisible">
+              <fieldset>
+                <legend id="patientTaskLabel" aria-live="polite" class="invisible">
+                  Choose a patient to <span id="patientTask"></span>
+                </legend>
+                <ul>
+                  <li id="handPatientLITemplate" aria-live="polite" class="invisible">
+                    <button disabled="true"></button>
+                  </li>
+                </ul>
+              </fieldset>
             </form>
-            <p class="move invisible"></p>
-            <p class="ready invisible">Ready</p>
+            <h3>Influences</h3>
+            <form id="influenceForm">
+              <fieldset>
+                <legend id="influenceLabel" aria-live="polite" class="invisible">
+                  You <strong>may</strong> choose to influence a player&rsquo;s bid
+                </legend>
+                <ul>
+                  <li id="influenceLITemplate" aria-live="polite" class="invisible">
+                    <span></span>
+                  </li>
+                </ul>
+                <p><button id="influenceNone" class="invisible">None</button></p>
+              </fieldset>
+            </form>
+            <p class="replaceP invisible">Replaced</p>
+            <p class="bidP invisible">
+              Bid: <span class="bid"></span>.
+              &plusmn: <span class="bidInfluences">none</span>.
+              Net &starf;: <span class="bidNet"></span>.
+            </p>
+            <p class="readyP invisible">Ready</p>
           </li>
-          <li id="playerLITemplate" class="playerBox themBox invisible">
-            <p>[<span class="idLetter"></span>] <span class="playerName"></span></p>
+          <li id="playerLITemplate" class="playerBox themBox invisible" data-playerID="Y">
+            <p>[<span class="playerID"></span>] <span class="playerName"></span></p>
             <p class="invisible">Score <span class="score"></span>; won rounds <span class="rounds"></span></p>
-            <p class="move invisible"></p>
-            <p class="ready invisible">Ready</p>
+            <p class="replaceP invisible">Replaced</p>
+            <p class="bidP invisible">
+              Bid: <span class="bid"></span>.
+              &plusmn: <span class="bidInfluences">none</span>.
+              Net &starf;: <span class="bidNet"></span>.
+            </p>
+            <p class="readyP invisible">Ready</p>
           </li>
         </ol>
       </section>
