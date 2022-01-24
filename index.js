@@ -142,8 +142,21 @@ const taskSpecs = (round, hand) => {
   );
 };
 // Notifies a player of the specifications for the next move.
-const sendTasks = (playerID, round, hand) => {
-
+const sendTasks = (sessionCode, playerID, round, hand) => {
+  const specs = taskSpecs(round, hand);
+  // Patient specification.
+  const stream = newsStreams[sessionCode][playerID];
+  if (specs.bid.length) {
+    sendEventMsg(stream, `chooseBid=${specs.bid.join('\t')}`);
+  }
+  else {
+    sendEventMsg(stream, 'chooseReplace');
+  }
+  specs.influence.forEach((spec, index) => {
+    if (spec.length) {
+      sendEventMsg(stream, `chooseInfluence=${index}\t${spec.join('\t')}`);
+    }
+  });
 };
 // Returns the specification of a patient.
 const patientSpec = patient => {
@@ -162,7 +175,7 @@ const startTurn = sessionData => {
   // Add the turn facts to the session data.
   const round = sessionData.rounds[sessionData.roundsEnded];
   const turnNum = round.turnsEnded;
-  const {playerIDs} = sessionData;
+  const {sessionCode, playerIDs, players} = sessionData;
   const turnPlayerID
     = playerIDs[(playerIDs.indexOf(round.roundStarterID) + turnNum) % playerIDs.length];
   const turn = {
@@ -175,45 +188,25 @@ const startTurn = sessionData => {
   };
   round.turns.push(turn);
   // Notify the players of the deciding player.
-  const {sessionCode} = sessionData;
   broadcast(sessionCode, true, 'turnStart', turnPlayerID);
   // Notify the deciding player of the next patient and influence tasks.
-  sessionData.playerIDs.forEach(id => {
-    // If the player is the turn player:
-    if (id === turnPlayerID) {
-      // Notify the player of the next task.
-      const moveSpec = nextPatientMove(round, sessionData.players[id].hand.current);
-      const taskMsg = `task=${moveSpec}`;
-      const streams = newsStreams[sessionCode];
-      sendEventMsg(streams.Leader, taskMsg);
-      sendEventMsg(streams[id], taskMsg);
-    }
-    // Otherwise, i.e. if the player is not the turn player:
-    else {
-      // Notify the player of the player’s task.
-      sendEventMsg(newsStreams[sessionCode][id], 'task=wait');
-    }
-  });
+  sendTasks(sessionCode, turnPlayerID, round, players[turnPlayerID].hand.current);
 };
 // Starts a round.
 const startRound = sessionData => {
   // Notify all users of the round facts.
-  const roundNum = sessionData.roundsEnded;
-  const {sessionCode, playerIDs} = sessionData;
+  const roundID = sessionData.roundsEnded;
+  const {sessionCode, playerIDs, rounds, piles} = sessionData;
   const playerCount = playerIDs.length;
-  const roundStarterID = roundNum ? sessionData.rounds[roundNum - 1].nextStarterID : playerIDs[0];
+  const roundStarterID = roundID ? rounds[roundID - 1].nextStarterID : playerIDs[0];
   const starterIndex = playerIDs.indexOf(roundStarterID);
   const roundEnderID = playerIDs[(starterIndex + playerCount - 1) % playerCount];
-  const roundOrgan = sessionData.piles.organs.latent.shift();
-  const roundNewsParts = [roundNum, roundOrgan.organ, roundOrgan.group];
-  broadcast(sessionCode, false, 'round', roundNewsParts.join('\t'));
-  const turnPlayerIDs = playerIDs.slice(starterIndex).concat(playerIDs.slice(0, starterIndex));
-  turnPlayerIDs.forEach((id, index) => {
-    broadcast(sessionCode, false, 'turnInit', `${index}\t${id}`);
-  });
+  const roundOrgan = piles.organs.latent.shift();
+  const roundNewsParts = [roundID, roundOrgan.organ, roundOrgan.group];
+  broadcast(sessionCode, false, 'roundStart', roundNewsParts.join('\t'));
   // Initialize a round record and add it to the session data.
   sessionData.rounds.push({
-    roundNum,
+    roundID,
     startTime: nowString(),
     endTime: null,
     roundStarterID,
