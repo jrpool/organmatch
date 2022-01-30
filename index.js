@@ -502,29 +502,14 @@ const requestHandler = (req, res) => {
           // Delete the user’s news stream.
           delete sessionStreams[userID];
           const sessionData = sessions[sessionCode];
-          let userNews;
-          // If the user was the leader:
-          if (userID === 'Leader') {
-            userNews = 'The leader';
-            // Notify all users that the session has been aborted.
-            broadcast(sessionCode, false, 'sessionStage', 'Aborted');
-            console.log(`Session ${sessionCode} aborted`);
-            // Add the end time to the session data.
-            sessionData.endTime = nowString();
-            // Record and delete the session.
-            exportSession(sessionData);
-          }
-          // Otherwise, i.e. if the user was a player:
-          else {
-            userNews = `Player ${userID} (${sessionData.players[userID].playerName})`;
-            // Remove the player from the session data.
-            delete sessionData.players[userID];
-            const {playerIDs} = sessionData;
-            playerIDs.splice(playerIDs.indexOf(userID), 1);
-            // Notify all users.
-            revisePlayerLists(sessionCode);
-          }
-          console.log(`${userNews} in session ${sessionCode} has closed the connection`);
+          const userNews = userID === 'Leader' ? 'The leader' : `Player ${userID}`;
+          // Notify all users that the session has been aborted.
+          broadcast(sessionCode, false, 'sessionEnd', `${userNews} quit`);
+          console.log(`Session ${sessionCode} aborted by ${userID}`);
+          // Add the end time to the session data.
+          sessionData.endTime = nowString();
+          // Record and delete the session.
+          exportSession(sessionData);
         });
       }
       // Otherwise, if the session was started by the leader:
@@ -534,20 +519,17 @@ const requestHandler = (req, res) => {
         // Set the start time in the session data.
         sessionData.startTime = nowString();
         // Notify all users.
-        const minutes = minutesLeft(versionData, sessionData);
-        broadcast(
-          sessionCode,
-          false,
-          'sessionStage',
-          `Started; <span id="timeLeft">${minutes}</span> minutes left`
-        );
+        broadcast(sessionCode, false, 'sessionStart');
         console.log(`Session ${sessionCode} started`);
+        // Notify all users of the time left.
+        const minutes = minutesLeft(versionData, sessionData);
+        broadcast(sessionCode, false, 'timeLeft', minutes);
         // Shuffle the player IDs in the session data.
         const shuffler = sessionData.playerIDs.map(id => [id, Math.random()]);
         shuffler.sort((a, b) => a[1] - b[1]);
         sessionData.playerIDs = shuffler.map(pair => pair[0]);
         // Notify all users of the shuffling.
-        revisePlayerLists(sessionCode);
+        broadcast(sessionCode, false, 'playersShuffled', ...sessionData.playerIDs);
         // For each player:
         sessionData.playerIDs.forEach((id, index) => {
           const {patients, influences} = sessionData.players[id].hand.initial;

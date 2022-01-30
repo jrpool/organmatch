@@ -166,6 +166,20 @@ news.onmessage = event => {
     // Append the player to the list.
     addPlayerLI(...params.slice(1));
   }
+  // Otherwise, if the players were shuffled:
+  else if (params[0] === 'playersShuffled') {
+    // Reorder the players in the list.
+    const listOL = document.getElementById('players');
+    const playerLIs = {};
+    listOL.children.forEach(playerLI => {
+      const {playerID} = playerLI.dataset;
+      playerLIs[playerID] = playerLI;
+      playerLI.remove();
+    });
+    params.slice(1).forEach(playerID => {
+      listOL.insertAdjacentElement('afterbegin', playerLIs[playerID]);
+    });
+  }
   // Otherwise, if the session started:
   else if (params[0] === 'sessionStart') {
     // Remove the pre-start information from the page.
@@ -319,7 +333,7 @@ news.onmessage = event => {
     const approverLI = playerLI(params[1]);
     approverLI.querySelector('.readyP').classList.remove('invisible');
   }
-  // Otherwise, if the time left was updated:
+  // Otherwise, if the time left (in minutes) was updated:
   else if (params[0] === 'timeLeft') {
     // Update it.
     timeLeft.textContent = params[1];
