@@ -203,7 +203,8 @@ const startRound = sessionData => {
   const roundEnderID = playerIDs[(starterIndex + playerCount - 1) % playerCount];
   const roundOrgan = piles.organs.latent.shift();
   const roundNewsParts = [roundID, roundOrgan.organ, roundOrgan.group];
-  broadcast(sessionCode, false, 'roundStart', roundNewsParts.join('\t'));
+  broadcast(sessionCode, true, 'roundStart', roundNewsParts.join('\t'));
+  sendEventMsg(newsStreams[sessionCode].Leader, 'roundStart');
   // Initialize a round record and add it to the session data.
   sessionData.rounds.push({
     roundID,
@@ -270,8 +271,8 @@ const endRound = sessionData => {
     };
     const player = players[winningPlayerID];
     player.roundsWon++;
-    // Notify all users of the winner.
-    broadcast(sessionCode,  false, 'roundWinner', `${round.roundNum}\t${winningPlayerID}`);
+    // Notify all players of the round winner.
+    broadcast(sessionCode,  true, 'roundWinner', `${round.roundNum}\t${winningPlayerID}`);
     // Return the other bid cards to the latent piles.
     bids.forEach((bid, index) => {
       if (index !== winningBidIndex) {
@@ -283,8 +284,6 @@ const endRound = sessionData => {
     if (player.roundsWon < versionData.limits.winningRounds.max) {
       // Add the next round’s starter to the session data.
       round.nextStarterID = winningPlayerID;
-      // Notify all users of the next round’s starter.
-      broadcast(sessionCode, false, 'roundImpact', `false\t${round.nextStarterID}`);
       // If there are losing bidders:
       if (bids.length > 1) {
         // For each losing bidder:
@@ -302,22 +301,20 @@ const endRound = sessionData => {
     }
     // Otherwise, i.e. if the winner has won the session:
     else {
-      // Notify all users of the round’s finality.
-      broadcast(sessionCode, false, 'roundImpact', 'true\t');
+      // Notify all users of the session end.
+      broadcast(sessionCode, false, 'sessionEnd', `Session ended; won by ${round.winner.playerID}`);
     }
   }
   // Otherwise, i.e. if there were no bids in the round:
   else {
     // Add the next round’s starter to the session data.
     round.nextStarterID = round.roundStarterID;
-    // Notify all users of the next round’s starter.
-    broadcast(sessionCode, false, 'roundImpact', `false\t${round.nextStarterID}`);
+    // Notify the players of the winnerless round end.
+    broadcast(sessionCode, true, 'roundEnd');
   }
   // Add the round data to the session data.
   round.endTime = nowString();
   sessionData.roundsEnded++;
-  // Notify the players of their task of approving the round end.
-  broadcast(sessionCode, true, 'task', 'roundOK');
 };
 // Handles a round-end approval and returns whether all players have approved.
 const roundOK = (sessionData, playerID) => {
@@ -407,7 +404,7 @@ const prepInfluence = (versionData, sessionData, playerID, bids, startIndex) => 
     let index = startIndex;
     while (index > -1 && index < influences.length) {
       // If the player can use it on any bids:
-      const targetIndexes = targets(versionData, playerID, influences[index], bids);
+      const targetIndexes = influenceTargets(versionData, playerID, influences[index], bids);
       if (targetIndexes.length) {
         // Notify the player and the leader of the task.
         const {sessionCode} = sessionData;
@@ -532,7 +529,7 @@ const requestHandler = (req, res) => {
         broadcast(sessionCode, false, 'playersShuffled', ...sessionData.playerIDs);
         // For each player:
         sessionData.playerIDs.forEach((id, index) => {
-          const {patients, influences} = sessionData.players[id].hand.initial;
+          const {patients} = sessionData.players[id].hand.initial;
           // For each patient card in the player’s hand:
           patients.forEach(patient => {
             // Notify the player of the card.
@@ -542,18 +539,6 @@ const requestHandler = (req, res) => {
             if (index === 0) {
               // Notify the leader of the card.
               sendEventMsg(newsStreams[sessionCode].Leader, `handPatientAdd=${news}`);
-            }
-          });
-          // For each influence card in the player’s hand:
-          influences.forEach(influence => {
-            // Notify the player of the card.
-            const {influenceName, impact} = influence;
-            const news = [influenceName, impact].join('\t');
-            sendEventMsg(newsStreams[sessionCode][id], `handInfluenceAdd=${news}`);
-            // If the player is the session’s starter:
-            if (index === 0) {
-              // Notify the leader of the card.
-              sendEventMsg(newsStreams[sessionCode].Leader, `handInfluenceAdd=${news}`);
             }
           });
         });
@@ -604,7 +589,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionStage', 'Stopped; allowed time exhausted');
+          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted');
           console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
           // Record and delete the session.
           exportSession(sessionData);
@@ -649,9 +634,8 @@ const requestHandler = (req, res) => {
             broadcast(sessionCode, false, 'use', `${targetNum}\t${useNews}`);
             // Remove the card from the player’s hand.
             influences.splice(cardNum - 1, 1);
-            // Notify the player and the leader of the hand change.
+            // Notify the player of the hand change.
             sendEventMsg(newsStreams[sessionCode][playerID], `influenceRemove=${cardNum}`);
-            sendEventMsg(newsStreams[sessionCode].Leader, `influenceRemove=${cardNum}`);
           }
           // Prepare another possible influence decision by the player.
           const nextInfluenceIndex = cardNum - (targetNum === 'keep' ? 0 : 1);
@@ -660,7 +644,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionStage', 'Stopped; allowed time exhausted');
+          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted');
           console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
           // Record and delete the session.
           exportSession(sessionData);
@@ -689,7 +673,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionStage', 'Stopped; allowed time exhausted');
+          broadcast(sessionCode, false, 'sessionEnd', 'Allowed session time exhausted');
           console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
           // Record and delete the session.
           exportSession(sessionData);
@@ -759,16 +743,10 @@ const requestHandler = (req, res) => {
             broadcast(sessionCode, false, 'addition', `${playerID}\t${playerName}`);
             // Add the player to the session data.
             require('./addPlayer')(versionData, sessionData, playerID, playerName, '');
-            // Compile a list of players, including the added one.
-            const {playerIDs} = sessionData;
-            const playerListItems = playerIDs.map(
-              playerID => playerListItem(sessionData, playerID)
-            );
-            const playerList = playerListItems.join('\n');
-            // Serve a session-status page, including the list.
+            // Serve a session-status page.
             serveTemplate(
               'playerStatus',
-              {sessionCode, playerList, playerID, playerName, minPlayerCount, maxPlayerCount},
+              {sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount},
               res
             );
           }

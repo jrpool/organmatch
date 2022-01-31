@@ -315,9 +315,17 @@ news.onmessage = event => {
     influenceSpan.textContent = wholeContent;
     netSpan.textContent = params[4];
   }
+  // Otherwise, if a round ended without a winner:
+  else if (params[0] === 'roundEnd') {
+    // Update the round result.
+    document.getElementById('roundResult').textContent = 'No winner';
+    document.getElementById('roundResultP').classList.remove('invisible');
+  }
   // Otherwise, if a player won a round:
   else if (params[0] === 'roundWinner') {
-    // Update and show the winner’s score information.
+    // Update the round result and show the winner’s score information.
+    document.getElementById('roundResult').textContent = `Won by player ${params[2]}`;
+    document.getElementById('roundResultP').classList.remove('invisible');
     const winnerLI = playerLI(params[2]);
     const scoreP = winnerLI.querySelector('.scoreP');
     const scoreSpan = scoreP.querySelector('score');
