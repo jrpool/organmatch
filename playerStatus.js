@@ -1,7 +1,7 @@
 // playerStatus
 const params = JSON.parse(document.getElementById('params').textContent);
 // Add the session code and player count limits to the page.
-const {sessionCode, playerID, playerList, minPlayerCount, maxPlayerCount} = params;
+const {sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount} = params;
 document.getElementById('sessionCode').textContent = sessionCode;
 document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
@@ -36,17 +36,18 @@ const populatePlayerLI = (playerLI, id, playerName) => {
 };
 // Adds another player to the player list.
 const addPlayerLI = (playerID, playerName) => {
+  console.log('Adding player');
   const newPlayerLI = playerLITemplate.cloneNode(true);
   playerLITemplate.before(newPlayerLI);
   populatePlayerLI(newPlayerLI, playerID, playerName);
 };
 // List the players in existence when the page was created.
-Object.keys(playerList).forEach(id => {
+Object.keys(playerData).forEach(id => {
   if (id === playerID) {
-    populatePlayerLI(you, id, playerList[id]);
+    populatePlayerLI(you, id, playerData[id]);
   }
   else {
-    addPlayerLI(id, playerList[id]);
+    addPlayerLI(id, playerData[id]);
   }
 });
 // Reinitializes the influence form, leaving existing cards in place.
