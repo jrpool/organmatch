@@ -10,6 +10,7 @@ document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
 // Identify the page elements to be acted on.
 const preStart = document.getElementById('preStart');
+const postStart = document.getElementById('postStart');
 const playerOL = document.getElementById('players');
 const playerLITemplate = document.getElementById('playerLITemplate');
 const startSession = document.getElementById('startSession');
@@ -48,6 +49,18 @@ const startable = () => {
       startSession.classList.add('invisible');
     }
   }
+};
+// When the start-session form is submitted:
+startSession.onsubmit = async event => {
+  // Prevent a reload.
+  event.preventDefault();
+  // Notify the server.
+  await fetch(`startSession?sessionCode=${sessionCode}`);
+  // Permanently remove the prestart information and the start-session form.
+  preStart.remove();
+  startSession.remove();
+  // Make the post-start facts visible.
+  postStart.classList.remove('invisible');
 };
 
 // MESSAGE HANDLING

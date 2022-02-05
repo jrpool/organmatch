@@ -34,16 +34,18 @@
       <form id="startSession" class="invisible">
         <p><button class="bb">Start session now</button></p>
       </form>
-      <h2>Session information</h2>
-      <p>Minutes left: <span id="timeLeft"></span></p>
-      <p>Stage: <span id="stage">Not yet started</span></p>
-      <section id="sessionEnd" class="invisible">
-        <h2>Session end</h2>
-        <p>Reason: <span id="whySessionEnded"></span></p>
-        <p>Won by: <span id="sessionWonBy"></span></p>
+      <section id="postStart" class="invisible">
+        <h2>Session information</h2>
+        <p>Minutes left: <span id="timeLeft"></span></p>
+        <p>Stage: <span id="stage">Not yet started</span></p>
+        <section id="sessionEnd" class="invisible">
+          <h2>Session end</h2>
+          <p>Reason: <span id="whySessionEnded"></span></p>
+          <p>Won by: <span id="sessionWonBy"></span></p>
+        </section>
+        <p>Current round: <span id="roundID"></span></p>
+        <p><a href="about" target="_blank">About OrganMatch (new tab)</a></p>
       </section>
-      <p>Current round: <span id="roundID"></span></p>
-      <p><a href="about" target="_blank">About OrganMatch (new tab)</a></p>
     </main>
   </body>
 </html>
