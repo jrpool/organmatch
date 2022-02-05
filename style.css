@@ -171,6 +171,15 @@ p.summary {
   font-weight: 700;
   font-style: italic;
 }
+.playerBox {
+  border-width: 2px;
+  border-style: dotted;
+  border-color: #666;
+}
+.playerBox.deciding {
+  border-style: solid;
+  border-color: #060;
+}
 q {
   quotes: '“' '”';
 }

@@ -225,14 +225,9 @@ news.onmessage = event => {
   }
   // Otherwise, if a turn started:
   else if (params[0] === 'turnStart') {
-    // If it is not the player’s turn, show whose turn it is.
-    playerOL.querySelectorAll('.theirTurn').forEach(
-      turnPlayerSpan => turnPlayerSpan.classList.add('invisible')
-    );
-    if (params[1] !== playerID) {
-      const decidingSpan = playerOL.querySelector(`[data-playerID=${params[1]}] .deciding`);
-      decidingSpan.classList.remove('invisible');
-    }
+    // Show whose turn it is.
+    playerOL.querySelector('.playerBox.deciding').classList.remove('deciding');
+    playerOL.querySelector(`.playerBox[data-playerID=${params[1]}]`).classList.add('deciding');
   }
   // Otherwise, if a patient was added to the hand:
   else if (params[0] === 'handPatientAdd') {
