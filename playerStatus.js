@@ -14,6 +14,7 @@ const preStart = document.getElementById('preStart');
 const playerOL = document.getElementById('players');
 const you = document.getElementById('you');
 const patientForm = document.getElementById('patientForm');
+const patientTaskLabel = document.getElementById('patientTaskLabel');
 const patientTask = document.getElementById('patientTask');
 const handPatientLITemplate = document.getElementById('handPatientLITemplate');
 const influenceForm = document.getElementById('influenceForm');
@@ -27,9 +28,9 @@ const roundID = document.getElementById('roundID');
 const roundOrgan = document.getElementById('roundOrgan');
 const roundResultP = document.getElementById('roundResultP');
 const roundResult = document.getElementById('roundResult');
-const readyForm = document.getElementById('readyForm');
 // Populates and shows a newly added player in the player list.
 const populatePlayerLI = (playerLI, id, playerName) => {
+  playerLI.dataset.player = id;
   playerLI.querySelector('.playerID').textContent = id;
   playerLI.querySelector('.playerName').textContent = playerName;
   playerLI.classList.remove('invisible');
@@ -208,11 +209,11 @@ news.onmessage = event => {
   else if (params[0] === 'roundStart') {
     // Change the round ID and organ.
     roundID.textContent = params[1];
-    roundOrgan.textContent = `${params[2]} ${params[3]}`;
+    roundOrgan.innerHTML = `${params[2]} ${params[3]}`;
     // Hide the round-end content.
     roundResult.textContent = '';
     roundResultP.classList.add('invisible');
-    readyForm.classList.add('invisible');
+    roundOKForm.classList.add('invisible');
     // Remove and hide the player round information.
     playerOL.querySelectorAll('.bid, .bidNet').forEach(infoSpan => {
       infoSpan.textContent = '';
@@ -237,6 +238,8 @@ news.onmessage = event => {
     newPatientLI.removeAttribute('id');
     // Add the patient description to the button.
     newPatientLI.firstElementChild.innerHTML = patientDigest(params.slice(1));
+    // Make the patient visible.
+    newPatientLI.classList.remove('invisible');
     // Insert the copy into the hand.
     handPatientLITemplate.before(newPatientLI);
     // Ensure that the patient form is visible.
@@ -262,6 +265,8 @@ news.onmessage = event => {
     .getElementById('patientForm')
     .querySelectorAll('button')
     .forEach(button => button.setAttribute('disabled', false));
+    // Show the task.
+    patientTaskLabel.classList.remove('invisible');
   }
   // Otherwise, if the player was told to choose a patient to bid:
   else if (params[0] === 'chooseBid') {
@@ -272,6 +277,8 @@ news.onmessage = event => {
         button.setAttribute('disabled', false);
       }
     });
+    // Show the task.
+    patientTaskLabel.classList.remove('invisible');
   }
   // Otherwise, if the player was offered bids to use an influence card on:
   else if (params[0] === 'chooseInfluence') {

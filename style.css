@@ -54,9 +54,9 @@ body.cardlet {
   font-size: 1.5rem;
 }
 button {
-  min-height: 44px;
-  min-width: 44px;
-  margin: auto 0.5rem;
+  min-height: 24px;
+  min-width: 24px;
+  margin: 0.5rem;
   padding: 0 1rem;
   font-size: 1.5rem;
   border-radius: 1rem;

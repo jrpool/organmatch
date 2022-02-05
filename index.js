@@ -501,6 +501,8 @@ const requestHandler = (req, res) => {
           // Delete the user’s news stream.
           delete sessionStreams[userID];
           const sessionData = sessions[sessionCode];
+          console.log(`sessions has type ${typeof sessions}`);
+          console.log(`sessions has keys ${Object.keys(sessions)}`);
           const userNews = userID === 'Leader' ? 'The leader' : `Player ${userID}`;
           // Notify all users that the session has been aborted.
           broadcast(sessionCode, false, 'sessionEnd', `${userNews} quit`);
@@ -528,7 +530,7 @@ const requestHandler = (req, res) => {
         shuffler.sort((a, b) => a[1] - b[1]);
         sessionData.playerIDs = shuffler.map(pair => pair[0]);
         // Notify all players of the shuffling.
-        broadcast(sessionCode, false, 'playersShuffled', ...sessionData.playerIDs);
+        broadcast(sessionCode, true, 'playersShuffled', sessionData.playerIDs.join('\t'));
         // For each player:
         sessionData.playerIDs.forEach((id, index) => {
           const {patients} = sessionData.players[id].hand.initial;

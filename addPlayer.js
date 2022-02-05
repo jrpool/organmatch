@@ -1,6 +1,6 @@
 /*
   addPlayer
-  Adds a player to a session of OrganMatchata.
+  Adds a player to a session of OrganMatch.
 */
 // FUNCTIONS
 // Adds a player to a session.
