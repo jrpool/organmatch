@@ -714,9 +714,9 @@ const requestHandler = (req, res) => {
         const sessionCodeOK = Object.keys(sessions).includes(sessionCode);
         if (sessionCodeOK) {
           const sessionData = sessions[sessionCode];
-          // If the user is already a player:
-          const playerData = getPlayers(sessionData);
+          let playerData = getPlayers(sessionData);
           const playerNames = Object.values(playerData);
+          // If the user is already a player:
           if (playerNames.includes(playerName)) {
             // Serve an error page.
             serveTemplate(
@@ -741,8 +741,9 @@ const requestHandler = (req, res) => {
             const playerID = String.fromCharCode(65 + playerNames.length);
             // Send the new player’s ID and name to all other players and the leader.
             broadcast(sessionCode, false, 'playerAdd', `${playerID}\t${playerName}`);
-            // Add the player to the session data.
+            // Add the player to the session data and to the list of players.
             require('./addPlayer')(versionData, sessionData, playerID, playerName, '');
+            playerData = getPlayers(sessionData);
             // Serve a session-status page.
             serveTemplate(
               'playerStatus',

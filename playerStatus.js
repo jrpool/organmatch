@@ -36,7 +36,6 @@ const populatePlayerLI = (playerLI, id, playerName) => {
 };
 // Adds another player to the player list.
 const addPlayerLI = (playerID, playerName) => {
-  console.log('Adding player');
   const newPlayerLI = playerLITemplate.cloneNode(true);
   playerLITemplate.before(newPlayerLI);
   populatePlayerLI(newPlayerLI, playerID, playerName);

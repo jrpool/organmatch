@@ -172,6 +172,7 @@ p.summary {
   font-style: italic;
 }
 .playerBox {
+  margin: 0.25rem 0;
   border-width: 2px;
   border-style: dotted;
   border-color: #666;
