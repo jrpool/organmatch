@@ -147,7 +147,7 @@ const influenceDigest = influenceData => {
   return `${influenceData[0]}/${impactNews}`;
 };
 // Returns the list item of a player.
-const playerLI = id => playerOL.querySelector(`[data-playerID=${id}]`);
+const playerLIOf = id => playerOL.querySelector(`[data-player=${id}]`);
 
 // MESSAGE HANDLING
 
@@ -159,7 +159,7 @@ news.onmessage = event => {
   // If another player disconnected:
   if (params[0] === 'playerDrop') {
     // Remove the player.
-    playerLI(params[1]).remove();
+    playerLIOf(params[1]).remove();
   }
   // Otherwise, if a player joined:
   else if (params[0] === 'playerAdd') {
@@ -168,16 +168,17 @@ news.onmessage = event => {
   }
   // Otherwise, if the players were shuffled:
   else if (params[0] === 'playersShuffled') {
+    // Remove the player template.
+    playerLITemplate.remove();
     // Reorder the players in the list.
-    const listOL = document.getElementById('players');
     const playerLIs = {};
-    listOL.children.forEach(playerLI => {
-      const {playerID} = playerLI.dataset;
-      playerLIs[playerID] = playerLI;
+    Array.from(playerOL.children).forEach(playerLI => {
+      const {player} = playerLI.dataset;
+      playerLIs[player] = playerLI;
       playerLI.remove();
     });
     params.slice(1).forEach(playerID => {
-      listOL.insertAdjacentElement('afterbegin', playerLIs[playerID]);
+      playerOL.insertAdjacentElement('afterbegin', playerLIs[playerID]);
     });
   }
   // Otherwise, if the session started:
@@ -227,7 +228,7 @@ news.onmessage = event => {
   else if (params[0] === 'turnStart') {
     // Show whose turn it is.
     playerOL.querySelector('.playerBox.deciding').classList.remove('deciding');
-    playerOL.querySelector(`.playerBox[data-playerID=${params[1]}]`).classList.add('deciding');
+    playerOL.querySelector(`.playerBox[data-player=${params[1]}]`).classList.add('deciding');
   }
   // Otherwise, if a patient was added to the hand:
   else if (params[0] === 'handPatientAdd') {
@@ -287,7 +288,7 @@ news.onmessage = event => {
   // Otherwise, if a bid was made:
   else if (params[0] === 'didBid') {
     // Show it.
-    const player = playerLI(params[1]);
+    const player = playerLIOf(params[1]);
     const patient = patientDigest(params.slice(2));
     player.querySelector('.bid').textContent = patient;
     player.querySelector('.bidP').classList.remove('invisible');
@@ -295,13 +296,13 @@ news.onmessage = event => {
   // Otherwise, if a replacement was made:
   else if (params[0] === 'didReplace') {
     // Show it.
-    const player = playerLI(params[1]);
+    const player = playerLIOf(params[1]);
     player.querySelector('.replaceP').classList.remove('invisible');
   }
   // Otherwise, if an influence card was used:
   else if (params[0] === 'didInfluence') {
     // Show it and the bid’s resulting net priority.
-    const bidderLI = playerLI(params[2]);
+    const bidderLI = playerLIOf(params[2]);
     const influenceSpan = bidderLI.querySelector('.bidInfluences');
     const netSpan = bidderLI.querySelector('.bidNet');
     const oldContent = influenceSpan.textContent;
@@ -321,7 +322,7 @@ news.onmessage = event => {
     // Update the round result and show the winner’s score information.
     document.getElementById('roundResult').textContent = `Won by player ${params[2]}`;
     document.getElementById('roundResultP').classList.remove('invisible');
-    const winnerLI = playerLI(params[2]);
+    const winnerLI = playerLIOf(params[2]);
     const scoreP = winnerLI.querySelector('.scoreP');
     const scoreSpan = scoreP.querySelector('score');
     const roundsSpan = scoreP.querySelector('rounds');
@@ -333,7 +334,7 @@ news.onmessage = event => {
   // Otherwise, if a player approved finishing a round:
   else if (params[0] === 'roundOKd') {
     // Add that to the player information
-    const approverLI = playerLI(params[1]);
+    const approverLI = playerLIOf(params[1]);
     approverLI.querySelector('.readyP').classList.remove('invisible');
   }
   // Otherwise, if the time left (in minutes) was updated:

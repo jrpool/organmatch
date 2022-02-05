@@ -88,6 +88,8 @@ news.onmessage = event => {
   else if (params[0] === 'sessionStart') {
     // Remove the pre-start information from the page.
     preStart.remove();
+    // Update the session stage.
+    stage.textContent = 'Started';
   }
   // Otherwise, if the session ended:
   else if (params[0] === 'sessionEnd') {

@@ -140,6 +140,8 @@ const taskSpecs = (round, hand) => {
   specs.influence = influences.map(
     influence => influenceTargets(versionData, round, influence)
   );
+  // Return the specifications.
+  return specs;
 };
 // Notifies a player of the specifications for the next move.
 const sendTasks = (sessionCode, playerID, round, hand) => {
@@ -525,7 +527,7 @@ const requestHandler = (req, res) => {
         const shuffler = sessionData.playerIDs.map(id => [id, Math.random()]);
         shuffler.sort((a, b) => a[1] - b[1]);
         sessionData.playerIDs = shuffler.map(pair => pair[0]);
-        // Notify all users of the shuffling.
+        // Notify all players of the shuffling.
         broadcast(sessionCode, false, 'playersShuffled', ...sessionData.playerIDs);
         // For each player:
         sessionData.playerIDs.forEach((id, index) => {
