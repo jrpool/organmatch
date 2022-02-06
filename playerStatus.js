@@ -211,9 +211,10 @@ news.onmessage = event => {
     // Change the round ID and organ.
     roundID.textContent = params[1];
     roundOrgan.innerHTML = `${params[2]} ${params[3]}`;
-    // Hide the round-end content.
+    // Hide the round-end content and re-enable its approval button.
     roundResult.textContent = '';
     roundResultP.classList.add('invisible');
+    roundOKButton.removeAttribute('disabled');
     // Remove and hide the player round information.
     playerOL.querySelectorAll('.bid, .bidNet').forEach(infoSpan => {
       infoSpan.textContent = '';
