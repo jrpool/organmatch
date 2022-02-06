@@ -269,7 +269,7 @@ news.onmessage = event => {
     else {
       // Replace the existing button’s content with the new patient.
       patientForm
-      .querySelector(`fieldset > ul > li:nth-child(${params[1] +1}) > button`)
+      .querySelector(`fieldset > ul > li:nth-child(${Number.parseInt(params[1]) + 1}) > button`)
       .innerHTML = newPatient;
     }
   }
@@ -312,7 +312,9 @@ news.onmessage = event => {
   else if (params[0] === 'chooseInfluence') {
     // Enable the eligible buttons for the influence card.
     influenceLabel.classList.remove('invisible');
-    const influenceLI = influenceForm.querySelector(`li:nth-child(${params[1] + 1})`);
+    const influenceLI = influenceForm.querySelector(
+      `li:nth-child(${Number.parseInt(params[1]) + 1})`
+    );
     params.slice(2).forEach(bidderID => {
       const bidButton = document.createElement('button');
       bidButton.class = 'bidButton';
