@@ -359,8 +359,9 @@ news.onmessage = event => {
   // Otherwise, if a round ended without a winner:
   else if (params[0] === 'roundEnd') {
     // Update the round result.
-    document.getElementById('roundResult').textContent = 'No winner';
-    document.getElementById('roundResultP').classList.remove('invisible');
+    roundResult.textContent = 'No winner';
+    roundResultP.classList.remove('invisible');
+    roundOKForm.classList.remove('invisible');
   }
   // Otherwise, if a player won a round:
   else if (params[0] === 'roundWinner') {
