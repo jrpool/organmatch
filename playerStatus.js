@@ -150,7 +150,7 @@ const influenceDigest = influenceData => {
   return `${influenceData[0]}/${impactNews}`;
 };
 // Returns the list item of a player.
-const playerLIOf = id => playerOL.querySelector(`[data-player=${id}]`);
+const playerLIOf = id => playerOL.querySelector(`li[data-player=${id}]`);
 
 // MESSAGE HANDLING
 
@@ -247,17 +247,28 @@ news.onmessage = event => {
   }
   // Otherwise, if a patient was added to the hand:
   else if (params[0] === 'handPatientAdd') {
-    // Copy the patient template.
-    const newPatientLI = handPatientLITemplate.cloneNode(true);
-    newPatientLI.removeAttribute('id');
-    // Add the patient description to the button.
-    newPatientLI.firstElementChild.innerHTML = patientDigest(params.slice(1));
-    // Make the patient visible.
-    newPatientLI.classList.remove('invisible');
-    // Insert the copy into the hand.
-    handPatientLITemplate.before(newPatientLI);
-    // Ensure that the patient form is visible.
-    patientForm.classList.remove('invisible');
+    const newPatient = patientDigest(params.slice(2));
+    // If the new patient is to be appended:
+    if (params[1] === 'end') {
+      // Copy the patient template.
+      const newPatientLI = handPatientLITemplate.cloneNode(true);
+      newPatientLI.removeAttribute('id');
+      // Add the patient description to the button.
+      newPatientLI.firstElementChild.innerHTML = newPatient;
+      // Make the patient visible.
+      newPatientLI.classList.remove('invisible');
+      // Insert the copy into the hand.
+      handPatientLITemplate.before(newPatientLI);
+      // Ensure that the patient form is visible.
+      patientForm.classList.remove('invisible');
+    }
+    // Otherwise, i.e. if the new patient is to replace an existing one:
+    else {
+      // Replace the existing button’s content with the new patient.
+      patientForm
+      .querySelector(`fieldset > ul > li:nth-child(${params[1] +1}) > button`)
+      .innerHTML = newPatient;
+    }
   }
   // Otherwise, if an influence card was added to the hand:
   else if (params[0] === 'handInfluenceAdd') {
@@ -311,7 +322,7 @@ news.onmessage = event => {
     // Show it.
     const player = playerLIOf(params[1]);
     const patient = patientDigest(params.slice(2));
-    player.querySelector('.bid').textContent = patient;
+    player.querySelector('.bid').innerHTML = patient;
     player.querySelector('.bidP').classList.remove('invisible');
   }
   // Otherwise, if a replacement was made:

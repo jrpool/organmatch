@@ -535,9 +535,9 @@ const requestHandler = (req, res) => {
           const {patients} = sessionData.players[id].hand.initial;
           // For each patient card in the player’s hand:
           patients.forEach(patient => {
-            // Notify the player of the card.
+            // Notify the player to insert the card at the end.
             const news = patientSpec(patient).join('\t');
-            sendEventMsg(newsStreams[sessionCode][id], `handPatientAdd=${news}`);
+            sendEventMsg(newsStreams[sessionCode][id], `handPatientAdd=end\t${news}`);
           });
         });
         // Start the first round.
@@ -561,7 +561,7 @@ const requestHandler = (req, res) => {
           if (task === 'bid') {
             // Notify all players of the bid.
             const patient = player.hand.current.patients[index];
-            const bidNews = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
+            const bidNews = [playerID].concat(patientSpec(patient)).join('\t');
             broadcast(sessionCode, true, 'didBid', bidNews);
             // Add the bid to the round data.
             bids.push({
@@ -574,13 +574,14 @@ const requestHandler = (req, res) => {
             const turn = turns[turns.length - 1];
             turn.bid = true;
           }
-          // Draw a patient to replace the lost patient.
+          // Draw a new patient.
           const newPatient = sessionData.piles.patients.shift();
+          // Substitute the new patient in the hand for the lost one.
           player.hand.current.patients[index] = newPatient;
-          // Notify the player of the replacement.
-          const replacementNews = [index].concat(patientSpec(newPatient)).join('\t');
-          const replacementMsg = `didReplace=${replacementNews}`;
-          sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
+          // Notify the player of the change.
+          const newPlayerNews = [index].concat(patientSpec(newPatient)).join('\t');
+          const newPlayerMsg = `handPlayerAdd=${index}\t${newPlayerNews}`;
+          sendEventMsg(newsStreams[sessionCode][playerID], newPlayerMsg);
           // Prepare a possible influence decision by the player.
           prepInfluence(versionData, sessionData, playerID, bids, 0);
         }
