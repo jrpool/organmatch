@@ -361,21 +361,19 @@ news.onmessage = event => {
     // Update the round result.
     roundResult.textContent = 'No winner';
     roundResultP.classList.remove('invisible');
+    // Show the approval button.
     roundOKForm.classList.remove('invisible');
   }
   // Otherwise, if a player won a round:
   else if (params[0] === 'roundWinner') {
-    // Update the round result and show the winner’s score information.
+    // Update the round result and the winner’s score.
     document.getElementById('roundResult').textContent = `Won by player ${params[2]}`;
     document.getElementById('roundResultP').classList.remove('invisible');
     const winnerLI = playerLIOf(params[2]);
-    const scoreP = winnerLI.querySelector('.scoreP');
-    const scoreSpan = scoreP.querySelector('.score');
-    const roundsSpan = scoreP.querySelector('.rounds');
-    scoreSpan.textContent = params[3];
-    const roundList = roundsSpan.textContent;
-    roundsSpan.textContent = roundList ? `${roundList}, ${params[1]}` : params[1];
-    scoreP.classList.remove('invisible');
+    const winnerScoreSpan = winnerLI.querySelector('.roundsWon');
+    winnerScoreSpan.textContent = params[3];
+    // Show the approval button.
+    roundOKForm.classList.remove('invisible');
   }
   // Otherwise, if a player approved finishing a round:
   else if (params[0] === 'roundOKd') {

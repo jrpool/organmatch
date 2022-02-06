@@ -33,10 +33,10 @@
         <h2>Players</h2>
         <ol id="players" aria-live="polite">
           <li id="you" class="playerBox youBox" data-player="X">
-            <p>[<span class="playerID"></span>] <span class="playerName"></span></p>
-            <p class="scoreP invisible">
-              Score <span id="sessionScore" class="score"></span>;
-              won rounds <span id="wonRoundList" class="rounds"></span>
+            <p>
+              [<span class="playerID"></span>]
+              <span class="playerName"></span>
+              (rounds won: <span class="roundsWon"></span>)
             </p>
             <form id="patientForm" class="invisible">
               <h3>Patients</h3>
@@ -72,8 +72,11 @@
             </p>
           </li>
           <li id="playerLITemplate" class="playerBox themBox invisible" data-player="Y">
-            <p>[<span class="playerID"></span>] <span class="playerName"></span></p>
-            <p class="scoreP invisible">Score <span class="score"></span>; won rounds <span class="rounds"></span></p>
+            <p>
+              [<span class="playerID"></span>]
+              <span class="playerName"></span>
+              (rounds won: <span class="roundsWon"></span>)
+            </p>
             <p class="deciding invisible">Deciding</p>
             <p class="replaceP invisible">Replaced</p>
             <p class="bidP invisible">
