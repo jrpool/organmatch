@@ -234,7 +234,10 @@ news.onmessage = event => {
     const priorDecider = playerOL.querySelector('.playerBox.deciding');
     if (priorDecider) {
       priorDecider.classList.remove('deciding');
-      priorDecider.querySelector('.deciding').classList.add('invisible');
+      const decidingP = priorDecider.querySelector('.deciding');
+      if (decidingP) {
+        decidingP.classList.add('invisible');
+      }
     }
     // Mark the turn player with a style.
     const turnPlayerBox = playerOL.querySelector(`.playerBox[data-player=${params[1]}]`);
