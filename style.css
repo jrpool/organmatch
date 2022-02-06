@@ -94,6 +94,10 @@ div.figs {
   padding-left: 2rem;
   border: 0.3rem solid #f00;
 }
+fieldset {
+  padding: 0;
+  border: none;
+}
 figure {
   display: inline-block;
 }
@@ -133,6 +137,9 @@ footer {
   width: 100%;
   height: auto;
 }
+h1, h2 {
+  margin: 0.5rem, 0;
+}
 .half {
   display: block;
   width: auto;
@@ -171,9 +178,6 @@ p.moddate {
 p.summary {
   font-weight: 700;
   font-style: italic;
-}
-#patientForm > fieldset {
-  border: none;
 }
 #patientForm ul {
   display: flex;

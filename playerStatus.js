@@ -311,6 +311,7 @@ news.onmessage = event => {
       bidButton.textContent = bidderID;
       influenceLI.insertAdjacentElement('beforeend', bidButton);
     });
+    influenceNone.classList.remove('invisible');
   }
   // Otherwise, if a bid was made:
   else if (params[0] === 'didBid') {

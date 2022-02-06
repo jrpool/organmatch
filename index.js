@@ -124,18 +124,22 @@ const influenceTargets = (versionData, round, influence) => {
   return targetIndexes.map(index => bids[index].playerID);
 };
 // Returns specifications for a turn player’s next move.
-const taskSpecs = (round, hand) => {
+const taskSpecs = (hasMovedPatient, round, hand) => {
   const {patients, influences} = hand;
   // Initialize the specifications.
   const specs = {
+    hasMovedPatient,
     bid: [],
     influence: []
   };
-  // Add the indexes of the patients eligible to be bid to the specifications.
-  const matchIndexes = patients
-  .map((patient, index) => isMatch(round.roundOrgan, patient) ? index : -1)
-  .filter(index => index > -1);
-  specs.bid = matchIndexes;
+  // If the turn player has not yet moved a patient:
+  if (! hasMovedPatient) {
+    // Add the indexes of the patients eligible to be bid to the specifications.
+    const matchIndexes = patients
+    .map((patient, index) => isMatch(round.roundOrgan, patient) ? index : -1)
+    .filter(index => index > -1);
+    specs.bid = matchIndexes;
+  }
   // Add the permitted influence uses to the specifications.
   specs.influence = influences.map(
     influence => influenceTargets(versionData, round, influence)
@@ -143,22 +147,30 @@ const taskSpecs = (round, hand) => {
   // Return the specifications.
   return specs;
 };
-// Notifies a player of the specifications for the next move.
-const sendTasks = (sessionCode, playerID, round, hand) => {
-  const specs = taskSpecs(round, hand);
-  // Patient specification.
+// Sends move specifications, if any, to a player and returns whether there were any.
+const sendTasks = (hasMovedPatient, sessionCode, playerID, round, hand) => {
+  let anySpecs = false;
+  const specs = taskSpecs(hasMovedPatient, round, hand);
   const stream = newsStreams[sessionCode][playerID];
-  if (specs.bid.length) {
-    sendEventMsg(stream, `chooseBid=${specs.bid.join('\t')}`);
+  // If the player has not yet moved a patient:
+  if (! hasMovedPatient) {
+    // Tell the player to bid, if possible, or otherwise to replace.
+    if (specs.bid.length) {
+      sendEventMsg(stream, `chooseBid=${specs.bid.join('\t')}`);
+    }
+    else {
+      sendEventMsg(stream, 'chooseReplace');
+    }
+    anySpecs = true;
   }
-  else {
-    sendEventMsg(stream, 'chooseReplace');
-  }
+  // Send the player the influence options, if any.
   specs.influence.forEach((spec, index) => {
     if (spec.length) {
       sendEventMsg(stream, `chooseInfluence=${index}\t${spec.join('\t')}`);
+      anySpecs = true;
     }
   });
+  return anySpecs;
 };
 // Returns the specification of a patient.
 const patientSpec = patient => {
@@ -185,6 +197,7 @@ const startTurn = sessionData => {
     turnPlayerID,
     startTime: nowString(),
     bid: false,
+    replaced: false,
     influenced: false,
     endTime: null
   };
@@ -192,7 +205,7 @@ const startTurn = sessionData => {
   // Notify the players of the deciding player.
   broadcast(sessionCode, true, 'turnStart', turnPlayerID);
   // Notify the deciding player of the next patient and influence tasks.
-  sendTasks(sessionCode, turnPlayerID, round, players[turnPlayerID].hand.current);
+  sendTasks(false, sessionCode, turnPlayerID, round, players[turnPlayerID].hand.current);
 };
 // Starts a round.
 const startRound = sessionData => {
@@ -401,37 +414,6 @@ const endTurn = sessionData => {
     startTurn(sessionData);
   }
 };
-// Prepares an influence decision.
-const prepInfluence = (versionData, sessionData, playerID, bids) => {
-  // If the player has any influence cards and there are any bids in the turn:
-  const {influences} = sessionData.players[playerID].hand.current;
-  if (influences.length && bids.length) {
-    let canUse = false;
-    // For each influence card:
-    influences.forEach((influence, index) => {
-      // If the player can use it on any bids:
-      const targetIndexes = influenceTargets(versionData, playerID, influence, bids);
-      if (targetIndexes.length) {
-        canUse = true;
-        // Tell the player to create buttons for the uses.
-        const {sessionCode} = sessionData;
-        const targetBidderIDs = targetIndexes.map(i => bids[i].playerID);
-        const useNews = `chooseInfluence=${index}\t${targetBidderIDs.join('\t')}`;
-        sendEventMsg(newsStreams[sessionCode][playerID], useNews);
-      }
-    });
-    // If no usable influence card was found:
-    if (! canUse) {
-      // End the turn and start the next turn or round.
-      endTurn(sessionData);
-    }
-  }
-  // Otherwise, i.e. if the player has no influence cards or there are no bids:
-  else {
-    // End the turn and start the next turn or round.
-    endTurn(sessionData);
-  }
-};
 // Returns the time in minutes before a session is stopped.
 const minutesLeft = (versionData, sessionData) => {
   const creationTime = (new Date(sessionData.creationTime)).getTime();
@@ -586,13 +568,19 @@ const requestHandler = (req, res) => {
           // Draw a new patient.
           const newPatient = sessionData.piles.patients.shift();
           // Substitute the new patient in the hand for the lost one.
-          player.hand.current.patients[index] = newPatient;
+          const currentHand = player.hand.current;
+          currentHand.patients[index] = newPatient;
           // Notify the player of the change.
           const newPlayerNews = [index].concat(patientSpec(newPatient)).join('\t');
           const newPlayerMsg = `handPatientAdd=${newPlayerNews}`;
           sendEventMsg(newsStreams[sessionCode][playerID], newPlayerMsg);
-          // Prepare a possible influence decision by the player.
-          prepInfluence(versionData, sessionData, playerID, bids, 0);
+          // Send specifications, if any, for the next move to the player.
+          const anySpecs = sendTasks(true, sessionCode, playerID, round, currentHand);
+          // If there were none:
+          if (! anySpecs) {
+            // End the turn.
+            endTurn(sessionData);
+          }
         }
         // Otherwise, i.e. if no time is left:
         else {
@@ -618,7 +606,8 @@ const requestHandler = (req, res) => {
           const round = sessionData.rounds[sessionData.roundsEnded];
           const {bids, turns} = round;
           // Add the use to the session data.
-          const {influences} = player.hand.current;
+          const currentHand = player.hand.current;
+          const {influences} = currentHand;
           const use = {
             playerID,
             influence: influences[index]
@@ -638,9 +627,48 @@ const requestHandler = (req, res) => {
           broadcast(sessionCode, true, 'didInfluence', useNews);
           // Remove the card from the player’s hand.
           influences.splice(index, 1);
-          // Prepare another possible influence decision by the player.
-          const nextInfluenceIndex = index - (bidIndex === 'keep' ? 0 : 1);
-          prepInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
+          // Send specifications, if any, for the next move to the player.
+          const hasMovedPatient = turn.bid || turn.replaced;
+          const anySpecs = sendTasks(hasMovedPatient, sessionCode, playerID, round, currentHand);
+          // If there were none:
+          if (! anySpecs) {
+            // End the turn.
+            endTurn(sessionData);
+          }
+        }
+        // Otherwise, i.e. if no time is left:
+        else {
+          // Notify all users that the session has been ended.
+          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted');
+          console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
+          // Record and delete the session.
+          exportSession(sessionData);
+        }
+        // Close the response.
+        res.end();
+      }
+      // Otherwise, if a player waived influence:
+      else if (urlBase === 'influenceNone') {
+        const {sessionCode, playerID} = params;
+        const sessionData = sessions[sessionCode];
+        // If any time is left:
+        const timeLeft = minutesLeft(versionData, sessionData);
+        if (timeLeft) {
+          // Notify all users of the time left.
+          broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
+          const round = sessionData.rounds[sessionData.roundsEnded];
+          const {turns} = round;
+          const turn = turns[turns.length - 1];
+          // Send specifications, if any, for the next move to the player.
+          const hasMovedPatient = turn.bid || turn.replaced;
+          const player = sessionData.players[playerID];
+          const currentHand = player.hand.current;
+          const anySpecs = sendTasks(hasMovedPatient, sessionCode, playerID, round, currentHand);
+          // If there were none:
+          if (! anySpecs) {
+            // End the turn.
+            endTurn(sessionData);
+          }
         }
         // Otherwise, i.e. if no time is left:
         else {
