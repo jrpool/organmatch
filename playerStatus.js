@@ -370,8 +370,8 @@ news.onmessage = event => {
     document.getElementById('roundResultP').classList.remove('invisible');
     const winnerLI = playerLIOf(params[2]);
     const scoreP = winnerLI.querySelector('.scoreP');
-    const scoreSpan = scoreP.querySelector('score');
-    const roundsSpan = scoreP.querySelector('rounds');
+    const scoreSpan = scoreP.querySelector('.score');
+    const roundsSpan = scoreP.querySelector('.rounds');
     scoreSpan.textContent = params[3];
     const roundList = roundsSpan.textContent;
     roundsSpan.textContent = roundList ? `${roundList}, ${params[1]}` : params[1];
