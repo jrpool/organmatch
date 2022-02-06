@@ -230,15 +230,6 @@ news.onmessage = event => {
   }
   // Otherwise, if a turn started:
   else if (params[0] === 'turnStart') {
-    // Remove any prior indicator of the turn player.
-    const priorDecider = playerOL.querySelector('.playerBox.deciding');
-    if (priorDecider) {
-      priorDecider.classList.remove('deciding');
-      const decidingP = priorDecider.querySelector('.deciding');
-      if (decidingP) {
-        decidingP.classList.add('invisible');
-      }
-    }
     // Mark the turn player with a style.
     const turnPlayerBox = playerOL.querySelector(`.playerBox[data-player=${params[1]}]`);
     turnPlayerBox.classList.add('deciding');
@@ -350,6 +341,18 @@ news.onmessage = event => {
     const wholeContent = oldContent === 'none' ? addedContent : `${oldContent}, ${addedContent}`;
     influenceSpan.textContent = wholeContent;
     netSpan.textContent = params[4];
+  }
+  // Otherwise, if a turn ended:
+  else if (params[0] === 'turnEnd') {
+    // Remove any prior indicator of the turn player.
+    const priorDecider = playerOL.querySelector('.playerBox.deciding');
+    if (priorDecider) {
+      priorDecider.classList.remove('deciding');
+      const decidingP = priorDecider.querySelector('.deciding');
+      if (decidingP) {
+        decidingP.classList.add('invisible');
+      }
+    }
   }
   // Otherwise, if a round ended without a winner:
   else if (params[0] === 'roundEnd') {

@@ -384,8 +384,7 @@ const endTurn = sessionData => {
   // Increment the turn count in the session data.
   round.turnsEnded++;
   // Notify all players.
-  const turnSummary = ` ${turn.bid ? 'bid' : 'replaced'}${turn.influenced ? '; influenced' : ''}`;
-  broadcast(sessionData.sessionCode, true, 'turn', `${turnNum}\t:${turnSummary}`);
+  broadcast(sessionData.sessionCode, true, 'turnEnd');
   // If this was the last turn in the round:
   if (turnNum === sessionData.playerIDs.length - 1) {
     // End the round.
