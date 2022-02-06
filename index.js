@@ -496,21 +496,22 @@ const requestHandler = (req, res) => {
         // Add the response to the news streams.
         const sessionStreams = newsStreams[sessionCode];
         sessionStreams[userID] = res;
-        // If the user later closes the request:
+        // If the news stream is later closed:
         req.on('close', () => {
           // Delete the user’s news stream.
           delete sessionStreams[userID];
+          // If the session data still exist:
           const sessionData = sessions[sessionCode];
-          console.log(`sessions has type ${typeof sessions}`);
-          console.log(`sessions has keys ${Object.keys(sessions)}`);
-          const userNews = userID === 'Leader' ? 'The leader' : `Player ${userID}`;
-          // Notify all users that the session has been aborted.
-          broadcast(sessionCode, false, 'sessionEnd', `${userNews} quit`);
-          console.log(`Session ${sessionCode} aborted by ${userID}`);
-          // Add the end time to the session data.
-          sessionData.endTime = nowString();
-          // Record and delete the session.
-          exportSession(sessionData);
+          if (sessionData) {
+            const userNews = userID === 'Leader' ? 'The leader' : `Player ${userID}`;
+            // Notify all users that the session has been aborted.
+            broadcast(sessionCode, false, 'sessionEnd', `${userNews} quit`);
+            console.log(`Session ${sessionCode} aborted by ${userID}`);
+            // Add the end time to the session data.
+            sessionData.endTime = nowString();
+            // Record and delete the session and close all news streams.
+            exportSession(sessionData);
+          }
         });
       }
       // Otherwise, if the session was started by the leader:
@@ -547,6 +548,7 @@ const requestHandler = (req, res) => {
           });
         });
         // Start the first round.
+        console.log('Starting first round');
         startRound(sessionData);
         // Close the response.
         res.end();
