@@ -19,7 +19,7 @@ const patientTask = document.getElementById('patientTask');
 const handPatientLITemplate = document.getElementById('handPatientLITemplate');
 const influenceForm = document.getElementById('influenceForm');
 const influenceLabel = document.getElementById('influenceLabel');
-const handInfluenceLITemplate = document.getElementById('handInfluenceLITemplate');
+const influenceLITemplate = document.getElementById('influenceLITemplate');
 const influenceNone = document.getElementById('influenceNone');
 const playerLITemplate = document.getElementById('playerLITemplate');
 const roundInfo = document.getElementById('roundInfo');
@@ -265,12 +265,12 @@ news.onmessage = event => {
   // Otherwise, if an influence card was added to the hand:
   else if (params[0] === 'handInfluenceAdd') {
     // Copy the influence-card template.
-    const newInfluenceLI = handInfluenceLITemplate.cloneNode(true);
+    const newInfluenceLI = influenceLITemplate.cloneNode(true);
     newInfluenceLI.removeAttribute('id');
     // Add the influence description to the list item.
     newInfluenceLI.firstElementChild.innerHTML = influenceDigest(params.slice(1));
     // Insert the copy into the hand.
-    handInfluenceLITemplate.before(newInfluenceLI);
+    influenceLITemplate.before(newInfluenceLI);
     // Ensure that the influence form is visible.
     influenceForm.classList.remove('invisible');
   }
@@ -370,9 +370,13 @@ news.onmessage = event => {
   }
   // Otherwise, if a player approved finishing a round:
   else if (params[0] === 'roundOKd') {
-    // Add that to the player information
     const approverLI = playerLIOf(params[1]);
-    approverLI.querySelector('.readyP').classList.remove('invisible');
+    const readyP = approverLI.querySelector('.readyP');
+    // If the player is another player:
+    if (readyP) {
+      // Show this.
+      readyP.classList.remove('invisible');
+    }
   }
   // Otherwise, if the time left (in minutes) was updated:
   else if (params[0] === 'timeLeft') {
