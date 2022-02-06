@@ -629,9 +629,9 @@ const requestHandler = (req, res) => {
           turn.influenced = true;
           // Notify all users of the use.
           const {impact} = use.influence;
-          const signedImpact = impact > 0 ? `+ ${impact}` : `- ${Math.abs(impact)}`;
-          const useNews = ` ${signedImpact} by ${playerID} (net ${bid.netPriority})`;
-          broadcast(sessionCode, false, 'didInfluence', `${bidIndex}\t${useNews}`);
+          const signedImpact = impact > 0 ? `+${impact}` : `&minus;${Math.abs(impact)}`;
+          const useNews = `${playerID}\t${bidderID}\t${signedImpact}\t${bid.netPriority}`;
+          broadcast(sessionCode, true, 'didInfluence', useNews);
           // Remove the card from the player’s hand.
           influences.splice(index, 1);
           // Prepare another possible influence decision by the player.
