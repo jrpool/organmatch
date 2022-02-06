@@ -315,10 +315,12 @@ news.onmessage = event => {
   }
   // Otherwise, if a bid was made:
   else if (params[0] === 'didBid') {
-    // Show it.
+    // Show it, with no influences and an unchanged net priority.
     const player = playerLIOf(params[1]);
     const patient = patientDigest(params.slice(2));
     player.querySelector('.bid').innerHTML = patient;
+    player.querySelector('.bidInfluences').textContent = 'none';
+    player.querySelector('.bidNet').textContent = params[7];
     player.querySelector('.bidP').classList.remove('invisible');
   }
   // Otherwise, if a replacement was made:
