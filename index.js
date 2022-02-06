@@ -383,9 +383,9 @@ const endTurn = sessionData => {
   turn.endTime = nowString();
   // Increment the turn count in the session data.
   round.turnsEnded++;
-  // Notify all users.
+  // Notify all players.
   const turnSummary = ` ${turn.bid ? 'bid' : 'replaced'}${turn.influenced ? '; influenced' : ''}`;
-  broadcast(sessionData.sessionCode, false, 'turn', `${turnNum}\t:${turnSummary}`);
+  broadcast(sessionData.sessionCode, true, 'turn', `${turnNum}\t:${turnSummary}`);
   // If this was the last turn in the round:
   if (turnNum === sessionData.playerIDs.length - 1) {
     // End the round.
@@ -574,13 +574,18 @@ const requestHandler = (req, res) => {
             const turn = turns[turns.length - 1];
             turn.bid = true;
           }
+          // Otherwise, i.e. if the move was a replacement:
+          else {
+            // Notify all players.
+            broadcast(sessionCode, true, 'didReplace', playerID);
+          }
           // Draw a new patient.
           const newPatient = sessionData.piles.patients.shift();
           // Substitute the new patient in the hand for the lost one.
           player.hand.current.patients[index] = newPatient;
           // Notify the player of the change.
           const newPlayerNews = [index].concat(patientSpec(newPatient)).join('\t');
-          const newPlayerMsg = `handPlayerAdd=${index}\t${newPlayerNews}`;
+          const newPlayerMsg = `handPatientAdd=${index}\t${newPlayerNews}`;
           sendEventMsg(newsStreams[sessionCode][playerID], newPlayerMsg);
           // Prepare a possible influence decision by the player.
           prepInfluence(versionData, sessionData, playerID, bids, 0);

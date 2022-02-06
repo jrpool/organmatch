@@ -332,7 +332,10 @@ news.onmessage = event => {
   else if (params[0] === 'didReplace') {
     // Show it.
     const player = playerLIOf(params[1]);
-    player.querySelector('.replaceP').classList.remove('invisible');
+    const replaceP = player.querySelector('.replaceP');
+    if (replaceP) {
+      replaceP.classList.remove('invisible');
+    }
   }
   // Otherwise, if an influence card was used:
   else if (params[0] === 'didInfluence') {
