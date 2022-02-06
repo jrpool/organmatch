@@ -24,6 +24,7 @@ const influenceNone = document.getElementById('influenceNone');
 const roundOKForm = document.getElementById('roundOKForm');
 const playerLITemplate = document.getElementById('playerLITemplate');
 const roundInfo = document.getElementById('roundInfo');
+const roundH = document.getElementById('roundH');
 const roundID = document.getElementById('roundID');
 const roundOrgan = document.getElementById('roundOrgan');
 const roundResultP = document.getElementById('roundResultP');
@@ -188,6 +189,7 @@ news.onmessage = event => {
     preStart.remove();
     // Make the round information visible.
     roundInfo.classList.remove('invisible');
+    roundH.classList.remove('invisible');
   }
   // Otherwise, if the session ended:
   else if (params[0] === 'sessionEnd') {
@@ -228,8 +230,14 @@ news.onmessage = event => {
   // Otherwise, if a turn started:
   else if (params[0] === 'turnStart') {
     // Show whose turn it is.
-    playerOL.querySelector('.playerBox.deciding').classList.remove('deciding');
-    playerOL.querySelector(`.playerBox[data-player=${params[1]}]`).classList.add('deciding');
+    const priorDecider = playerOL.querySelector('.playerBox.deciding');
+    if (priorDecider) {
+      priorDecider.classList.remove('deciding');
+      priorDecider.querySelector('.deciding').classList.add('invisible');
+    }
+    const turnPlayerBox = playerOL.querySelector(`.playerBox[data-player=${params[1]}]`);
+    turnPlayerBox.classList.add('deciding');
+    turnPlayerBox.querySelector('.deciding').classList.remove('invisible');
   }
   // Otherwise, if a patient was added to the hand:
   else if (params[0] === 'handPatientAdd') {
@@ -261,10 +269,9 @@ news.onmessage = event => {
   else if (params[0] === 'chooseReplace') {
     // Add this task to the page and enable all the player buttons.
     patientTask.textContent = 'replace';
-    document
-    .getElementById('patientForm')
-    .querySelectorAll('button')
-    .forEach(button => button.removeAttribute('disabled'));
+    patientForm.querySelectorAll('button').forEach(button => {
+      button.removeAttribute('disabled');
+    });
     // Show the task.
     patientTaskLabel.classList.remove('invisible');
   }
@@ -272,8 +279,9 @@ news.onmessage = event => {
   else if (params[0] === 'chooseBid') {
     // Add this task to the page and enable the eligible player buttons.
     patientTask.textContent = 'bid';
-    patientForm.querySelector('button').forEach((button, index) => {
-      if (params.slice(1).includes(index)) {
+    const paramNums = params.slice(1).map(param => Number.parseInt(param));
+    patientForm.querySelectorAll('button').forEach((button, index) => {
+      if (paramNums.includes(index)) {
         button.removeAttribute('disabled');
       }
     });

@@ -206,7 +206,7 @@ const startRound = sessionData => {
   const roundOrgan = piles.organs.latent.shift();
   const roundNewsParts = [roundID, roundOrgan.organ, roundOrgan.group];
   broadcast(sessionCode, false, 'roundStart', roundNewsParts.join('\t'));
-  sendEventMsg(newsStreams[sessionCode].Leader, 'roundStart');
+  console.log(`Round ${roundID} started`);
   // Initialize a round record and add it to the session data.
   sessionData.rounds.push({
     roundID,
@@ -533,22 +533,16 @@ const requestHandler = (req, res) => {
         // Notify all players of the shuffling.
         broadcast(sessionCode, true, 'playersShuffled', sessionData.playerIDs.join('\t'));
         // For each player:
-        sessionData.playerIDs.forEach((id, index) => {
+        sessionData.playerIDs.forEach(id => {
           const {patients} = sessionData.players[id].hand.initial;
           // For each patient card in the player’s hand:
           patients.forEach(patient => {
             // Notify the player of the card.
             const news = patientSpec(patient).join('\t');
             sendEventMsg(newsStreams[sessionCode][id], `handPatientAdd=${news}`);
-            // If the player is the session’s starter:
-            if (index === 0) {
-              // Notify the leader of the card.
-              sendEventMsg(newsStreams[sessionCode].Leader, `handPatientAdd=${news}`);
-            }
           });
         });
         // Start the first round.
-        console.log('Starting first round');
         startRound(sessionData);
         // Close the response.
         res.end();
