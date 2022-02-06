@@ -397,36 +397,32 @@ const endTurn = sessionData => {
     startTurn(sessionData);
   }
 };
-// Manages an influence decision.
-const prepInfluence = (versionData, sessionData, playerID, bids, startIndex) => {
-  // If the player has any more influence cards and there are any bids in the turn:
+// Prepares an influence decision.
+const prepInfluence = (versionData, sessionData, playerID, bids) => {
+  // If the player has any influence cards and there are any bids in the turn:
   const {influences} = sessionData.players[playerID].hand.current;
-  if (influences.length > startIndex && bids.length) {
-    // For each card until a usable one is found:
-    let index = startIndex;
-    while (index > -1 && index < influences.length) {
+  if (influences.length && bids.length) {
+    let canUse = false;
+    // For each influence card:
+    influences.forEach((influence, index) => {
       // If the player can use it on any bids:
-      const targetIndexes = influenceTargets(versionData, playerID, influences[index], bids);
+      const targetIndexes = influenceTargets(versionData, playerID, influence, bids);
       if (targetIndexes.length) {
-        // Notify the player and the leader of the task.
+        canUse = true;
+        // Tell the player to create buttons for the uses.
         const {sessionCode} = sessionData;
-        const taskNews
-          = `use\t${index + 1}\t${targetIndexes.map(index => index + 1).join('\t')}`;
-        sendEventMsg(newsStreams[sessionCode][playerID], `task=${taskNews}`);
-        sendEventMsg(newsStreams[sessionCode].Leader, `task=${taskNews}`);
-        index = -1;
+        const targetBidderIDs = targetIndexes.map(i => bids[i].playerID);
+        const useNews = `chooseInfluence=${index}\t${targetBidderIDs.join('\t')}`;
+        sendEventMsg(newsStreams[sessionCode][playerID], useNews);
       }
-      else {
-        index++;
-      }
-    }
+    });
     // If no usable influence card was found:
-    if (index > -1) {
+    if (! canUse) {
       // End the turn and start the next turn or round.
       endTurn(sessionData);
     }
   }
-  // Otherwise, i.e. if the player cannot use any influence cards:
+  // Otherwise, i.e. if the player has no influence cards or there are no bids:
   else {
     // End the turn and start the next turn or round.
     endTurn(sessionData);
@@ -550,8 +546,8 @@ const requestHandler = (req, res) => {
         res.end();
       }
       // Otherwise, if a bid or replacement was made:
-      else if (['bid', 'swap'].includes(urlBase)) {
-        const {sessionCode, playerID, cardNum} = params;
+      else if (urlBase === 'patient') {
+        const {sessionCode, playerID, task, index} = params;
         const sessionData = sessions[sessionCode];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
@@ -562,11 +558,11 @@ const requestHandler = (req, res) => {
           const round = sessionData.rounds[sessionData.roundsEnded];
           const {bids, turns} = round;
           // If the move was a bid:
-          if (urlBase === 'bid') {
-            // Notify all users of the bid.
-            const patient = player.hand.current.patients[cardNum - 1];
+          if (task === 'bid') {
+            // Notify all players of the bid.
+            const patient = player.hand.current.patients[index];
             const bidNews = `Bid by ${playerID}: ${patientSpec(patient).join('\t')}`;
-            broadcast(sessionCode, false, 'bidAdd', bidNews);
+            broadcast(sessionCode, true, 'didBid', bidNews);
             // Add the bid to the round data.
             bids.push({
               playerID,
@@ -580,10 +576,10 @@ const requestHandler = (req, res) => {
           }
           // Draw a patient to replace the lost patient.
           const newPatient = sessionData.piles.patients.shift();
-          player.hand.current.patients[cardNum - 1] = newPatient;
+          player.hand.current.patients[index] = newPatient;
           // Notify the player of the replacement.
-          const replacementNews = [cardNum].concat(patientSpec(newPatient)).join('\t');
-          const replacementMsg = `handPatientReplace=${replacementNews}`;
+          const replacementNews = [index].concat(patientSpec(newPatient)).join('\t');
+          const replacementMsg = `didReplace=${replacementNews}`;
           sendEventMsg(newsStreams[sessionCode][playerID], replacementMsg);
           // Prepare a possible influence decision by the player.
           prepInfluence(versionData, sessionData, playerID, bids, 0);
@@ -599,10 +595,9 @@ const requestHandler = (req, res) => {
         // Close the response.
         res.end();
       }
-      // Otherwise, if a decision was made about an influence card:
-      else if (urlBase === 'use') {
-        const {sessionCode, playerID, targetNum} = params;
-        const cardNum = Number.parseInt(params.cardNum);
+      // Otherwise, if an influence card was used:
+      else if (urlBase === 'influence') {
+        const {sessionCode, playerID, index, bidderID} = params;
         const sessionData = sessions[sessionCode];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
@@ -612,35 +607,29 @@ const requestHandler = (req, res) => {
           const player = sessionData.players[playerID];
           const round = sessionData.rounds[sessionData.roundsEnded];
           const {bids, turns} = round;
-          // If the decision was to use the card:
-          if (params.targetNum !== 'keep') {
-            const bid = bids[targetNum - 1];
-            // Add the use to the session data.
-            const {influences} = player.hand.current;
-            const use = {
-              playerID,
-              influence: influences[cardNum - 1]
-            };
-            bid.influences.push(use);
-            const freePriority = bid.patient.priority + bid.influences.reduce(
-              (change, use) => change + use.influence.impact, 0
-            );
-            const limits = versionData.limits.bidPriority;
-            bid.netPriority = Math.min(freePriority, Math.max(freePriority, limits.min));
-            const turn = turns[turns.length - 1];
-            turn.influenced = true;
-            // Notify all users of the use.
-            const {impact} = use.influence;
-            const signedImpact = impact > 0 ? `+ ${impact}` : `- ${Math.abs(impact)}`;
-            const useNews = ` ${signedImpact} by ${playerID} (net ${bid.netPriority})`;
-            broadcast(sessionCode, false, 'use', `${targetNum}\t${useNews}`);
-            // Remove the card from the player’s hand.
-            influences.splice(cardNum - 1, 1);
-            // Notify the player of the hand change.
-            sendEventMsg(newsStreams[sessionCode][playerID], `influenceRemove=${cardNum}`);
-          }
+          // Add the use to the session data.
+          const {influences} = player.hand.current;
+          const use = {
+            playerID,
+            influence: influences[index]
+          };
+          const bidIndex = bids.findIndex(bid => bid.playerID === bidderID);
+          const bid = bids[bidIndex];
+          bid.influences.push(use);
+          bid.netPriority = bid.patient.priority + bid.influences.reduce(
+            (change, use) => change + use.influence.impact, 0
+          );
+          const turn = turns[turns.length - 1];
+          turn.influenced = true;
+          // Notify all users of the use.
+          const {impact} = use.influence;
+          const signedImpact = impact > 0 ? `+ ${impact}` : `- ${Math.abs(impact)}`;
+          const useNews = ` ${signedImpact} by ${playerID} (net ${bid.netPriority})`;
+          broadcast(sessionCode, false, 'didInfluence', `${bidIndex}\t${useNews}`);
+          // Remove the card from the player’s hand.
+          influences.splice(index, 1);
           // Prepare another possible influence decision by the player.
-          const nextInfluenceIndex = cardNum - (targetNum === 'keep' ? 0 : 1);
+          const nextInfluenceIndex = index - (bidIndex === 'keep' ? 0 : 1);
           prepInfluence(versionData, sessionData, playerID, bids, nextInfluenceIndex);
         }
         // Otherwise, i.e. if no time is left:

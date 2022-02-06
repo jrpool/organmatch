@@ -298,7 +298,7 @@ news.onmessage = event => {
   else if (params[0] === 'chooseInfluence') {
     // Enable the eligible buttons for the influence card.
     influenceLabel.classList.remove('invisible');
-    const influenceLI = influenceForm.querySelector(`li:nth-child(${params[1]})`);
+    const influenceLI = influenceForm.querySelector(`li:nth-child(${params[1] + 1})`);
     params.slice(2).forEach(bidderID => {
       const bidButton = document.createElement('button');
       bidButton.class = 'bidButton';
