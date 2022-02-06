@@ -72,8 +72,8 @@ patientForm.onsubmit = async event => {
     event.submitter.parentElement.parentElement.querySelectorAll('button')
   );
   const index = patientButtons.findIndex(button => button === patientButton);
-  // Remove the selected patient from the hand.
-  patientButton.parentElement.remove();
+  // Remove the selected patient data from the card.
+  patientButton.textContent = '';
   // Disable the buttons in the form.
   patientForm.querySelectorAll('button').forEach(button => {
     button.setAttribute('disabled', '');

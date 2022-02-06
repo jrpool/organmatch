@@ -585,7 +585,7 @@ const requestHandler = (req, res) => {
           player.hand.current.patients[index] = newPatient;
           // Notify the player of the change.
           const newPlayerNews = [index].concat(patientSpec(newPatient)).join('\t');
-          const newPlayerMsg = `handPatientAdd=${index}\t${newPlayerNews}`;
+          const newPlayerMsg = `handPatientAdd=${newPlayerNews}`;
           sendEventMsg(newsStreams[sessionCode][playerID], newPlayerMsg);
           // Prepare a possible influence decision by the player.
           prepInfluence(versionData, sessionData, playerID, bids, 0);
