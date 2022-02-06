@@ -205,7 +205,7 @@ const startRound = sessionData => {
   const roundEnderID = playerIDs[(starterIndex + playerCount - 1) % playerCount];
   const roundOrgan = piles.organs.latent.shift();
   const roundNewsParts = [roundID, roundOrgan.organ, roundOrgan.group];
-  broadcast(sessionCode, true, 'roundStart', roundNewsParts.join('\t'));
+  broadcast(sessionCode, false, 'roundStart', roundNewsParts.join('\t'));
   sendEventMsg(newsStreams[sessionCode].Leader, 'roundStart');
   // Initialize a round record and add it to the session data.
   sessionData.rounds.push({

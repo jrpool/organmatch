@@ -74,7 +74,7 @@ patientForm.onsubmit = async event => {
   patientButton.parentElement.remove();
   // Disable the buttons in the form.
   patientForm.querySelectorAll('button').forEach(button => {
-    button.setAttribute('disabled', true);
+    button.setAttribute('disabled');
   });
   const task = patientTask.textContent;
   // If the submission was a bid:
@@ -264,7 +264,7 @@ news.onmessage = event => {
     document
     .getElementById('patientForm')
     .querySelectorAll('button')
-    .forEach(button => button.setAttribute('disabled', false));
+    .forEach(button => button.removeAttribute('disabled'));
     // Show the task.
     patientTaskLabel.classList.remove('invisible');
   }
@@ -274,7 +274,7 @@ news.onmessage = event => {
     patientTask.textContent = 'bid';
     patientForm.querySelector('button').forEach((button, index) => {
       if (params.slice(1).includes(index)) {
-        button.setAttribute('disabled', false);
+        button.removeAttribute('disabled');
       }
     });
     // Show the task.
