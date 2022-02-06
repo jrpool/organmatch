@@ -271,7 +271,8 @@ news.onmessage = event => {
     newInfluenceLI.firstElementChild.innerHTML = influenceDigest(params.slice(1));
     // Insert the copy into the hand.
     influenceLITemplate.before(newInfluenceLI);
-    // Ensure that the influence form is visible.
+    // Make the the influence card and the influence form visible.
+    newInfluenceLI.classList.remove('invisible');
     influenceForm.classList.remove('invisible');
   }
   // Otherwise, if the player was told to choose a patient to replace:
