@@ -274,7 +274,12 @@ const endRound = sessionData => {
     const player = players[winningPlayerID];
     player.roundsWon++;
     // Notify all players of the round winner.
-    broadcast(sessionCode,  true, 'roundWinner', `${round.roundNum}\t${winningPlayerID}`);
+    broadcast(
+      sessionCode,
+      true,
+      'roundWinner',
+      `${round.roundNum}\t${winningPlayerID}\t${player.roundsWon}`
+    );
     // Return the other bid cards to the latent piles.
     bids.forEach((bid, index) => {
       if (index !== winningBidIndex) {

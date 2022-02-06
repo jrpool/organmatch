@@ -21,7 +21,6 @@ const influenceForm = document.getElementById('influenceForm');
 const influenceLabel = document.getElementById('influenceLabel');
 const handInfluenceLITemplate = document.getElementById('handInfluenceLITemplate');
 const influenceNone = document.getElementById('influenceNone');
-const roundOKForm = document.getElementById('roundOKForm');
 const playerLITemplate = document.getElementById('playerLITemplate');
 const roundInfo = document.getElementById('roundInfo');
 const roundH = document.getElementById('roundH');
@@ -29,6 +28,7 @@ const roundID = document.getElementById('roundID');
 const roundOrgan = document.getElementById('roundOrgan');
 const roundResultP = document.getElementById('roundResultP');
 const roundResult = document.getElementById('roundResult');
+const roundOKButton = roundResultP.querySelector('button');
 // Populates and shows a newly added player in the player list.
 const populatePlayerLI = (playerLI, id, playerName) => {
   playerLI.removeAttribute('id');
@@ -125,12 +125,10 @@ influenceForm.onsubmit = async event => {
     );
   }
 };
-// When the round-OK form is submitted:
-roundOKForm.onsubmit = async event => {
-  // Prevent a reload.
-  event.preventDefault();
-  // Hide the form.
-  roundOKForm.classList.add('invisible');
+// When the round-OK button is activated:
+roundOKButton.onclick = async () => {
+  // Disable the button.
+  roundOKButton.setAttribute('disabled', '');
   // Notify the server.
   await fetch(`roundOK?sessionCode=${sessionCode}&playerID=${playerID}`);
 };
@@ -216,7 +214,6 @@ news.onmessage = event => {
     // Hide the round-end content.
     roundResult.textContent = '';
     roundResultP.classList.add('invisible');
-    roundOKForm.classList.add('invisible');
     // Remove and hide the player round information.
     playerOL.querySelectorAll('.bid, .bidNet').forEach(infoSpan => {
       infoSpan.textContent = '';
@@ -358,22 +355,17 @@ news.onmessage = event => {
   }
   // Otherwise, if a round ended without a winner:
   else if (params[0] === 'roundEnd') {
-    // Update the round result.
+    // Update the round result and show the approval button.
     roundResult.textContent = 'No winner';
     roundResultP.classList.remove('invisible');
-    // Show the approval button.
-    roundOKForm.classList.remove('invisible');
   }
   // Otherwise, if a player won a round:
   else if (params[0] === 'roundWinner') {
-    // Update the round result and the winner’s score.
+    // Update the round result and the winner’s score and show the approval button.
     document.getElementById('roundResult').textContent = `Won by player ${params[2]}`;
     document.getElementById('roundResultP').classList.remove('invisible');
     const winnerLI = playerLIOf(params[2]);
-    const winnerScoreSpan = winnerLI.querySelector('.roundsWon');
-    winnerScoreSpan.textContent = params[3];
-    // Show the approval button.
-    roundOKForm.classList.remove('invisible');
+    winnerLI.querySelector('.roundsWon').textContent = params[3];
   }
   // Otherwise, if a player approved finishing a round:
   else if (params[0] === 'roundOKd') {

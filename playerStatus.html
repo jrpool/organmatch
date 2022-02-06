@@ -36,7 +36,7 @@
             <p>
               [<span class="playerID"></span>]
               <span class="playerName"></span>
-              (rounds won: <span class="roundsWon"></span>)
+              (rounds won: <span class="roundsWon">0</span>)
             </p>
             <form id="patientForm" class="invisible">
               <h3>Patients</h3>
@@ -75,7 +75,7 @@
             <p>
               [<span class="playerID"></span>]
               <span class="playerName"></span>
-              (rounds won: <span class="roundsWon"></span>)
+              (rounds won: <span class="roundsWon">0</span>)
             </p>
             <p class="deciding invisible">Deciding</p>
             <p class="replaceP invisible">Replaced</p>
@@ -91,10 +91,9 @@
       <section id="roundInfo" class="invisible">
         <h2 id="roundH" aria-live="polite" class="invisible">Round <span id="roundID"></span></h2>
         <p class="roundOrganP">Organ: <span id="roundOrgan"></span></p>
-        <p id="roundResultP" class="invisible">Result: <span id="roundResult"></span></p>
-        <form id="roundOKForm" class="invisible">
-          <p id="roundOK">Finished reviewing result? <button>OK</button></p>
-        </form>
+        <p id="roundResultP" class="invisible">
+          Result: <span id="roundResult"></span> <button type="button">OK</button>
+        </p>
       </section>
       <p><a href="about" target="_blank">About OrganMatch (new tab)</a></p>
     </main>
