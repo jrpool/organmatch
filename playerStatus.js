@@ -31,6 +31,7 @@ const roundResultP = document.getElementById('roundResultP');
 const roundResult = document.getElementById('roundResult');
 // Populates and shows a newly added player in the player list.
 const populatePlayerLI = (playerLI, id, playerName) => {
+  playerLI.removeAttribute('id');
   playerLI.dataset.player = id;
   playerLI.querySelector('.playerID').textContent = id;
   playerLI.querySelector('.playerName').textContent = playerName;
@@ -75,7 +76,7 @@ patientForm.onsubmit = async event => {
   patientButton.parentElement.remove();
   // Disable the buttons in the form.
   patientForm.querySelectorAll('button').forEach(button => {
-    button.setAttribute('disabled');
+    button.setAttribute('disabled', '');
   });
   const task = patientTask.textContent;
   // If the submission was a bid:
@@ -229,15 +230,20 @@ news.onmessage = event => {
   }
   // Otherwise, if a turn started:
   else if (params[0] === 'turnStart') {
-    // Show whose turn it is.
+    // Remove any prior indicator of the turn player.
     const priorDecider = playerOL.querySelector('.playerBox.deciding');
     if (priorDecider) {
       priorDecider.classList.remove('deciding');
       priorDecider.querySelector('.deciding').classList.add('invisible');
     }
+    // Mark the turn player with a style.
     const turnPlayerBox = playerOL.querySelector(`.playerBox[data-player=${params[1]}]`);
     turnPlayerBox.classList.add('deciding');
-    turnPlayerBox.querySelector('.deciding').classList.remove('invisible');
+    // If the turn player is another player:
+    if (params[1] !== playerID) {
+      // Mark the turn player with a label.
+      turnPlayerBox.querySelector('.deciding').classList.remove('invisible');
+    }
   }
   // Otherwise, if a patient was added to the hand:
   else if (params[0] === 'handPatientAdd') {

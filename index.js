@@ -495,24 +495,26 @@ const requestHandler = (req, res) => {
         serveEventStart(res);
         // Add the response to the news streams.
         const sessionStreams = newsStreams[sessionCode];
-        sessionStreams[userID] = res;
-        // If the news stream is later closed:
-        req.on('close', () => {
-          // Delete the user’s news stream.
-          delete sessionStreams[userID];
-          // If the session data still exist:
-          const sessionData = sessions[sessionCode];
-          if (sessionData) {
-            const userNews = userID === 'Leader' ? 'The leader' : `Player ${userID}`;
-            // Notify all users that the session has been aborted.
-            broadcast(sessionCode, false, 'sessionEnd', `${userNews} quit`);
-            console.log(`Session ${sessionCode} aborted by ${userID}`);
-            // Add the end time to the session data.
-            sessionData.endTime = nowString();
-            // Record and delete the session and close all news streams.
-            exportSession(sessionData);
-          }
-        });
+        if (sessionStreams) {
+          sessionStreams[userID] = res;
+          // If the news stream is later closed:
+          req.on('close', () => {
+            // Delete the user’s news stream.
+            delete sessionStreams[userID];
+            // If the session data still exist:
+            const sessionData = sessions[sessionCode];
+            if (sessionData) {
+              const userNews = userID === 'Leader' ? 'The leader' : `Player ${userID}`;
+              // Notify all users that the session has been aborted.
+              broadcast(sessionCode, false, 'sessionEnd', `${userNews} quit`);
+              console.log(`Session ${sessionCode} aborted by ${userID}`);
+              // Add the end time to the session data.
+              sessionData.endTime = nowString();
+              // Record and delete the session and close all news streams.
+              exportSession(sessionData);
+            }
+          });
+        }
       }
       // Otherwise, if the session was started by the leader:
       else if (urlBase === 'startSession') {
