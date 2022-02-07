@@ -220,29 +220,44 @@ const startRound = sessionData => {
   const starterIndex = playerIDs.indexOf(roundStarterID);
   const roundEnderID = playerIDs[(starterIndex + playerCount - 1) % playerCount];
   const roundOrgan = piles.organs.latent.shift();
-  const roundNewsParts = [roundID, roundOrgan.organ, roundOrgan.group];
-  broadcast(sessionCode, false, 'roundStart', roundNewsParts.join('\t'));
-  console.log(`Round ${roundID} started`);
-  // Initialize a round record and add it to the session data.
-  sessionData.rounds.push({
-    roundID,
-    startTime: nowString(),
-    endTime: null,
-    roundStarterID,
-    roundEnderID,
-    roundOrgan,
-    winner: {
-      playerID: null,
-      patient: null
-    },
-    nextStarterID: null,
-    turnsEnded: 0,
-    turns: [],
-    bids: [],
-    oksBy: new Set()
-  });
-  // Start the first turn.
-  startTurn(sessionData);
+  // If there is still a supply of organs:
+  if (roundOrgan) {
+    const roundNewsParts = [roundID, roundOrgan.organ, roundOrgan.group];
+    broadcast(sessionCode, false, 'roundStart', roundNewsParts.join('\t'));
+    console.log(`Round ${roundID} started`);
+    // Initialize a round record and add it to the session data.
+    sessionData.rounds.push({
+      roundID,
+      startTime: nowString(),
+      endTime: null,
+      roundStarterID,
+      roundEnderID,
+      roundOrgan,
+      winner: {
+        playerID: null,
+        patient: null
+      },
+      nextStarterID: null,
+      turnsEnded: 0,
+      turns: [],
+      bids: [],
+      oksBy: new Set()
+    });
+    // Start the first turn.
+    startTurn(sessionData);
+  }
+  // Otherwise, i.e. if the supply of organs has been exhausted:
+  else {
+    // Notify all users of the session end.
+    const {players} = sessionData;
+    const maxRoundsWon = playerIDs
+    .map(id => players[id].roundsWon)
+    .reduce((max, current) => Math.max(max, current));
+    const winners = playerIDs.filter(id => players[id].roundsWon === maxRoundsWon);
+    broadcast(
+      sessionCode, false, 'sessionEnd', `Organs exhausted\t${winners.join(', ')}`
+    );
+  }
 };
 // Records and deletes a session.
 const exportSession = sessionData => {
@@ -325,7 +340,9 @@ const endRound = sessionData => {
     // Otherwise, i.e. if the winner has won the session:
     else {
       // Notify all users of the session end.
-      broadcast(sessionCode, false, 'sessionEnd', `Session ended; won by ${round.winner.playerID}`);
+      broadcast(
+        sessionCode, false, 'sessionEnd', `${player.roundsWon} rounds won\t${player.playerID}`
+      );
     }
   }
   // Otherwise, i.e. if there were no bids in the round:
@@ -382,7 +399,7 @@ const finishRound = sessionData => {
     }, []);
     sessionData.winnerIDs.push(...winnerIDs);
     // Notify the users.
-    broadcast(sessionCode, false, 'sessionStage', `Ended; won by ${winnerIDs.join(' and ')}`, );
+    broadcast(sessionCode, false, 'sessionEnd', `Ended; won by ${winnerIDs.join(' and ')}`, );
     // End the session.
     sessionData.endTime = nowString();
     console.log(`Session ${sessionCode} ended; won by ${winnerIDs.join(' and ')}`);
@@ -491,7 +508,7 @@ const requestHandler = (req, res) => {
             if (sessionData) {
               const userNews = userID === 'Leader' ? 'The leader' : `Player ${userID}`;
               // Notify all users that the session has been aborted.
-              broadcast(sessionCode, false, 'sessionEnd', `${userNews} quit`);
+              broadcast(sessionCode, false, 'sessionEnd', `${userNews} quit\tNone`);
               console.log(`Session ${sessionCode} aborted by ${userID}`);
               // Add the end time to the session data.
               sessionData.endTime = nowString();
@@ -592,7 +609,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted');
+          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted\tNone');
           console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
           // Record and delete the session.
           exportSession(sessionData);
@@ -648,7 +665,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted');
+          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted\tNone');
           console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
           // Record and delete the session.
           exportSession(sessionData);
@@ -687,7 +704,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted');
+          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted\tNone');
           console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
           // Record and delete the session.
           exportSession(sessionData);
@@ -716,7 +733,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionEnd', 'Allowed session time exhausted');
+          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted\tNone');
           console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
           // Record and delete the session.
           exportSession(sessionData);
