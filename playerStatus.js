@@ -78,12 +78,11 @@ patientForm.onsubmit = async event => {
   patientForm.querySelectorAll('button').forEach(button => {
     button.setAttribute('disabled', '');
   });
+  // Hide the task.
+  patientTaskLabel.classList.add('invisible');
   const task = patientTask.textContent;
-  // If the submission was a bid:
-  if (task === 'bid') {
-    // Reinitialize the influence form.
-    influenceClear();
-  }
+  // Reinitialize the influence form.
+  influenceClear();
   // Notify the server of the choice.
   await fetch(
     `patient?sessionCode=${sessionCode}&playerID=${playerID}&task=${task}&index=${index}`
@@ -202,7 +201,7 @@ news.onmessage = event => {
     // Add and show the session-end information.
     whySessionEnded.textContent = params[1];
     sessionWonBy.textContent = params[2];
-    sessionEnd.classList.add('invisible');
+    sessionEnd.classList.remove('invisible');
     // Close the messaging connection.
     news.close();
   }
