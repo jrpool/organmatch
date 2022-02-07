@@ -197,6 +197,7 @@ p.summary {
 .playerBox.deciding {
   border-style: solid;
   border-color: #060;
+  background-color: #f9faf8;
 }
 q {
   quotes: '“' '”';

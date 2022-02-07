@@ -565,6 +565,8 @@ const requestHandler = (req, res) => {
           }
           // Otherwise, i.e. if the move was a replacement:
           else {
+            // Add the replacement to the turn data.
+            turn.replaced = true;
             // Notify all players.
             broadcast(sessionCode, true, 'didReplace', playerID);
           }
@@ -663,19 +665,21 @@ const requestHandler = (req, res) => {
         if (timeLeft) {
           // Notify all users of the time left.
           broadcast(sessionCode, false, 'timeLeft', minutesLeft(versionData, sessionData));
+          // Add the waiver to the session data.
           const round = sessionData.rounds[sessionData.roundsEnded];
           const {turns} = round;
           const turn = turns[turns.length - 1];
           turn.influenceWaived = true;
-          // Send specifications, if any, for the next move to the player.
+          // If the player has not yet moved a patient:
           const hasMovedPatient = turn.bid || turn.replaced;
-          const player = sessionData.players[playerID];
-          const currentHand = player.hand.current;
-          const anySpecs = sendTasks(
-            hasMovedPatient, true, sessionCode, playerID, round, currentHand
-          );
-          // If there were none:
-          if (! anySpecs) {
+          if (! hasMovedPatient) {
+            // Send specifications for the patient move to the player.
+            const player = sessionData.players[playerID];
+            const currentHand = player.hand.current;
+            sendTasks(hasMovedPatient, true, sessionCode, playerID, round, currentHand);
+          }
+          // Otherwise, i.e. if the player has moved a patient and thus has no move options:
+          else {
             // End the turn.
             endTurn(sessionData);
           }
