@@ -340,7 +340,7 @@ news.onmessage = event => {
     const oldContent = influenceSpan.textContent;
     const addedContent = `${params[3]}(${params[1]})`;
     const wholeContent = oldContent === 'none' ? addedContent : `${oldContent}, ${addedContent}`;
-    influenceSpan.textContent = wholeContent;
+    influenceSpan.innerHTML = wholeContent;
     netSpan.textContent = params[4];
   }
   // Otherwise, if a turn ended:
