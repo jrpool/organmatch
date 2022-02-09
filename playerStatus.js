@@ -202,8 +202,6 @@ news.onmessage = event => {
     whySessionEnded.textContent = params[1];
     sessionWonBy.textContent = params[2];
     sessionEnd.classList.remove('invisible');
-    // Close the messaging connection.
-    news.close();
   }
   // Otherwise, if a round started:
   else if (params[0] === 'roundStart') {

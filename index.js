@@ -342,7 +342,7 @@ const endRound = sessionData => {
     else {
       // Notify all users of the session end.
       broadcast(
-        sessionCode, false, 'sessionEnd', `${player.roundsWon} rounds won\t${player.playerID}`
+        sessionCode, false, 'sessionEnd', `${player.roundsWon} rounds won\t${winningPlayerID}`
       );
     }
   }
