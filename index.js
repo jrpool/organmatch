@@ -97,9 +97,9 @@ const isMatch = (organ, patient) => {
 const influenceTargets = (versionData, round, influence) => {
   const limits = versionData.limits.influences;
   const {turnsEnded, bids} = round;
-  const playerID = round.turns[turnsEnded].playerID;
+  const {turnPlayerID} = round.turns[turnsEnded];
   const turnUseCount = bids.reduce(
-    (count, bid) => count + bid.influences.filter(use => use.playerID === playerID).length, 0
+    (count, bid) => count + bid.influences.filter(use => use.playerID === turnPlayerID).length, 0
   );
   const targetIndexes = [];
   // If the player is still permitted to use an influence:
@@ -110,7 +110,7 @@ const influenceTargets = (versionData, round, influence) => {
       // If any player is still permitted to influence it:
       if (influences.length < limits.perBid.max) {
         // If the turn player is still permitted to influence it:
-        const playerBidUseCount = influences.filter(use => use.playerID === playerID).length;
+        const playerBidUseCount = influences.filter(use => use.playerID === turnPlayerID).length;
         if (playerBidUseCount < limits.perTurnBid.max) {
           // If the influence type differs from that of all existing influences on the bid:
           if (influences.every(use => use.impact !== influence.impact)) {
@@ -121,7 +121,8 @@ const influenceTargets = (versionData, round, influence) => {
       }
     });
   }
-  return targetIndexes.map(index => bids[index].playerID);
+  const targetBidders = targetIndexes.map(index => bids[index].playerID);
+  return targetBidders;
 };
 // Returns specifications for a turn player’s next move.
 const taskSpecs = (hasMovedPatient, hasWaivedInfluence, round, hand) => {
