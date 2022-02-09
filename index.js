@@ -365,8 +365,8 @@ const roundOK = (sessionData, playerID) => {
   // If this is not the last required approval:
   const allOKd = round.oksBy.size === sessionData.playerIDs.length;
   if (! allOKd) {
-    // Notify all users.
-    broadcast(sessionData.sessionCode, false, 'roundOKd', playerID);
+    // Notify all players.
+    broadcast(sessionData.sessionCode, true, 'roundOKd', playerID);
   }
   // Return whether all players have approved.
   return allOKd;
@@ -645,7 +645,7 @@ const requestHandler = (req, res) => {
           );
           const turn = turns[turns.length - 1];
           turn.influenced = true;
-          // Notify all users of the use.
+          // Notify all players of the use.
           const {impact} = use.influence;
           const signedImpact = impact > 0 ? `+${impact}` : `&minus;${Math.abs(impact)}`;
           const useNews = `${playerID}\t${bidderID}\t${signedImpact}\t${bid.netPriority}`;
