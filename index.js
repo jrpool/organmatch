@@ -242,7 +242,7 @@ const startRound = sessionData => {
       turnsEnded: 0,
       turns: [],
       bids: [],
-      oksBy: new Set()
+      oksBy: []
     });
     // Start the first turn.
     startTurn(sessionData);
@@ -361,9 +361,10 @@ const endRound = sessionData => {
 const roundOK = (sessionData, playerID) => {
   // Add the approval to the session data.
   const round = sessionData.rounds[sessionData.roundsEnded - 1];
-  round.oksBy.add(playerID);
+  round.oksBy.push(playerID);
   // If this is not the last required approval:
-  const allOKd = round.oksBy.size === sessionData.playerIDs.length;
+  const okCount = new Set(round.oksBy);
+  const allOKd = okCount === sessionData.playerIDs.length;
   if (! allOKd) {
     // Notify all players.
     broadcast(sessionData.sessionCode, true, 'roundOKd', playerID);
