@@ -364,7 +364,7 @@ const roundOK = (sessionData, playerID) => {
   round.oksBy.push(playerID);
   // If this is not the last required approval:
   const okCount = new Set(round.oksBy);
-  const allOKd = okCount === sessionData.playerIDs.length;
+  const allOKd = okCount.size === sessionData.playerIDs.length;
   if (! allOKd) {
     // Notify all players.
     broadcast(sessionData.sessionCode, true, 'roundOKd', playerID);
