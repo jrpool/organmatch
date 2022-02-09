@@ -401,7 +401,10 @@ const finishRound = sessionData => {
     }, []);
     sessionData.winnerIDs.push(...winnerIDs);
     // Notify the users.
-    broadcast(sessionCode, false, 'sessionEnd', `Ended; won by ${winnerIDs.join(' and ')}`, );
+    const reason = roundWinnerID
+      ? `${versionData.limits.winningRounds.max} rounds won`
+      : 'organ supply exhausted';
+    broadcast(sessionCode, false, 'sessionEnd', `${reason}\t${winnerIDs.join(' and ')}`);
     // End the session.
     sessionData.endTime = nowString();
     console.log(`Session ${sessionCode} ended; won by ${winnerIDs.join(' and ')}`);

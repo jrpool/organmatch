@@ -89,12 +89,12 @@ news.onmessage = event => {
     // Remove the pre-start information from the page.
     preStart.remove();
     // Update the session stage.
-    stage.textContent = 'Started';
+    stage.textContent = 'started';
   }
   // Otherwise, if the session ended:
   else if (params[0] === 'sessionEnd') {
     // Update the stage information.
-    stage.textContent = 'Ended';
+    stage.textContent = 'ended';
     // Add and show the session-end information.
     whySessionEnded.textContent = params[1];
     sessionWonBy.textContent = params[2];
