@@ -131,13 +131,13 @@ roundOKButton.onclick = async () => {
   // Notify the server.
   await fetch(`roundOK?sessionCode=${sessionCode}&playerID=${playerID}`);
 };
-// Returns a patient description in format “«heart#23 + lung#5» ∂ ★3”.
+// Returns a patient description in format “«♥︎23 + ☃5» ∂ ★3”.
 const patientDigest = patientData => {
-  const organNewsItems = [`${svgs[patientData[0]]}#${patientData[1]}`];
+  const organNewsItems = [`${svgs[patientData[0]]}${patientData[1]}`];
   if (patientData[2]) {
-    organNewsItems.push(`${svgs[patientData[2]]}#${patientData[3]}`);
+    organNewsItems.push(`${svgs[patientData[2]]}${patientData[3]}`);
   }
-  const organNews = `&laquo;${organNewsItems.join(' + ')}&raquo;`;
+  const organNews = `&laquo;${organNewsItems.join('+')}&raquo;`;
   return `${[organNews, patientData[4], `&starf;${patientData[5]}`].join(' ')}`;
 };
 // Returns an influence-card description in format “bribe/-2”.
