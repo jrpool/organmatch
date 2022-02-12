@@ -1,27 +1,28 @@
-<svg version="1.1" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+<svg version="1.1" width="21" height="20" xmlns="http://www.w3.org/2000/svg">
 <title>lung</title>
+  <rect width="20" height="20" fill="#fff" />
   <path
-    fill="#a00"
-    stroke="#c00"
+    fill="#a0a"
+    stroke="#c0c"
     stroke-width="1"
     stroke-linejoin="round"
     d="
-      M 7,2
-      Q -1,6 1,18
-      Q 4,16 7,16
-      Q 9,5 7,2 z
+      M 8,2
+      Q 0,6 2,18
+      Q 5,16 8,16
+      Q 10,5 8,2 z
     "
   />
   <path
-    fill="#a00"
-    stroke="#c00"
+    fill="#a0a"
+    stroke="#c0c"
     stroke-width="1"
     stroke-linejoin="round"
     d="
-      M 12,2
-      Q 20,6 18,18
-      Q 15,16 12,16
-      Q 10,5 12,2 z
+      M 13,2
+      Q 21,6 19,18
+      Q 16,16 13,16
+      Q 11,5 13,2 z
     "
   />
   <path
@@ -31,9 +32,9 @@
     stroke-linejoin="round"
     stroke-linecap="round"
     d="
-      M 7,9
-      Q 9,5 9.5,1
-      Q 10,5 12,9
+      M 8,9
+      Q 10,5 10.5,1
+      Q 11,5 13,9
     "
   />
 </svg>
