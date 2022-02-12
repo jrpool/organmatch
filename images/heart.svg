@@ -1,0 +1,32 @@
+<svg version="1.1" width="16" height="20" xmlns="http://www.w3.org/2000/svg">
+<title>heart</title>
+  <path
+    fill="#a00"
+    stroke="#c00"
+    stroke-width="1"
+    stroke-linejoin="round"
+    d="
+      M 8,4
+      Q 20,5 8,18
+      Q -4,5 8,4 z
+    "
+  />
+  <path
+    stroke="#630"
+    stroke-width="2"
+    stroke-linecap="round"
+    d="
+      M 7,7
+      Q 5,5 6,2
+    "
+  />
+  <path
+    stroke="#909"
+    stroke-width="1"
+    stroke-linecap="round"
+    d="
+      M 9,8
+      Q 11,6 15,5
+    "
+  />
+</svg>

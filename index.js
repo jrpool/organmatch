@@ -21,6 +21,11 @@ const newsStreams = {};
 const versionData = require('./getVersion')('01');
 const key = fs.readFileSync(process.env.KEY);
 const cert = fs.readFileSync(process.env.CERT);
+// Organ images.
+const svgs = {};
+['heart', 'liver', 'lung'].forEach(organ => {
+  svgs[organ] = fs.readFileSync(`images/${organ}.svg`, 'utf8');
+});
 
 // ########## FUNCTIONS
 
@@ -812,7 +817,7 @@ const requestHandler = (req, res) => {
             // Serve a session-status page.
             serveTemplate(
               'playerStatus',
-              {sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount},
+              {sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount, svgs},
               res
             );
           }

@@ -1,0 +1,15 @@
+<svg version="1.1" width="30" height="20" xmlns="http://www.w3.org/2000/svg">
+<title>liver</title>
+  <path
+    fill="#740"
+    stroke="#960"
+    stroke-width="1"
+    stroke-linejoin="round"
+    d="
+      M 5,1
+      Q 15,0 28,1
+      Q 15,11 1,18
+      Q 2,4 5,1 z
+    "
+  />
+</svg>

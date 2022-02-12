@@ -1,7 +1,7 @@
 // playerStatus
 const params = JSON.parse(document.getElementById('params').textContent);
 // Add the session code and player count limits to the page.
-const {sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount} = params;
+const {sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount, svgs} = params;
 document.getElementById('sessionCode').textContent = sessionCode;
 document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
@@ -133,9 +133,9 @@ roundOKButton.onclick = async () => {
 };
 // Returns a patient description in format “«heart#23 + lung#5» ∂ ★3”.
 const patientDigest = patientData => {
-  const organNewsItems = [`${patientData[0]}#${patientData[1]}`];
+  const organNewsItems = [`${svgs[patientData[0]]}#${patientData[1]}`];
   if (patientData[2]) {
-    organNewsItems.push(`${patientData[2]}#${patientData[3]}`);
+    organNewsItems.push(`${svgs[patientData[2]]}#${patientData[3]}`);
   }
   const organNews = `&laquo;${organNewsItems.join(' + ')}&raquo;`;
   return `${[organNews, patientData[4], `&starf;${patientData[5]}`].join(' ')}`;
