@@ -22,9 +22,14 @@ const versionData = require('./getVersion')('01');
 const key = fs.readFileSync(process.env.KEY);
 const cert = fs.readFileSync(process.env.CERT);
 // Organ images.
-const svgs = {};
+const organSVGs = {};
 ['heart', 'liver', 'lung'].forEach(organ => {
-  svgs[organ] = fs.readFileSync(`images/${organ}.svg`, 'utf8');
+  organSVGs[organ] = fs.readFileSync(`images/${organ}.svg`, 'utf8');
+});
+// Influence images.
+const influenceSVGs = {};
+['addict', 'bribe', 'child', 'urgency'].forEach(influence => {
+  influenceSVGs[influence] = fs.readFileSync(`images/${influence}.svg`, 'utf8');
 });
 
 // ########## FUNCTIONS
@@ -816,8 +821,15 @@ const requestHandler = (req, res) => {
             playerData = getPlayers(sessionData);
             // Serve a session-status page.
             serveTemplate(
-              'playerStatus',
-              {sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount, svgs},
+              'playerStatus', {
+                sessionCode,
+                playerID,
+                playerData,
+                minPlayerCount,
+                maxPlayerCount,
+                organSVGs,
+                influenceSVGs
+              },
               res
             );
           }

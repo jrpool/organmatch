@@ -1,0 +1,8 @@
+<svg version="1.1" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+<title>bribe</title>
+  <rect width="20" height="20" fill="#fff" />
+  <circle cx="10" cy="10" r="9" fill="#f00" />
+  <circle cx="10" cy="10" r="8" fill="#fff" />
+  <text x="5" y="15" style="font-size: 1.25rem">$</text>
+  <line x1="3.63" y1="16.36" x2="16.36" y2="3.63" stroke="#f00" stroke-width="1" />
+</svg>

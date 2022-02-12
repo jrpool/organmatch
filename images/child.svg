@@ -1,0 +1,20 @@
+<svg version="1.1" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+<title>child</title>
+  <rect width="20" height="20" fill="#fff" />
+  <circle cx="10" cy="10" r="9" fill="#000" />
+  <circle cx="10" cy="10" r="8" fill="#fff" />
+  <circle cx="5" cy="11" r="1" fill="#000" />
+  <circle cx="12" cy="11.5" r="1" fill="#000" />
+  <line x1="7" y1="16" x2="9" y2="16.25" stroke="#000" stroke-width="0.5" />
+  <path
+    stroke="#533"
+    stroke-width="0.3"
+    stroke-linecap="round"
+    fill="none"
+    d="
+      M 10 2
+      Q 9,4 8,3
+      T 11,4
+    "
+  />
+</svg>

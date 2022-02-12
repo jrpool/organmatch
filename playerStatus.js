@@ -1,7 +1,9 @@
 // playerStatus
 const params = JSON.parse(document.getElementById('params').textContent);
 // Add the session code and player count limits to the page.
-const {sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount, svgs} = params;
+const {
+  sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount, organSVGs, influenceSVGs
+} = params;
 document.getElementById('sessionCode').textContent = sessionCode;
 document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
@@ -133,18 +135,18 @@ roundOKButton.onclick = async () => {
 };
 // Returns a patient description in format “«♥︎23 + ☃5» ∂ ★3”.
 const patientDigest = patientData => {
-  const organNewsItems = [`${svgs[patientData[0]]}${patientData[1]}`];
+  const organNewsItems = [`${organSVGs[patientData[0]]}${patientData[1]}`];
   if (patientData[2]) {
-    organNewsItems.push(`${svgs[patientData[2]]}${patientData[3]}`);
+    organNewsItems.push(`${organSVGs[patientData[2]]}${patientData[3]}`);
   }
   const organNews = `&laquo;${organNewsItems.join('+')}&raquo;`;
   return `${[organNews, patientData[4], `&starf;${patientData[5]}`].join(' ')}`;
 };
-// Returns an influence-card description in format “bribe/-2”.
+// Returns an influence-card description in format “☺︎-2”.
 const influenceDigest = influenceData => {
   const impact = influenceData[1];
   const impactNews = impact.startsWith('-') ? impact : `+${impact}`;
-  return `${influenceData[0]}/${impactNews}`;
+  return `${influenceSVGs[influenceData[0]]}${impactNews}`;
 };
 // Returns the list item of a player.
 const playerLIOf = id => playerOL.querySelector(`li[data-player=${id}]`);
