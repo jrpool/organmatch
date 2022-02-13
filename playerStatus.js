@@ -5,6 +5,7 @@ const {
   sessionCode,
   playerID,
   playerData,
+  groupData,
   minPlayerCount,
   maxPlayerCount,
   organSVGs,
@@ -139,9 +140,8 @@ roundOKButton.onclick = async () => {
   await fetch(`roundOK?sessionCode=${sessionCode}&playerID=${playerID}`);
 };
 // Colors and bolds a group symbol.
-const colorGroup = (versionData, groupKey) => {
-  const {groups} = versionData.matchGroups;
-  return `<span class="group ${groups[groupKey].class}">${groupKey}</span>`;
+const colorGroup = groupKey => {
+  return `<span class="group ${groupData[groupKey].class}">${groupKey}</span>`;
 };
 // Returns a patient description in format “«♥︎23 + ☃5» ∂ ★3”.
 const patientDigest = patientData => {
