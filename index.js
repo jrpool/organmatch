@@ -831,7 +831,7 @@ const requestHandler = (req, res) => {
                 sessionCode,
                 playerID,
                 playerData,
-                groupData: versionData.groups,
+                groupData: versionData.matchGroups.groups,
                 minPlayerCount,
                 maxPlayerCount,
                 organSVGs,
