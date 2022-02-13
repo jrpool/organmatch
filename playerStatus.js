@@ -209,7 +209,7 @@ news.onmessage = event => {
   else if (params[0] === 'roundStart') {
     // Change the round ID and organ.
     roundID.textContent = params[1];
-    roundOrgan.innerHTML = `${params[2]} ${params[3]}`;
+    roundOrgan.innerHTML = `${organSVGs[params[2]]}${params[3]}`;
     // Hide the round-end content and re-enable its approval button.
     roundResult.textContent = '';
     roundResultP.classList.add('invisible');
