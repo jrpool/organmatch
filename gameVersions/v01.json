@@ -3,16 +3,16 @@
     "description": "Categories of organs and of patients that must match",
     "groups": {
       "&alpha;": {
-        "color": "lavender"
+        "class": "groupAlpha"
       },
       "&beta;": {
-        "color": "mauve"
+        "class": "groupBeta"
       },
       "&gamma;": {
-        "color": "green"
+        "class": "groupGamma"
       },
       "&delta;": {
-        "color": "blue"
+        "class": "groupDelta"
       }
     }
   },

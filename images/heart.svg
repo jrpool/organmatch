@@ -14,7 +14,7 @@
   />
   <path
     stroke="#630"
-    stroke-width="2"
+    stroke-width="3"
     stroke-linecap="round"
     d="
       M 7,7
@@ -23,10 +23,10 @@
   />
   <path
     stroke="#909"
-    stroke-width="1"
+    stroke-width="2"
     stroke-linecap="round"
     d="
-      M 9,8
+      M 9,9
       Q 11,6 15,5
     "
   />

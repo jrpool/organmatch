@@ -138,6 +138,11 @@ roundOKButton.onclick = async () => {
   // Notify the server.
   await fetch(`roundOK?sessionCode=${sessionCode}&playerID=${playerID}`);
 };
+// Colors and bolds a group symbol.
+const colorGroup = (versionData, groupKey) => {
+  const {groups} = versionData.matchGroups;
+  return `<span class="group ${groups[groupKey].class}">${groupKey}</span>`;
+};
 // Returns a patient description in format “«♥︎23 + ☃5» ∂ ★3”.
 const patientDigest = patientData => {
   const organNewsItems = [`${organSVGs[patientData[0]]}${patientData[1]}`];
@@ -145,7 +150,7 @@ const patientDigest = patientData => {
     organNewsItems.push(`${organSVGs[patientData[2]]}${patientData[3]}`);
   }
   const organNews = `&laquo;${organNewsItems.join('+')}&raquo;`;
-  return `${[organNews, patientData[4], `&starf;${patientData[5]}`].join(' ')}`;
+  return `${[organNews, colorGroup(patientData[4]), `&starf;${patientData[5]}`].join(' ')}`;
 };
 // Returns an influence-card description in format “☺︎-2”.
 const influenceDigest = influenceData => {

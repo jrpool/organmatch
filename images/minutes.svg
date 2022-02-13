@@ -2,16 +2,16 @@
 <title>minutes left</title>
   <rect width="20" height="20" fill="#fff" />
   <circle cx="10" cy="10" r="9" fill="#333" />
-  <circle cx="10" cy="10" r="8" fill="#fff" />
+  <circle cx="10" cy="10" r="7.5" fill="#fff" />
   <path
     stroke="#666"
-    stroke-width="1.5"
+    stroke-width="0.5"
     stroke-linecap="round"
     fill="#666"
     d="
-      M 14 15
-      Q 8,3 6,5
-      T 14,15
+      M 14 14
+      Q 9,5 7,7
+      T 14,14
     "
   />
 </svg>

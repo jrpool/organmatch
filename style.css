@@ -74,6 +74,21 @@ fieldset {
   padding: 0;
   border: none;
 }
+.group {
+  font-weight: 700;
+}
+.groupAlpha {
+  color: orangered;
+}
+.groupBeta {
+  color: saddlebrown;
+}
+.groupGamma {
+  color: lime;
+}
+.groupDelta {
+  color: blue;
+}
 h1, h2 {
   margin: 0.5rem, 0;
 }
