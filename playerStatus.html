@@ -17,7 +17,7 @@
     <main>
       <header>
         <h1>OrganMatch: Session <span id="sessionCode"></span></h1>
-        <p>Minutes left: <span id="timeLeft"></span></p>
+        <p><span id="minutes"></span><span id="timeLeft"></span></p>
         <section id="sessionEnd" class="invisible">
           <h2>Session end</h2>
           <p>Reason: <span id="whySessionEnded"></span></p>
@@ -36,13 +36,13 @@
             <p>
               [<span class="playerID"></span>]
               <span class="playerName"></span>
-              (rounds won: <span class="roundsWon">0</span>)
+              (&#x1f64c; <span class="roundsWon">0</span>)
             </p>
             <form id="patientForm" class="invisible">
-              <h3>Patients</h3>
+              <h3>&#x1f912;</h3>
               <fieldset>
                 <legend id="patientTaskLabel" aria-live="polite" class="invisible">
-                  Choose a patient to <strong><span id="patientTask"></span></strong>
+                  <strong><span id="patientTask"></span></strong>
                 </legend>
                 <ul>
                   <li id="handPatientLITemplate" aria-live="polite" class="invisible">
@@ -52,7 +52,7 @@
               </fieldset>
             </form>
             <form id="influenceForm" class="invisible">
-              <h3>Influences</h3>
+              <h3>&plusmn;</h3>
               <fieldset>
                 <legend id="influenceLabel" aria-live="polite" class="invisible">
                   You <strong>may</strong> choose to influence a player&rsquo;s bid
@@ -66,33 +66,32 @@
               </fieldset>
             </form>
             <p class="bidP invisible">
-              Bid: <span class="bid"></span>.
-              &plusmn: <span class="bidInfluences">none</span>.
-              Net &starf; <span class="bidNet"></span>.
+              &#x270b <span class="bid"></span>.
+              &plusmn: <span class="bidInfluences">none</span>
+              = &starf; <span class="bidNet"></span>
             </p>
           </li>
           <li id="playerLITemplate" class="playerBox themBox invisible" data-player="Y">
             <p>
               [<span class="playerID"></span>]
               <span class="playerName"></span>
-              (rounds won: <span class="roundsWon">0</span>)
+              (&#x1f64c; <span class="roundsWon">0</span>)
             </p>
-            <p class="deciding invisible">Deciding</p>
-            <p class="replaceP invisible">Replaced</p>
+            <p class="deciding invisible">&hellip;</p>
+            <p class="replaceP invisible">&#x267b;</p>
             <p class="bidP invisible">
-              Bid: <span class="bid"></span>.
-              &plusmn: <span class="bidInfluences">none</span>.
-              Net &starf; <span class="bidNet"></span>.
+              &#x270b <span class="bid"></span>.
+              &plusmn: <span class="bidInfluences">none</span>
+              = &starf; <span class="bidNet"></span>
             </p>
-            <p class="readyP invisible">Ready</p>
+            <p class="readyP invisible">&#x1f197;</p>
           </li>
         </ol>
       </section>
       <section id="roundInfo" class="invisible">
-        <h2 id="roundH" aria-live="polite" class="invisible">Round <span id="roundID"></span></h2>
-        <p class="roundOrganP">Organ: <span id="roundOrgan"></span></p>
+        <p class="roundOrganP"><span id="roundID"></span>: <span id="roundOrgan"></span></p>
         <p id="roundResultP" class="invisible">
-          Result: <span id="roundResult"></span> <button type="button">OK</button>
+          &#x1f64c;: <span id="roundResult"></span> <button type="button">&#x1f197;</button>
         </p>
       </section>
       <p><a href="about" target="_blank">About OrganMatch (new tab)</a></p>

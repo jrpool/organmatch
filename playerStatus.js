@@ -2,11 +2,19 @@
 const params = JSON.parse(document.getElementById('params').textContent);
 // Add the session code and player count limits to the page.
 const {
-  sessionCode, playerID, playerData, minPlayerCount, maxPlayerCount, organSVGs, influenceSVGs
+  sessionCode,
+  playerID,
+  playerData,
+  minPlayerCount,
+  maxPlayerCount,
+  organSVGs,
+  influenceSVGs,
+  minutes
 } = params;
 document.getElementById('sessionCode').textContent = sessionCode;
 document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
+document.getElementById('minutes').innerHTML = minutes;
 // Identify the page elements to be acted on.
 const timeLeft = document.getElementById('timeLeft');
 const sessionEnd = document.getElementById('sessionEnd');
@@ -25,7 +33,6 @@ const influenceLITemplate = document.getElementById('influenceLITemplate');
 const influenceNone = document.getElementById('influenceNone');
 const playerLITemplate = document.getElementById('playerLITemplate');
 const roundInfo = document.getElementById('roundInfo');
-const roundH = document.getElementById('roundH');
 const roundID = document.getElementById('roundID');
 const roundOrgan = document.getElementById('roundOrgan');
 const roundResultP = document.getElementById('roundResultP');
@@ -189,7 +196,6 @@ news.onmessage = event => {
     preStart.remove();
     // Make the round information visible.
     roundInfo.classList.remove('invisible');
-    roundH.classList.remove('invisible');
   }
   // Otherwise, if the session ended:
   else if (params[0] === 'sessionEnd') {
@@ -277,7 +283,7 @@ news.onmessage = event => {
   // Otherwise, if the player was told to choose a patient to replace:
   else if (params[0] === 'chooseReplace') {
     // Add this task to the page and enable all the player buttons.
-    patientTask.textContent = 'replace';
+    patientTask.innerHTML = '&#x267b;';
     patientForm.querySelectorAll('button').forEach(button => {
       button.removeAttribute('disabled');
     });
@@ -287,7 +293,7 @@ news.onmessage = event => {
   // Otherwise, if the player was told to choose a patient to bid:
   else if (params[0] === 'chooseBid') {
     // Add this task to the page and enable the eligible player buttons.
-    patientTask.textContent = 'bid';
+    patientTask.innerHTML = '&#x270b;';
     const paramNums = params.slice(1).map(param => Number.parseInt(param));
     patientForm.querySelectorAll('button').forEach((button, index) => {
       if (paramNums.includes(index)) {
@@ -358,7 +364,7 @@ news.onmessage = event => {
   // Otherwise, if a round ended without a winner:
   else if (params[0] === 'roundEnd') {
     // Update the round result and show the approval button.
-    roundResult.textContent = 'No winner';
+    roundResult.innerHTML = '&#x2205';
     roundResultP.classList.remove('invisible');
   }
   // Otherwise, if a player won a round:
