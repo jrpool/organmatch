@@ -27,7 +27,6 @@ const patientForm = document.getElementById('patientForm');
 const patientTask = document.getElementById('patientTask');
 const handPatientLITemplate = document.getElementById('handPatientLITemplate');
 const influenceForm = document.getElementById('influenceForm');
-const influenceLabel = document.getElementById('influenceLabel');
 const influenceLITemplate = document.getElementById('influenceLITemplate');
 const influenceNone = document.getElementById('influenceNone');
 const playerLITemplate = document.getElementById('playerLITemplate');
@@ -67,7 +66,6 @@ const influenceClear = () => {
     button.remove();
   });
   // Hide the choice content in the form.
-  influenceLabel.classList.add('invisible');
   influenceNone.classList.add('invisible');
 };
 // When the patient form is submitted:
@@ -304,7 +302,6 @@ news.onmessage = event => {
   // Otherwise, if the player was offered bids to use an influence card on:
   else if (params[0] === 'chooseInfluence') {
     // Enable the eligible buttons for the influence card.
-    influenceLabel.classList.remove('invisible');
     const influenceLI = influenceForm.querySelector(
       `li:nth-child(${Number.parseInt(params[1]) + 1})`
     );
