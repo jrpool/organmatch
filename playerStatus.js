@@ -89,7 +89,7 @@ patientForm.onsubmit = async event => {
   });
   // Hide the task.
   patientTaskLabel.classList.add('invisible');
-  const task = patientTask.textContent;
+  const {task} = patientTask.dataset;
   // Reinitialize the influence form.
   influenceClear();
   // Notify the server of the choice.
@@ -283,6 +283,7 @@ news.onmessage = event => {
   // Otherwise, if the player was told to choose a patient to replace:
   else if (params[0] === 'chooseReplace') {
     // Add this task to the page and enable all the player buttons.
+    patientTask.setAttribute('data-task', 'replace');
     patientTask.innerHTML = '&#x267b;';
     patientForm.querySelectorAll('button').forEach(button => {
       button.removeAttribute('disabled');
@@ -293,6 +294,7 @@ news.onmessage = event => {
   // Otherwise, if the player was told to choose a patient to bid:
   else if (params[0] === 'chooseBid') {
     // Add this task to the page and enable the eligible player buttons.
+    patientTask.setAttribute('data-task', 'bid');
     patientTask.innerHTML = '&#x270b;';
     const paramNums = params.slice(1).map(param => Number.parseInt(param));
     patientForm.querySelectorAll('button').forEach((button, index) => {
