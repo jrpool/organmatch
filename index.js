@@ -270,8 +270,9 @@ const startRound = sessionData => {
     .map(id => players[id].roundsWon)
     .reduce((max, current) => Math.max(max, current));
     const winners = playerIDs.filter(id => players[id].roundsWon === maxRoundsWon);
+    const organSum = Object.values(organSVGs).join(' + ');
     broadcast(
-      sessionCode, false, 'sessionEnd', `Organs exhausted\t${winners.join(', ')}`
+      sessionCode, false, 'sessionEnd', `${organSum} = 0\t${winners.join(', ')}`
     );
   }
 };
@@ -357,7 +358,7 @@ const endRound = sessionData => {
     else {
       // Notify all users of the session end.
       broadcast(
-        sessionCode, false, 'sessionEnd', `${player.roundsWon} rounds won\t${winningPlayerID}`
+        sessionCode, false, 'sessionEnd', `🙌 ${player.roundsWon}\t${winningPlayerID}`
       );
     }
   }
