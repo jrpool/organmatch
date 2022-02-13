@@ -53,6 +53,7 @@ button {
   border-width: 0.25rem;
   border-style: solid;
   border-color: #000;
+  font-family: serif;
   color: #fff;
   background-color: #00c;
 }
