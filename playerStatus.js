@@ -150,7 +150,7 @@ const patientDigest = patientData => {
     organNewsItems.push(`${organSVGs[patientData[2]]}${patientData[3]}`);
   }
   const organNews = `&laquo;${organNewsItems.join('+')}&raquo;`;
-  return `${[organNews, colorGroup(patientData[4]), `&starf;${patientData[5]}`].join(' ')}`;
+  return `${organNews}${colorGroup(patientData[4])}&starf;${patientData[5]}`;
 };
 // Returns an influence-card description in format “☺︎-2”.
 const influenceDigest = influenceData => {

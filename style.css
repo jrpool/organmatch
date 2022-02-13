@@ -76,6 +76,7 @@ fieldset {
 }
 .group {
   font-weight: 700;
+  color: #000;
 }
 .groupAlpha {
   background-color: yellow;
