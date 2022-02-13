@@ -833,7 +833,8 @@ const requestHandler = (req, res) => {
                 minPlayerCount,
                 maxPlayerCount,
                 organSVGs,
-                influenceSVGs
+                influenceSVGs,
+                etcSVGs
               },
               res
             );
