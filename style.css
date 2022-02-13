@@ -50,7 +50,7 @@ button {
   display: inline-block;
   font-size: 1.25rem;
   border-radius: 1rem;
-  border-width: 0.25rem;
+  border-width: 0.2rem;
   border-style: solid;
   border-color: #000;
   font-family: serif;
@@ -59,6 +59,7 @@ button {
 }
 button[disabled] {
   border: none;
+  border-radius: 0;
   color: #333;
   background-color: #ddd;
 }
