@@ -141,7 +141,7 @@ roundOKButton.onclick = async () => {
 };
 // Colors and bolds a group symbol.
 const colorGroup = groupKey => {
-  return `<span class="group ${groupData[groupKey].class}">${groupKey}</span>`;
+  return `<span class="group ${groupData[groupKey].class}"> ${groupKey} </span>`;
 };
 // Returns a patient description in format “«♥︎23 + ☃5» ∂ ★3”.
 const patientDigest = patientData => {
