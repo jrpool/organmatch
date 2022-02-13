@@ -225,7 +225,7 @@ news.onmessage = event => {
       infoSpan.textContent = '';
     });
     playerOL.querySelectorAll('.bidInfluences').forEach(influenceSpan => {
-      influenceSpan.textContent = 'none';
+      influenceSpan.textContent = '∅';
     });
     playerOL.querySelectorAll('.replaceP, .bidP, .readyP').forEach(infoP => {
       infoP.classList.add('invisible');
@@ -284,7 +284,7 @@ news.onmessage = event => {
   else if (params[0] === 'chooseReplace') {
     // Add this task to the page and enable all the player buttons.
     patientTask.setAttribute('data-task', 'replace');
-    patientTask.innerHTML = '&#x267b;';
+    patientTask.textContent = '♻';
     patientForm.querySelectorAll('button').forEach(button => {
       button.removeAttribute('disabled');
     });
@@ -295,7 +295,7 @@ news.onmessage = event => {
   else if (params[0] === 'chooseBid') {
     // Add this task to the page and enable the eligible player buttons.
     patientTask.setAttribute('data-task', 'bid');
-    patientTask.innerHTML = '&#x270b;';
+    patientTask.textContent = '✋';
     const paramNums = params.slice(1).map(param => Number.parseInt(param));
     patientForm.querySelectorAll('button').forEach((button, index) => {
       if (paramNums.includes(index)) {
@@ -326,7 +326,7 @@ news.onmessage = event => {
     const player = playerLIOf(params[1]);
     const patient = patientDigest(params.slice(2));
     player.querySelector('.bid').innerHTML = patient;
-    player.querySelector('.bidInfluences').textContent = 'none';
+    player.querySelector('.bidInfluences').textContent = '∅';
     player.querySelector('.bidNet').textContent = params[7];
     player.querySelector('.bidP').classList.remove('invisible');
   }
@@ -347,7 +347,7 @@ news.onmessage = event => {
     const netSpan = bidderLI.querySelector('.bidNet');
     const oldContent = influenceSpan.textContent;
     const addedContent = `${params[3]}(${params[1]})`;
-    const wholeContent = oldContent === 'none' ? addedContent : `${oldContent}, ${addedContent}`;
+    const wholeContent = oldContent === '∅' ? addedContent : `${oldContent}, ${addedContent}`;
     influenceSpan.innerHTML = wholeContent;
     netSpan.textContent = params[4];
   }
@@ -366,7 +366,7 @@ news.onmessage = event => {
   // Otherwise, if a round ended without a winner:
   else if (params[0] === 'roundEnd') {
     // Update the round result and show the approval button.
-    roundResult.innerHTML = '&#x2205';
+    roundResult.textContent = '∅';
     roundResultP.classList.remove('invisible');
   }
   // Otherwise, if a player won a round:
