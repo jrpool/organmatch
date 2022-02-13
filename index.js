@@ -31,6 +31,11 @@ const influenceSVGs = {};
 ['addict', 'bribe', 'child', 'urgency'].forEach(influence => {
   influenceSVGs[influence] = fs.readFileSync(`images/${influence}.svg`, 'utf8');
 });
+// Other images.
+const etcSVGs = {};
+['minutes'].forEach(item => {
+  etcSVGs[item] = fs.readFileSync(`images/${item}.svg`, 'utf8');
+});
 
 // ########## FUNCTIONS
 

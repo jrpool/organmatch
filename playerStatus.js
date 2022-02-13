@@ -9,12 +9,12 @@ const {
   maxPlayerCount,
   organSVGs,
   influenceSVGs,
-  minutes
+  etcSVGs
 } = params;
 document.getElementById('sessionCode').textContent = sessionCode;
 document.getElementById('minPlayerCount').textContent = minPlayerCount;
 document.getElementById('maxPlayerCount').textContent = maxPlayerCount;
-document.getElementById('minutes').innerHTML = minutes;
+document.getElementById('minutes').innerHTML = etcSVGs.minutes;
 // Identify the page elements to be acted on.
 const timeLeft = document.getElementById('timeLeft');
 const sessionEnd = document.getElementById('sessionEnd');

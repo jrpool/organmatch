@@ -30,7 +30,6 @@
         <p>The allowed number of players is from <span id="minPlayerCount"></span> to <span id="maxPlayerCount"></span>.</p>
       </div>
       <section id="playersSec">
-        <h2>Players</h2>
         <ol id="players" aria-live="polite">
           <li id="you" class="playerBox youBox" data-player="X">
             <p>
@@ -54,9 +53,7 @@
             <form id="influenceForm" class="invisible">
               <h3>&plusmn;</h3>
               <fieldset>
-                <legend id="influenceLabel" aria-live="polite" class="invisible">
-                  You <strong>may</strong> choose to influence a player&rsquo;s bid
-                </legend>
+                <legend id="influenceLabel" aria-live="polite" class="invisible">&plusmn;?</legend>
                 <ul>
                   <li id="influenceLITemplate" aria-live="polite" class="invisible">
                     <span></span>
@@ -89,7 +86,8 @@
         </ol>
       </section>
       <section id="roundInfo" class="invisible">
-        <p class="roundOrganP"><span id="roundID"></span>: <span id="roundOrgan"></span></p>
+        <h2 id=""roundID"></h2>
+        <p class="roundOrganP"><span id="roundOrgan"></span></p>
         <p id="roundResultP" class="invisible">
           &#x1f64c;: <span id="roundResult"></span> <button type="button">&#x1f197;</button>
         </p>
