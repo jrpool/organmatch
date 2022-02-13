@@ -372,7 +372,7 @@ news.onmessage = event => {
   // Otherwise, if a player won a round:
   else if (params[0] === 'roundWinner') {
     // Update the round result and the winner’s score and show the approval button.
-    document.getElementById('roundResult').textContent = `Won by player ${params[2]}`;
+    document.getElementById('roundResult').textContent = `🙌 ${params[2]}`;
     document.getElementById('roundResultP').classList.remove('invisible');
     const winnerLI = playerLIOf(params[2]);
     winnerLI.querySelector('.roundsWon').textContent = params[3];
