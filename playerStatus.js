@@ -24,7 +24,6 @@ const preStart = document.getElementById('preStart');
 const playerOL = document.getElementById('players');
 const you = document.getElementById('you');
 const patientForm = document.getElementById('patientForm');
-const patientTaskLabel = document.getElementById('patientTaskLabel');
 const patientTask = document.getElementById('patientTask');
 const handPatientLITemplate = document.getElementById('handPatientLITemplate');
 const influenceForm = document.getElementById('influenceForm');
@@ -87,11 +86,12 @@ patientForm.onsubmit = async event => {
   patientForm.querySelectorAll('button').forEach(button => {
     button.setAttribute('disabled', '');
   });
-  // Hide the task.
-  patientTaskLabel.classList.add('invisible');
-  const {task} = patientTask.dataset;
+  // Remove the task.
+  patientTask.textContent = '';
   // Reinitialize the influence form.
   influenceClear();
+  const {task} = patientTask.dataset;
+  patientTask.setAttribute('data-task', '');
   // Notify the server of the choice.
   await fetch(
     `patient?sessionCode=${sessionCode}&playerID=${playerID}&task=${task}&index=${index}`
@@ -288,8 +288,6 @@ news.onmessage = event => {
     patientForm.querySelectorAll('button').forEach(button => {
       button.removeAttribute('disabled');
     });
-    // Show the task.
-    patientTaskLabel.classList.remove('invisible');
   }
   // Otherwise, if the player was told to choose a patient to bid:
   else if (params[0] === 'chooseBid') {
@@ -302,8 +300,6 @@ news.onmessage = event => {
         button.removeAttribute('disabled');
       }
     });
-    // Show the task.
-    patientTaskLabel.classList.remove('invisible');
   }
   // Otherwise, if the player was offered bids to use an influence card on:
   else if (params[0] === 'chooseInfluence') {
