@@ -59,6 +59,7 @@ button {
 button[disabled] {
   border: none;
   color: #333;
+  background-color: #ddd;
 }
 button:hover:not([disabled]) {
   color: #000;
