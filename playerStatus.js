@@ -324,7 +324,7 @@ news.onmessage = event => {
     const player = playerLIOf(params[1]);
     const patient = patientDigest(params.slice(2));
     player.querySelector('.bid').innerHTML = patient;
-    player.querySelector('.bidInfluences').textContent = '∅';
+    player.querySelector('.bidInfluences').textContent = '';
     player.querySelector('.bidNet').textContent = params[7];
     player.querySelector('.bidP').classList.remove('invisible');
   }
