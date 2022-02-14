@@ -141,7 +141,7 @@ roundOKButton.onclick = async () => {
 };
 // Colors and bolds a group symbol.
 const colorGroup = groupKey => {
-  return `<span class="group ${groupData[groupKey].class}"> ${groupKey} </span>`;
+  return `<span class="group ${groupData[groupKey].class}">&nbsp;${groupKey}&nbsp;</span>`;
 };
 // Returns a patient description in format “«♥︎23 + ☃5» ∂ ★3”.
 const patientDigest = patientData => {
@@ -228,7 +228,7 @@ news.onmessage = event => {
       infoSpan.textContent = '';
     });
     playerOL.querySelectorAll('.bidInfluences').forEach(influenceSpan => {
-      influenceSpan.textContent = '∅';
+      influenceSpan.textContent = '';
     });
     playerOL.querySelectorAll('.replaceP, .bidP, .readyP').forEach(infoP => {
       infoP.classList.add('invisible');

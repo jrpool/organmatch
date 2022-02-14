@@ -104,9 +104,20 @@ p.summary {
   font-weight: 700;
   font-style: italic;
 }
-#patientForm ul {
+#patientForm legend {
+  position: relative;
+  top: 2.5rem;
+}
+#patientForm > fieldset {
+  margin-top: -1.5rem;
+  padding-top: 0;
+}
+#patientForm > fieldset, #patientForm ul {
   display: flex;
   flex-wrap: wrap;
+}
+#patientForm ul {
+  margin-left: 1.5rem;
   list-style-type: none;
 }
 .playerBox {
