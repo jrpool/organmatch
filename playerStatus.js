@@ -350,7 +350,7 @@ news.onmessage = event => {
     const netSpan = bidderLI.querySelector('.bidNet');
     const oldContent = influenceSpan.textContent;
     const addedContent = `${params[3]}(${params[1]})`;
-    const wholeContent = oldContent === '∅' ? addedContent : `${oldContent}, ${addedContent}`;
+    const wholeContent = oldContent === '∅' ? addedContent : `${oldContent} ${addedContent}`;
     influenceSpan.innerHTML = wholeContent;
     netSpan.textContent = params[4];
   }
