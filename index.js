@@ -155,13 +155,10 @@ const taskSpecs = (hasMovedPatient, hasWaivedInfluence, round, hand) => {
     .filter(index => index > -1);
     specs.bid = matchIndexes;
   }
-  // If the player has not waived influence:
-  if (! hasWaivedInfluence) {
-    // Add the permitted influence uses to the specifications.
-    specs.influence = influences.map(
-      influence => influenceTargets(versionData, round, influence)
-    );
-  }
+  // Add the permitted influence uses to the specifications.
+  specs.influence = influences.map(
+    influence => influenceTargets(versionData, round, influence)
+  );
   // Return the specifications.
   return specs;
 };
@@ -381,6 +378,8 @@ const roundOK = (sessionData, playerID) => {
   // Return whether all players have approved.
   return allOKd;
 };
+// Returns the image of an organ.
+const organImage = organName => `<img src="images/${organName}.svg" alt="${organName}>`;
 // Processes a post-approval round end.
 const finishRound = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded - 1];
@@ -410,10 +409,12 @@ const finishRound = sessionData => {
     }, []);
     sessionData.winnerIDs.push(...winnerIDs);
     // Notify the users.
+    const organs = ['heart', 'lung', 'liver'];
+    const organImages = organs.map(organ => organImage(organ)).join('');
     const reason = roundWinnerID
-      ? `${versionData.limits.winningRounds.max} rounds won`
-      : 'organ supply exhausted';
-    broadcast(sessionCode, false, 'sessionEnd', `${reason}\t${winnerIDs.join(' and ')}`);
+      ? `🙌 ${versionData.limits.winningRounds.max}`
+      : `${organImages} = 0`;
+    broadcast(sessionCode, false, 'sessionEnd', `${reason}\t${winnerIDs.join(', ')}`);
     // End the session.
     sessionData.endTime = nowString();
     console.log(`Session ${sessionCode} ended; won by ${winnerIDs.join(' and ')}`);
@@ -453,6 +454,16 @@ const minutesLeft = (versionData, sessionData) => {
   const creationTime = (new Date(sessionData.creationTime)).getTime();
   const minutesElapsed = Math.round(((Date.now() - creationTime)) / 60000);
   return Math.max(0, versionData.limits.sessionTime.max - minutesElapsed);
+};
+// Notifies all users that no time is left.
+const noTimeNotice = sessionCode => {
+  broadcast(
+    sessionCode,
+    false,
+    'sessionEnd',
+    '<img src="images/minutes.svg" alt="minutes left> = 0\t∅'
+  );
+  console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
 };
 // Handles requests.
 const requestHandler = (req, res) => {
@@ -530,7 +541,7 @@ const requestHandler = (req, res) => {
             if (sessionData) {
               const userNews = userID === 'Leader' ? 'The leader' : `Player ${userID}`;
               // Notify all users that the session has been aborted.
-              broadcast(sessionCode, false, 'sessionEnd', `${userNews} quit\tNone`);
+              broadcast(sessionCode, false, 'sessionEnd', `${userNews} ❌\tNone`);
               console.log(`Session ${sessionCode} aborted by ${userID}`);
               // Add the end time to the session data.
               sessionData.endTime = nowString();
@@ -631,8 +642,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted\tNone');
-          console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
+          noTimeNotice(sessionCode);
           // Record and delete the session.
           exportSession(sessionData);
         }
@@ -687,8 +697,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted\tNone');
-          console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
+          noTimeNotice(sessionCode);
           // Record and delete the session.
           exportSession(sessionData);
         }
@@ -726,8 +735,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted\tNone');
-          console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
+          noTimeNotice(sessionCode);
           // Record and delete the session.
           exportSession(sessionData);
         }
@@ -755,8 +763,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if no time is left:
         else {
           // Notify all users that the session has been ended.
-          broadcast(sessionCode, false, 'sessionEnd', 'Allowed time exhausted\tNone');
-          console.log(`Session ${sessionCode} stopped for exhausting allowed time`);
+          noTimeNotice(sessionCode);
           // Record and delete the session.
           exportSession(sessionData);
         }

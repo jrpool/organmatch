@@ -22,7 +22,7 @@ const sessionEnd = document.getElementById('sessionEnd');
 const whySessionEnded = document.getElementById('whySessionEnded');
 const sessionWonBy = document.getElementById('sessionWonBy');
 const preStart = document.getElementById('preStart');
-const playerOL = document.getElementById('players');
+const playerUL = document.getElementById('players');
 const you = document.getElementById('you');
 const patientForm = document.getElementById('patientForm');
 const patientTask = document.getElementById('patientTask');
@@ -160,7 +160,7 @@ const influenceDigest = influenceData => {
   return `${influenceSVGs[influenceData[0]]}${impactNews}`;
 };
 // Returns the list item of a player.
-const playerLIOf = id => playerOL.querySelector(`li[data-player=${id}]`);
+const playerLIOf = id => playerUL.querySelector(`li[data-player=${id}]`);
 
 // MESSAGE HANDLING
 
@@ -185,13 +185,13 @@ news.onmessage = event => {
     playerLITemplate.remove();
     // Reorder the players in the list.
     const playerLIs = {};
-    Array.from(playerOL.children).forEach(playerLI => {
+    Array.from(playerUL.children).forEach(playerLI => {
       const {player} = playerLI.dataset;
       playerLIs[player] = playerLI;
       playerLI.remove();
     });
     params.slice(1).forEach(playerID => {
-      playerOL.insertAdjacentElement('afterbegin', playerLIs[playerID]);
+      playerUL.insertAdjacentElement('afterbegin', playerLIs[playerID]);
     });
   }
   // Otherwise, if the session started:
@@ -204,7 +204,7 @@ news.onmessage = event => {
   // Otherwise, if the session ended:
   else if (params[0] === 'sessionEnd') {
     // Hide the players’ round information.
-    playerOL.querySelectorAll('.replaceP, .bidP, .readyP').forEach(infoP => {
+    playerUL.querySelectorAll('.replaceP, .bidP, .readyP').forEach(infoP => {
       infoP.classList.add('invisible');
     });
     // Hide the player’s hand.
@@ -225,20 +225,20 @@ news.onmessage = event => {
     roundResultP.classList.add('invisible');
     roundOKButton.removeAttribute('disabled');
     // Remove and hide the player round information.
-    playerOL.querySelectorAll('.bid, .bidNet').forEach(infoSpan => {
+    playerUL.querySelectorAll('.bid, .bidNet').forEach(infoSpan => {
       infoSpan.textContent = '';
     });
-    playerOL.querySelectorAll('.bidInfluences').forEach(influenceSpan => {
+    playerUL.querySelectorAll('.bidInfluences').forEach(influenceSpan => {
       influenceSpan.textContent = '';
     });
-    playerOL.querySelectorAll('.replaceP, .bidP, .readyP').forEach(infoP => {
+    playerUL.querySelectorAll('.replaceP, .bidP, .readyP').forEach(infoP => {
       infoP.classList.add('invisible');
     });
   }
   // Otherwise, if a turn started:
   else if (params[0] === 'turnStart') {
     // Mark the turn player with a style.
-    const turnPlayerBox = playerOL.querySelector(`.playerBox[data-player=${params[1]}]`);
+    const turnPlayerBox = playerUL.querySelector(`.playerBox[data-player=${params[1]}]`);
     turnPlayerBox.classList.add('deciding');
     // If the turn player is another player:
     if (params[1] !== playerID) {
@@ -317,7 +317,11 @@ news.onmessage = event => {
       bidButton.textContent = bidderID;
       influenceLI.insertAdjacentElement('beforeend', bidButton);
     });
-    influenceNone.classList.remove('invisible');
+    // If the player has no patient task:
+    if (! patientTask.dataset.task) {
+      // Show the ready-to-proceed button to let the player waive influence.
+      influenceNone.classList.remove('invisible');
+    }
   }
   // Otherwise, if a bid was made:
   else if (params[0] === 'didBid') {
@@ -353,7 +357,7 @@ news.onmessage = event => {
   // Otherwise, if a turn ended:
   else if (params[0] === 'turnEnd') {
     // Remove any prior indicator of the turn player.
-    const priorDecider = playerOL.querySelector('.playerBox.deciding');
+    const priorDecider = playerUL.querySelector('.playerBox.deciding');
     if (priorDecider) {
       priorDecider.classList.remove('deciding');
       const decidingP = priorDecider.querySelector('.deciding');
