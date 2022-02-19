@@ -143,14 +143,15 @@ roundOKButton.onclick = async () => {
 const colorGroup = groupKey => {
   return `<span class="group ${groupData[groupKey].class}">&nbsp;${groupKey}&nbsp;</span>`;
 };
-// Returns a patient description in format “«♥︎23 + ☃5» ∂ ★3”.
-const patientDigest = patientData => {
+// Returns a patient description in format “«♥︎23 + ☃5»<br>∂ ★3”.
+const patientDigest = (isButton, patientData) => {
   const organNewsItems = [`${organSVGs[patientData[0]]}${patientData[1]}`];
   if (patientData[2]) {
     organNewsItems.push(`${organSVGs[patientData[2]]}${patientData[3]}`);
   }
   const organNews = `&laquo;${organNewsItems.join('+')}&raquo;`;
-  return `${organNews}${colorGroup(patientData[4])}&starf;${patientData[5]}`;
+  const joiner = isButton ? '<br>' : '';
+  return `${organNews}${joiner}${colorGroup(patientData[4])}&starf;${patientData[5]}`;
 };
 // Returns an influence-card description in format “☺︎-2”.
 const influenceDigest = influenceData => {
@@ -247,7 +248,7 @@ news.onmessage = event => {
   }
   // Otherwise, if a patient was added to the hand:
   else if (params[0] === 'handPatientAdd') {
-    const newPatient = patientDigest(params.slice(2));
+    const newPatient = patientDigest(true, params.slice(2));
     // If the new patient is to be appended:
     if (params[1] === 'end') {
       // Copy the patient template.
@@ -322,7 +323,7 @@ news.onmessage = event => {
   else if (params[0] === 'didBid') {
     // Show it, with no influences and an unchanged net priority.
     const player = playerLIOf(params[1]);
-    const patient = patientDigest(params.slice(2));
+    const patient = patientDigest(false, params.slice(2));
     player.querySelector('.bid').innerHTML = patient;
     player.querySelector('.bidInfluences').textContent = '';
     player.querySelector('.bidNet').textContent = params[7];

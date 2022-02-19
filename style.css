@@ -34,7 +34,7 @@ a:active {
 }
 body {
   margin: 0 5% auto 5%;
-  max-width: 55rem;
+  max-width: 70rem;
   font-size: 1.25rem;
   font-family: serif;
   background-color: #f3f4f2;
@@ -87,7 +87,7 @@ fieldset {
   background-color: lightcyan;
 }
 .groupDelta {
-  background-color: magenta;
+  background-color: #f9f;
 }
 h1, h2 {
   margin: 0.5rem, 0;

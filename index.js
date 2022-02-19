@@ -354,13 +354,6 @@ const endRound = sessionData => {
         });
       }
     }
-    // Otherwise, i.e. if the winner has won the session:
-    else {
-      // Notify all users of the session end.
-      broadcast(
-        sessionCode, false, 'sessionEnd', `🙌 ${player.roundsWon}\t${winningPlayerID}`
-      );
-    }
   }
   // Otherwise, i.e. if there were no bids in the round:
   else {
@@ -483,12 +476,20 @@ const requestHandler = (req, res) => {
     if (method === 'GET') {
       // Get any query parameters as an object.
       const absURL = `https://localhost${url}`;
-      const urlBase = url.replace(/^\/|\?.+/g, '');
+      const urlBase = url.replace(/^\/|\?.+|\/\w+.svg$/g, '');
       const params = parse((new URL(absURL)).search);
       // If a script was requested:
       if (url.endsWith('.js')) {
         // Serve it.
         serveScript(url.slice(1), res);
+      }
+      // Otherwise, if an image was requested:
+      else if (url.startsWith('/images/')) {
+        // Serve it and close the response.
+        res.setHeader('Content-Type', 'image/svg+xml');
+        const image = fs.readFileSync(url.slice(1), 'utf8');
+        res.write(image);
+        res.end();
       }
       // Otherwise, if the home page was requested:
       else if (['home', 'home.html', ''].includes(urlBase)) {

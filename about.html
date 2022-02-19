@@ -17,7 +17,8 @@
         <h1>About OrganMatch</h1>
         <p class="summary">Your patients&rsquo; lives depend on you&mdash;and on luck</p>
       </header>
-      <p>OrganMatch is a turn-based game for 3 to 8 players.</p>
+      <h2>Introduction</h2>
+      <p>OrganMatch is a turn-based game.</p>
       <p>You and your fellow surgeons have patients needing organ transplants. There are not enough organs, so some patients will not survive the wait.</p>
       <p>The outcome is partly out of your control:</p>
       <ul>
@@ -30,6 +31,39 @@
         <li>You will discover some facts about patients that you can use to increase or decrease their priorities.</li>
         <li>You will have opportunities to change the patients you are caring for.</li>
       </ul>
+      <h2>Symbols</h2>
+      <table>
+        <caption>Symbols</caption>
+        <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><th>#</th><td>session number</td></tr>
+          <tr><th><img src="images/minutes.svg" alt="minutes left"></th><td>minutes left</td></tr>
+          <tr><th><img src="images/heart.svg" alt="heart"></th><td>organ: heart</td></tr>
+          <tr><th><img src="images/lung.svg" alt="lung"></th><td>organ: lung</td></tr>
+          <tr><th><img src="images/liver.svg" alt="lung"></th><td>organ: liver</td></tr>
+          <tr><th>« »</th><td>organ(s) needed by patient and position(s) in queue</td></tr>
+          <tr><th><span class="group groupAlpha">&nbsp;α&nbsp;</span></th><td>match group Alpha</td></tr>
+          <tr><th><span class="group groupBeta">&nbsp;β&nbsp;</span></th><td>match group Beta</td></tr>
+          <tr><th><span class="group groupGamma">&nbsp;γ&nbsp;</span></th><td>match group Gamma</td></tr>
+          <tr><th><span class="group groupDelta">&nbsp;δ&nbsp;</span></th><td>match group Delta</td></tr>
+          <tr><th>★</th><td>patient priority</td></tr>
+          <tr><th>= ★</th><td>net bid priority after any influences</td></tr>
+          <tr><th><img src="images/child.svg" alt="lung"></th><td>influence: patient is a child</td></tr>
+          <tr><th><img src="images/urgency.svg" alt="lung"></th><td>influence: patient need is urgent</td></tr>
+          <tr><th><img src="images/addict.svg" alt="lung"></th><td>influence: patient is an addict</td></tr>
+          <tr><th><img src="images/bribe.svg" alt="lung"></th><td>influence: patient tried a bribe</td></tr>
+          <tr><th>🤒</th><td>patient cards in your hand</td></tr>
+          <tr><th>±</th><td>influence cards in your hand</td></tr>
+          <tr><th>✋</th><td>patient bid</td></tr>
+          <tr><th>♻</th><td>patient replacement</td></tr>
+          <tr><th><button type="button">X</button></th><td>apply this to the bid of player X</td></tr>
+          <tr><th>✔︎</th><td>ready to proceed</td></tr>
+          <tr><th><div class="playerBox">&nbsp;</div></th><td>player waiting</td></tr>
+          <tr><th><div class="playerBox deciding">&nbsp;</div></th><td>player whose turn it is</td></tr>
+          <tr><th>🙌</th><td>winner(s) or rounds won</td></tr>
+          <tr><th>∅</th><td>no winner</td></tr>
+        </tbody>
+      </table>
       <p><a href="home">OrganMatch home</a></p>
     </main>
   </body>
