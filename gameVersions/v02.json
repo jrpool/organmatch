@@ -1,0 +1,233 @@
+{
+  "matchGroups": {
+    "description": "Categories of organs and of patients that must match",
+    "groups": {
+      "&alpha;": {
+        "class": "groupAlpha"
+      },
+      "&beta;": {
+        "class": "groupBeta"
+      },
+      "&gamma;": {
+        "class": "groupGamma"
+      }
+    }
+  },
+  "limits": {
+    "playerCount": {
+      "description": "How many players may play a session of the game",
+      "min": 2,
+      "max": 8
+    },
+    "winningRounds": {
+      "description": "How many rounds a player may win without winning the session",
+      "max": 6
+    },
+    "influences": {
+      "description": "Limits on the use of influence cards",
+      "perTurn": {
+        "description": "How many a player may use in a turn",
+        "max": 2
+      },
+      "perBid": {
+        "description": "How many may be placed on a bid",
+        "max": 2
+      },
+      "perTurnBid":{
+        "description": "how many a player may place on a bid",
+        "max": 1
+      }
+    },
+    "sessionTime": {
+      "description": "Time in minutes until a session is expunged",
+      "max": 240
+    }
+  },
+  "handSize": {
+    "description": "How many patient cards are in each hand",
+    "count": 7
+  },
+  "organCards": {
+    "description": "Organs available for transplant per specified group (or each group)",
+    "types": [
+      {
+        "organ": "heart",
+        "count": 4
+      },
+      {
+        "organ": "liver",
+        "count": 4
+      },
+      {
+        "organ": "lung",
+        "count": 4
+      }
+    ]
+  },
+  "influenceCards": {
+    "description": "Factors modifying patient priorities",
+    "types": [
+      {
+        "name": "urgency",
+        "description": "Patient’s health has deteriorated, making transplant more urgent",
+        "impact": 2,
+        "count": 10
+      },
+      {
+        "name": "child",
+        "description": "Patient is a child",
+        "impact": 1,
+        "count": 10
+      },
+      {
+        "name": "addict",
+        "description": "Patient has used a prohibited substance",
+        "impact": -1,
+        "count": 10
+      },
+      {
+        "name": "bribe",
+        "description": "Patient has offered a bribe to the transplant committee",
+        "impact": -2,
+        "count": 10
+      }
+    ]
+  },
+  "patientCards": {
+    "description": "Patients needing organ transplants per specified group (or each group)",
+    "types": [
+      {
+        "organNeed": [
+          "heart"
+        ],
+        "priority": 4,
+        "count": 2
+      },
+      {
+        "organNeed": [
+          "lung"
+        ],
+        "priority": 4,
+        "count": 2
+      },
+      {
+        "organNeed": [
+          "liver"
+        ],
+        "priority": 4,
+        "count": 2
+      },
+      {
+        "organNeed": [
+          "heart"
+        ],
+        "priority": 3,
+        "count": 2
+      },
+      {
+        "organNeed": [
+          "lung"
+        ],
+        "priority": 3,
+        "count": 2
+      },
+      {
+        "organNeed": [
+          "liver"
+        ],
+        "priority": 3,
+        "count": 2
+      },
+      {
+        "organNeed": [
+          "heart"
+        ],
+        "priority": 2,
+        "count": 3
+      },
+      {
+        "organNeed": [
+          "lung"
+        ],
+        "priority": 2,
+        "count": 3
+      },
+      {
+        "organNeed": [
+          "liver"
+        ],
+        "priority": 2,
+        "count": 3
+      },
+      {
+        "organNeed": [
+          "heart"
+        ],
+        "priority": 1,
+        "count": 3
+      },
+      {
+        "organNeed": [
+          "lung"
+        ],
+        "priority": 1,
+        "count": 3
+      },
+      {
+        "organNeed": [
+          "liver"
+        ],
+        "priority": 1,
+        "count": 3
+      },
+      {
+        "organNeed": [
+          "heart",
+          "lung"
+        ],
+        "priority": 2,
+        "count": 1
+      },
+      {
+        "organNeed": [
+          "heart",
+          "liver"
+        ],
+        "priority": 2,
+        "count": 1
+      },
+      {
+        "organNeed": [
+          "lung",
+          "liver"
+        ],
+        "priority": 2,
+        "count": 1
+      },
+      {
+        "organNeed": [
+          "heart",
+          "lung"
+        ],
+        "priority": 3,
+        "count": 1
+      },
+      {
+        "organNeed": [
+          "heart",
+          "liver"
+        ],
+        "priority": 3,
+        "count": 1
+      },
+      {
+        "organNeed": [
+          "lung",
+          "liver"
+        ],
+        "priority": 3,
+        "count": 1
+      }
+    ]
+  }
+}
