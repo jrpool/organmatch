@@ -17,8 +17,8 @@ const http2 = require('http2');
 const sessions = {};
 // SSE responses for player lists.
 const newsStreams = {};
-// Data on version 01.
-const versionData = require('./getVersion')('01');
+// Data on version 02.
+const versionData = require('./getVersion')('02');
 const key = fs.readFileSync(process.env.KEY);
 const cert = fs.readFileSync(process.env.CERT);
 // Organ images.
