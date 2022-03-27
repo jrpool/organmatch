@@ -98,23 +98,27 @@ const broadcast = (sessionCode, onlyPlayers, subtype, value) => {
     }
   });
 };
-// Returns whether a patient matches an organ.
-const isMatch = (organ, patient) => {
-  const isGroupMatch = organ.group === patient.group;
+// Returns whether a patient matches an offer.
+const isMatch = (offer, patient) => {
+  const isGroupMatch = offer.group === patient.group;
   if (isGroupMatch) {
-    return patient.organNeed.map(need => need.organ).includes(organ.organ);
+    return patient.organNeed.some(organ => offer.organs.includes(organ));
   }
   else {
     return false;
   }
 };
-// Returns the IDs of the bidders a player can use an influence on the bids of.
+// Returns the IDs of the patients a player can use an influence on.
 const influenceTargets = (versionData, round, influence) => {
   const limits = versionData.limits.influences;
   const {turnsEnded, bids} = round;
   const {turnPlayerID} = round.turns[turnsEnded];
   const turnUseCount = bids.reduce(
-    (count, bid) => count + bid.influences.filter(use => use.playerID === turnPlayerID).length, 0
+    (count, bid) => count + bid
+    .influences
+    .filter(use => use.playerID === turnPlayerID)
+    .length,
+    0
   );
   const targetIndexes = [];
   // If the player is still permitted to use an influence:
@@ -136,11 +140,11 @@ const influenceTargets = (versionData, round, influence) => {
       }
     });
   }
-  const targetBidders = targetIndexes.map(index => bids[index].playerID);
-  return targetBidders;
+  const targetPatients = targetIndexes.map(index => bids[index].patient.waitTime);
+  return targetPatients;
 };
 // Returns specifications for a turn player’s next move.
-const taskSpecs = (hasMovedPatient, hasWaivedInfluence, round, hand) => {
+const taskSpecs = (hasMovedPatient, round, hand) => {
   const {patients, influences} = hand;
   // Initialize the specifications.
   const specs = {
@@ -151,7 +155,7 @@ const taskSpecs = (hasMovedPatient, hasWaivedInfluence, round, hand) => {
   if (! hasMovedPatient) {
     // Add the indexes of the patients eligible to be bid to the specifications.
     const matchIndexes = patients
-    .map((patient, index) => isMatch(round.roundOrgan, patient) ? index : -1)
+    .map((patient, index) => isMatch(round.roundOffer, patient) ? index : -1)
     .filter(index => index > -1);
     specs.bid = matchIndexes;
   }
@@ -163,9 +167,9 @@ const taskSpecs = (hasMovedPatient, hasWaivedInfluence, round, hand) => {
   return specs;
 };
 // Sends move specifications, if any, to a player and returns whether there were any.
-const sendTasks = (hasMovedPatient, hasWaivedInfluence, sessionCode, playerID, round, hand) => {
+const sendTasks = (hasMovedPatient, sessionCode, playerID, round, hand) => {
   let anySpecs = false;
-  const specs = taskSpecs(hasMovedPatient, hasWaivedInfluence, round, hand);
+  const specs = taskSpecs(hasMovedPatient, round, hand);
   const stream = newsStreams[sessionCode][playerID];
   // If the player has not yet moved a patient:
   if (! hasMovedPatient) {
@@ -221,7 +225,7 @@ const startTurn = sessionData => {
   // Notify the players of the deciding player.
   broadcast(sessionCode, true, 'turnStart', turnPlayerID);
   // Notify the deciding player of the next patient and influence tasks.
-  sendTasks(false, false, sessionCode, turnPlayerID, round, players[turnPlayerID].hand.current);
+  sendTasks(false, sessionCode, turnPlayerID, round, players[turnPlayerID].hand.current);
 };
 // Starts a round.
 const startRound = sessionData => {
@@ -232,10 +236,10 @@ const startRound = sessionData => {
   const roundStarterID = roundID ? rounds[roundID - 1].nextStarterID : playerIDs[0];
   const starterIndex = playerIDs.indexOf(roundStarterID);
   const roundEnderID = playerIDs[(starterIndex + playerCount - 1) % playerCount];
-  const roundOrgan = piles.organs.latent.shift();
+  const roundOffer = piles.offers.latent.shift();
   // If there is still a supply of organs:
-  if (roundOrgan) {
-    const roundNewsParts = [roundID, roundOrgan.organ, roundOrgan.group];
+  if (roundOffer) {
+    const roundNewsParts = [roundID, roundOffer.organ, roundOffer.group];
     broadcast(sessionCode, false, 'roundStart', roundNewsParts.join('\t'));
     console.log(`Round ${roundID} started`);
     // Initialize a round record and add it to the session data.
@@ -245,7 +249,7 @@ const startRound = sessionData => {
       endTime: null,
       roundStarterID,
       roundEnderID,
-      roundOrgan,
+      roundOffer,
       winner: {
         playerID: null,
         patient: null
@@ -303,7 +307,7 @@ const endRound = sessionData => {
       const qP = bid
       .patient
       .organNeed
-      .filter(need => need.organ === round.roundOrgan.organ)[0]
+      .filter(need => need.organ === round.roundOffer.organ)[0]
       .waitTime;
       return 100 * netPriority - qP;
     });
@@ -389,7 +393,7 @@ const finishRound = sessionData => {
   const sessionWon
     = roundWinnerID
     && players[roundWinnerID].roundsWon === versionData.limits.winningRounds.max;
-  if (sessionWon || ! sessionData.piles.organs.latent.length) {
+  if (sessionWon || ! sessionData.piles.offers.latent.length) {
     // Add the session winners to the session data.
     const winnerIDs = Object.keys(players).reduce((winners, id) => {
       if (winners.length) {
@@ -630,9 +634,7 @@ const requestHandler = (req, res) => {
           const newPlayerMsg = `handPatientAdd=${newPlayerNews}`;
           sendEventMsg(newsStreams[sessionCode][playerID], newPlayerMsg);
           // Send specifications, if any, for the next move to the player.
-          const anySpecs = sendTasks(
-            true, turn.influenceWaived, sessionCode, playerID, round, currentHand
-          );
+          const anySpecs = sendTasks(true, sessionCode, playerID, round, currentHand);
           // If there were none:
           if (! anySpecs) {
             // End the turn.
@@ -685,9 +687,7 @@ const requestHandler = (req, res) => {
           influences.splice(index, 1);
           // Send specifications, if any, for the next move to the player.
           const hasMovedPatient = turn.bid || turn.replaced;
-          const anySpecs = sendTasks(
-            hasMovedPatient, false, sessionCode, playerID, round, currentHand
-          );
+          const anySpecs = sendTasks(hasMovedPatient, sessionCode, playerID, round, currentHand);
           // If there were none:
           if (! anySpecs) {
             // End the turn.
@@ -724,7 +724,7 @@ const requestHandler = (req, res) => {
             // Send specifications for the patient move to the player.
             const player = sessionData.players[playerID];
             const currentHand = player.hand.current;
-            sendTasks(hasMovedPatient, true, sessionCode, playerID, round, currentHand);
+            sendTasks(hasMovedPatient, sessionCode, playerID, round, currentHand);
           }
           // Otherwise, i.e. if the player has moved a patient and thus has no move options:
           else {

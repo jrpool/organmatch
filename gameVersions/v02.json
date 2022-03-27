@@ -47,7 +47,7 @@
     "description": "How many patient cards are in each hand",
     "count": 7
   },
-  "organCards": {
+  "offerCards": {
     "description": "Organs available for transplant per specified group (or each group)",
     "types": [
       {

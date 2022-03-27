@@ -8,10 +8,10 @@ const fs = require('fs');
 // Processes the end of a round.
 module.exports = (versionData, sessionData)  => {
   try {
-    // Move the current organ card to the old pile.
-    const currentOrgan = sessionData.piles.organs.current;
-    sessionData.piles.organs.old.push(currentOrgan);
-    sessionData.piles.organs.current = null;
+    // Move the current offer card to the old pile.
+    const currentOrgan = sessionData.piles.offers.current;
+    sessionData.piles.offers.old.push(currentOrgan);
+    sessionData.piles.offers.current = null;
     let sessionEnded = false;
     const round = sessionData.rounds[sessionData.rounds.length - 1];
     const bidCount = round.bids.length;
@@ -70,7 +70,7 @@ module.exports = (versionData, sessionData)  => {
       console.log('The round had no bid and therefore no winner\n');
     }
     // If no player has won enough rounds to end the session but the organs have been exhausted:
-    if (! sessionEnded && ! sessionData.piles.organs.latent.length) {
+    if (! sessionEnded && ! sessionData.piles.offers.latent.length) {
       // End the session.
       sessionEnded = true;
     }
@@ -96,7 +96,7 @@ module.exports = (versionData, sessionData)  => {
         winnerNews = `won by ${sessionData.winners[0].playerName}`;
       }
       console.log(`\nThe session was ${winnerNews}`);
-      console.log(`Organs still available: ${sessionData.piles.organs.latent.length}`);
+      console.log(`Organs still available: ${sessionData.piles.offers.latent.length}`);
       console.log(`Patients still available: ${sessionData.piles.patients.length}`);
     }
   }

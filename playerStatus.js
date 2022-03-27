@@ -33,7 +33,7 @@ const influenceNone = document.getElementById('influenceNone');
 const playerLITemplate = document.getElementById('playerLITemplate');
 const roundInfo = document.getElementById('roundInfo');
 const roundID = document.getElementById('roundID');
-const roundOrgan = document.getElementById('roundOrgan');
+const roundOffer = document.getElementById('roundOffer');
 const roundResultP = document.getElementById('roundResultP');
 const roundResult = document.getElementById('roundResult');
 const roundOKButton = roundResultP.querySelector('button');
@@ -143,7 +143,7 @@ roundOKButton.onclick = async () => {
 const colorGroup = groupKey => {
   return `<span class="group ${groupData[groupKey].class}">&nbsp;${groupKey}&nbsp;</span>`;
 };
-// Returns a patient description in format “«♥︎23 + ☃5»<br>∂ ★3”.
+// Returns a patient description in format “23 *3<br>♥︎☃ ∂”.
 const patientDigest = (isButton, patientData) => {
   const organNewsItems = [`${organSVGs[patientData[0]]}${patientData[1]}`];
   if (patientData[2]) {
@@ -219,7 +219,7 @@ news.onmessage = event => {
   else if (params[0] === 'roundStart') {
     // Change the round ID and organ.
     roundID.textContent = params[1];
-    roundOrgan.innerHTML = `${organSVGs[params[2]]}${colorGroup(params[3])}`;
+    roundOffer.innerHTML = `${organSVGs[params[2]]}${colorGroup(params[3])}`;
     // Hide the round-end content and re-enable its approval button.
     roundResult.textContent = '';
     roundResultP.classList.add('invisible');

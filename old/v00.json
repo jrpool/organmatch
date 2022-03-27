@@ -1,7 +1,7 @@
 {
   "doc": {
     "classes": {
-      "organ": "Number is count of organ cards per type",
+      "organ": "Number is count of offer cards per type",
       "type": "Code name of category of organ/patient match",
       "influence": "Numbers are points per influence card and count of cards",
       "patient": "Number is count of cards per priority-type permutation"

@@ -6,8 +6,8 @@
 // Starts a round.
 module.exports = sessionData => {
   try {
-    // Move the top latent organ card to the current pile.
-    sessionData.piles.organs.current = sessionData.piles.organs.latent.shift();
+    // Move the top latent offer card to the current pile.
+    sessionData.piles.offers.current = sessionData.piles.offers.latent.shift();
     // Identify the players who will start and end the round.
     const starter = sessionData.rounds.length
       ? sessionData.rounds[sessionData.rounds.length - 1].nextStarter
@@ -20,7 +20,7 @@ module.exports = sessionData => {
       endTime: null,
       starter,
       ender,
-      organ: sessionData.piles.organs.current,
+      organ: sessionData.piles.offers.current,
       winner: {
         index: null,
         name: null

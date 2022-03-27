@@ -27,8 +27,8 @@ module.exports = sessionData => {
     // Identify the turn player’s matching patient cards.
     const matchIndexes = initial.patients.map((patient, index) => {
       if (
-        patient.organNeed.some(need => need.organ === sessionData.piles.organs.current.organ)
-        && patient.group === sessionData.piles.organs.current.group
+        patient.organNeed.some(need => need.organ === sessionData.piles.offers.current.organ)
+        && patient.group === sessionData.piles.offers.current.group
       ) {
         return index;
       }

@@ -106,7 +106,7 @@
       "count": 10
     },
     "organ": {
-      "description": "How many organ cards exist per combination of organ and match group",
+      "description": "How many offer cards exist per combination of organ and match group",
       "count": 2
     },
     "patient": {

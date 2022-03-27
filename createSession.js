@@ -11,23 +11,24 @@ const createCode = () => {
 };
 // Returns an array of the names of the groups of a version.
 const matchGroups = versionData => Object.keys(versionData.matchGroups.groups);
-// Creates and returns all organ cards for a session.
-const createOrganCards = versionData => {
+// Creates and returns all offer cards for a session.
+const createOfferCards = versionData => {
   const cards = [];
-  const cardTypes = versionData.organCards.types;
+  const cardTypes = versionData.offerCards.types;
   cardTypes.forEach(type => {
-    for (let i = 0; i < type.count; i++) {
-      if (type.group) {
+    const {count, group, organs} = type;
+    for (let i = 0; i < count; i++) {
+      if (group) {
         cards.push({
-          organ: type.organ,
-          group: type.group
+          organs,
+          group
         });
       }
       else {
         const groups = matchGroups(versionData);
         groups.forEach(group => {
           cards.push({
-            organ: type.organ,
+            organs,
             group
           });
         });
@@ -93,10 +94,12 @@ const createPatientCards = versionData => {
       }
     }
   });
+  // Replace the wait times with random serial integers doubling as patient IDs.
   cards.sort((a, b) => a.waitTime < b.waitTime);
   cards.forEach((card, index) => {
     card.waitTime = index;
   });
+  // Return the cards in ID order.
   return cards;
 };
 // Returns data for a session.
@@ -112,7 +115,7 @@ module.exports = versionData => {
       endTime: null,
       winnerIDs: [],
       piles: {
-        organs: {
+        offers: {
           latent: [],
           current: null,
           old: []
@@ -125,7 +128,7 @@ module.exports = versionData => {
     };
     // Populate the card piles in the session data.
     const {piles} = sessionData;
-    piles.organs.latent = shuffle(createOrganCards(versionData));
+    piles.offers.latent = shuffle(createOfferCards(versionData));
     piles.influences = shuffle(createInfluenceCards(versionData));
     piles.patients = shuffle(createPatientCards(versionData));
     return sessionData;

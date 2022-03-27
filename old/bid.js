@@ -11,7 +11,7 @@ module.exports = (sessionData, matchIndex) => {
     const player = sessionData.players[turn.player.index];
     // Bid and replace the specified patient and revise the session data accordingly.
     const match = turn.hand.matches[matchIndex];
-    const organ = sessionData.piles.organs.current;
+    const organ = sessionData.piles.offers.current;
     const {patient} = match;
     const drawn = sessionData.piles.patients.shift();
     turn.hand.changes.patient = {
