@@ -191,10 +191,10 @@ const sendTasks = (hasMovedPatient, hasWaivedInfluence, sessionCode, playerID, r
 const patientSpec = patient => {
   const {organNeed, group, priority} = patient;
   const organ0 = organNeed[0].organ;
-  const qP0 = organNeed[0].queuePosition;
+  const qP0 = organNeed[0].waitTime;
   const needCount = organNeed.length === 2;
   const organ1 = needCount ? organNeed[1].organ : '';
-  const qP1 = needCount ? organNeed[1].queuePosition : '';
+  const qP1 = needCount ? organNeed[1].waitTime : '';
   return [organ0, qP0, organ1, qP1, group, priority];
 };
 // Returns a date-time string.
@@ -304,7 +304,7 @@ const endRound = sessionData => {
       .patient
       .organNeed
       .filter(need => need.organ === round.roundOrgan.organ)[0]
-      .queuePosition;
+      .waitTime;
       return 100 * netPriority - qP;
     });
     const winningBidIndex = scores.reduce(

@@ -58,71 +58,44 @@ const shuffle = array => {
 };
 // Creates and returns the patient cards for a session.
 const createPatientCards = versionData => {
-  const organs = versionData.organCards.types.map(type => type.organ);
-  const organQueueSizes = {};
-  const groups = matchGroups(versionData);
-  organs.forEach(organ => {
-    organQueueSizes[organ] = versionData.patientCards.types.reduce((count, thisType) => {
-      if (thisType.organNeed.includes(organ)) {
-        if (thisType.group) {
-          return count + thisType.count;
-        }
-        else {
-          return count + groups.length * thisType.count;
-        }
-      }
-      else {
-        return count;
-      }
-    }, 0);
-  });
-  const organQueues = {};
-  organs.forEach(organ => {
-    organQueues[organ] = (new Array(organQueueSizes[organ])).fill(1);
-    for (let i = 0; i < organQueueSizes[organ]; i++) {
-      organQueues[organ][i] = [i, Math.random()];
-    }
-    organQueues[organ].sort((a, b) => a[1] - b[1]);
-    organQueues[organ] = organQueues[organ].map(pair => pair[0]);
-  });
-  const queueIndexes = {};
-  organs.forEach(organ => {
-    queueIndexes[organ] = 0;
-  });
+  const groupTypes = matchGroups(versionData);
   const cards = [];
+  // For each type of patient card:
   versionData.patientCards.types.forEach(type => {
-    for (let i = 0; i < type.count; i++) {
-      if (type.group) {
+    const {count, group, organNeed, priority} = type;
+    // For each patient of that type:
+    for (let i = 0; i < count; i++) {
+      // If the card is group-specific:
+      if (group) {
+        // Create a card.
         const card = {
-          organNeed: type.organNeed,
-          group: type.group,
-          priority: type.priority
+          organNeed,
+          group,
+          priority,
+          waitTime: Math.random()
         };
-        type.organNeed.forEach((organ, index) => {
-          card.organNeed[index] = {
-            organ,
-            queuePosition: organQueues[organ][queueIndexes[organ]++]
-          };
-        });
+        // Add it to the collection of cards.
         cards.push(card);
       }
+      // Otherwise, i.e. if the card applies to every group:
       else {
-        groups.forEach(group => {
+        // For each group:
+        groupTypes.forEach(group => {
+          // Create a card.
           const card = {
-            organNeed: type.organNeed.map(organ => ({
-              organ,
-              queuePosition: null
-            })),
+            organNeed,
             group,
-            priority: type.priority
+            priority,
+            waitTime: Math.random()
           };
-          type.organNeed.forEach((organ, index) => {
-            card.organNeed[index].queuePosition = organQueues[organ][queueIndexes[organ]++];
-          });
           cards.push(card);
         });
       }
     }
+  });
+  cards.sort((a, b) => a.waitTime < b.waitTime);
+  cards.forEach((card, index) => {
+    card.waitTime = index;
   });
   return cards;
 };

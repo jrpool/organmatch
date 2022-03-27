@@ -20,7 +20,7 @@ module.exports = (versionData, sessionData)  => {
       const bidTerm = bidCount > 1 ? 'bids' : 'bid';
       console.log(`The round had ${round.bids.length} ${bidTerm}`);
       // Identify the round’s winning bid, winner, and next starter.
-      const scoreBid = bid => bid.netPriority - bid.queuePosition / 1000;
+      const scoreBid = bid => bid.netPriority - bid.waitTime / 1000;
       round.bids.sort((a, b) => scoreBid(b) - scoreBid(a));
       const winnerIndex = round.bids[0].player.index;
       const winner = sessionData.players[winnerIndex];

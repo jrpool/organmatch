@@ -92,7 +92,7 @@ const createPatientData = versionData => {
           cards.push({
             organNeed: organNeed.map(organ => ({
               organ,
-              queuePosition: organQPs[organQPIndexes[organ]++]
+              waitTime: organQPs[organQPIndexes[organ]++]
             })),
             group,
             priority

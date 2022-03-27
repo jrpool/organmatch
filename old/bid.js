@@ -21,7 +21,7 @@ module.exports = (sessionData, matchIndex) => {
     };
     const bid = {
       turnIndex: turn.index,
-      queuePosition: patient.organNeed.find(need => need.organ === organ.organ).queuePosition,
+      waitTime: patient.organNeed.find(need => need.organ === organ.organ).waitTime,
       player: {
         index: turn.player.index,
         name: turn.player.playerName
