@@ -17,8 +17,8 @@ const http2 = require('http2');
 const sessions = {};
 // SSE responses for player lists.
 const newsStreams = {};
-// Data on version 02.
-const versionData = require('./getVersion')('02');
+// Data on version 01.
+const versionData = require('./getVersion')('01');
 const key = fs.readFileSync(process.env.KEY);
 const cert = fs.readFileSync(process.env.CERT);
 // Organ images.
@@ -193,13 +193,11 @@ const sendTasks = (hasMovedPatient, sessionCode, playerID, round, hand) => {
 };
 // Returns the specification of a patient.
 const patientSpec = patient => {
-  const {organNeed, group, priority} = patient;
-  const organ0 = organNeed[0].organ;
-  const qP0 = organNeed[0].waitTime;
+  const {waitTime, organNeed, group, priority} = patient;
+  const organ0 = organNeed[0];
   const needCount = organNeed.length === 2;
-  const organ1 = needCount ? organNeed[1].organ : '';
-  const qP1 = needCount ? organNeed[1].waitTime : '';
-  return [organ0, qP0, organ1, qP1, group, priority];
+  const organ1 = needCount ? organNeed[1] : '';
+  return [waitTime, priority, organ0, organ1, group];
 };
 // Returns a date-time string.
 const nowString = () => (new Date()).toISOString();
@@ -239,7 +237,7 @@ const startRound = sessionData => {
   const roundOffer = piles.offers.latent.shift();
   // If there is still a supply of organs:
   if (roundOffer) {
-    const roundNewsParts = [roundID, roundOffer.organ, roundOffer.group];
+    const roundNewsParts = [roundID, roundOffer.group, ...roundOffer.organs];
     broadcast(sessionCode, false, 'roundStart', roundNewsParts.join('\t'));
     console.log(`Round ${roundID} started`);
     // Initialize a round record and add it to the session data.

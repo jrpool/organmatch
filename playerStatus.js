@@ -218,9 +218,10 @@ news.onmessage = event => {
   }
   // Otherwise, if a round started:
   else if (params[0] === 'roundStart') {
-    // Change the round ID and organ.
+    // Change the round ID and offer.
     roundID.textContent = params[1];
-    roundOffer.innerHTML = `${organSVGs[params[2]]}${colorGroup(params[3])}`;
+    const organNews = `${organSVGs[params[3]]}${params[4] ? organSVGs[params[4]] : ''}`;
+    roundOffer.innerHTML = `${organNews} ${colorGroup(params[2])}`;
     // Hide the round-end content and re-enable its approval button.
     roundResult.textContent = '';
     roundResultP.classList.add('invisible');
