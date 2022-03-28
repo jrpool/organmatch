@@ -145,13 +145,14 @@ const colorGroup = groupKey => {
 };
 // Returns a patient description in format “23 *3<br>♥︎☃ ∂”.
 const patientDigest = (isButton, patientData) => {
-  const organNewsItems = [`${organSVGs[patientData[0]]}${patientData[1]}`];
-  if (patientData[2]) {
-    organNewsItems.push(`${organSVGs[patientData[2]]}${patientData[3]}`);
+  const numberNews = `${patientData[0]} &starf;${patientData[1]}`;
+  const organNewsItems = [`${organSVGs[patientData[2]]}`];
+  if (patientData[3]) {
+    organNewsItems.push(`${organSVGs[patientData[3]]}`);
   }
-  const organNews = `&laquo;${organNewsItems.join('+')}&raquo;`;
+  const organNews = `${organNewsItems.join('')}`;
   const joiner = isButton ? '<br>' : '';
-  return `${organNews}${joiner}${colorGroup(patientData[4])}&starf;${patientData[5]}`;
+  return `${numberNews}${joiner}${organNews} ${colorGroup(patientData[4])}`;
 };
 // Returns an influence-card description in format “☺︎-2”.
 const influenceDigest = influenceData => {
