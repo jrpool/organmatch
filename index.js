@@ -13,12 +13,14 @@ const fs = require('fs');
 const http2 = require('http2');
 
 // ########## GLOBAL CONSTANTS
-// Data on all current sessions.
-const sessions = {};
+
 // SSE responses for player lists.
 const newsStreams = {};
-// Data on version 01.
-const versionData = require('./getVersion')('01');
+// Data on all versions.
+const versionsData = {};
+['01', '02', '03'].forEach(num => {
+  versionsData[num] = require('./getVersion')(num);
+});
 const key = fs.readFileSync(process.env.KEY);
 const cert = fs.readFileSync(process.env.CERT);
 // Organ images.
@@ -36,6 +38,11 @@ const etcSVGs = {};
 ['minutes'].forEach(item => {
   etcSVGs[item] = fs.readFileSync(`images/${item}.svg`, 'utf8');
 });
+
+// ########## VARIABLES
+
+// Data on all current sessions.
+const sessions = {};
 
 // ########## FUNCTIONS
 
@@ -144,7 +151,7 @@ const influenceTargets = (versionData, round, influence) => {
   return targetPatients;
 };
 // Returns specifications for a turn player’s next move.
-const taskSpecs = (hasMovedPatient, round, hand) => {
+const taskSpecs = (version, hasMovedPatient, round, hand) => {
   const {patients, influences} = hand;
   // Initialize the specifications.
   const specs = {
@@ -161,7 +168,7 @@ const taskSpecs = (hasMovedPatient, round, hand) => {
   }
   // Add the permitted influence uses to the specifications.
   specs.influence = influences.map(
-    influence => influenceTargets(versionData, round, influence)
+    influence => influenceTargets(versionsData[version], round, influence)
   );
   // Return the specifications.
   return specs;
@@ -169,7 +176,7 @@ const taskSpecs = (hasMovedPatient, round, hand) => {
 // Sends move specifications, if any, to a player and returns whether there were any.
 const sendTasks = (hasMovedPatient, sessionCode, playerID, round, hand) => {
   let anySpecs = false;
-  const specs = taskSpecs(hasMovedPatient, round, hand);
+  const specs = taskSpecs(sessions[sessionCode].version, hasMovedPatient, round, hand);
   const stream = newsStreams[sessionCode][playerID];
   // If the player has not yet moved a patient:
   if (! hasMovedPatient) {
@@ -335,7 +342,7 @@ const endRound = sessionData => {
       sessionData.piles.influences.push(...bid.influences.map(card => card.influence));
     });
     // If the winner has not won enough rounds to win the session:
-    if (player.roundsWon < versionData.limits.winningRounds.max) {
+    if (player.roundsWon < versionsData[sessionData.version].limits.winningRounds.max) {
       // Add the next round’s starter to the session data.
       round.nextStarterID = winningPlayerID;
       // If there are losing bidders:
@@ -388,9 +395,9 @@ const finishRound = sessionData => {
   // If the round has ended the session:
   const roundWinnerID = round.winner && round.winner.playerID;
   const {sessionCode, players} = sessionData;
-  const sessionWon
-    = roundWinnerID
-    && players[roundWinnerID].roundsWon === versionData.limits.winningRounds.max;
+  const versionData = versionsData[sessionData.version];
+  const sessionWon = roundWinnerID
+  && players[roundWinnerID].roundsWon === versionData.limits.winningRounds.max;
   if (sessionWon || ! sessionData.piles.offers.latent.length) {
     // Add the session winners to the session data.
     const winnerIDs = Object.keys(players).reduce((winners, id) => {
@@ -563,7 +570,7 @@ const requestHandler = (req, res) => {
         broadcast(sessionCode, false, 'sessionStart');
         console.log(`Session ${sessionCode} started`);
         // Notify all users of the time left.
-        const minutes = minutesLeft(versionData, sessionData);
+        const minutes = minutesLeft(versionsData[sessionData.version], sessionData);
         broadcast(sessionCode, false, 'timeLeft', minutes);
         // Shuffle the player IDs in the session data.
         const shuffler = sessionData.playerIDs.map(id => [id, Math.random()]);
@@ -590,6 +597,7 @@ const requestHandler = (req, res) => {
       else if (urlBase === 'patient') {
         const {sessionCode, playerID, task, index} = params;
         const sessionData = sessions[sessionCode];
+        const versionData = versionsData[sessionData.version];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
         if (timeLeft) {
@@ -653,6 +661,7 @@ const requestHandler = (req, res) => {
       else if (urlBase === 'influence') {
         const {sessionCode, playerID, index, bidderID} = params;
         const sessionData = sessions[sessionCode];
+        const versionData = versionsData[sessionData.version];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
         if (timeLeft) {
@@ -706,6 +715,7 @@ const requestHandler = (req, res) => {
       else if (urlBase === 'influenceNone') {
         const {sessionCode, playerID} = params;
         const sessionData = sessions[sessionCode];
+        const versionData = versionsData[sessionData.version];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
         if (timeLeft) {
@@ -745,6 +755,7 @@ const requestHandler = (req, res) => {
         const {sessionCode, playerID} = params;
         console.log(`roundOK received from ${playerID}`);
         const sessionData = sessions[sessionCode];
+        const versionData = versionsData[sessionData.version];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
         if (timeLeft) {
@@ -771,21 +782,23 @@ const requestHandler = (req, res) => {
     }
     // Otherwise, if the request method was POST:
     else if (method === 'POST') {
-      // Identify the limits on player counts.
-      const minPlayerCount = versionData.limits.playerCount.min;
-      const maxPlayerCount = versionData.limits.playerCount.max;
       // Get the data as an object.
       const params = parse(Buffer.concat(bodyParts).toString());
       // If a session creation was requested:
       if (url === '/createSession') {
         // Create a session and get its data.
-        const sessionData = require('./createSession')(versionData);
+        const {version} = params;
+        const sessionData = require('./createSession')(versionsData[version]);
         const {sessionCode} = sessionData;
+        const versionData = versionsData[sessions[sessionCode].version];
         // Add them to the data on all current sessions.
         sessions[sessionCode] = sessionData;
         // Initialize the new-player streams for the session.
         newsStreams[sessionCode] = {};
         // Serve a session-status page.
+        // Identify the limits on player counts.
+        const minPlayerCount = versionData.limits.playerCount.min;
+        const maxPlayerCount = versionData.limits.playerCount.max;
         serveTemplate('leaderStatus', {
           minPlayerCount,
           maxPlayerCount,
@@ -801,6 +814,7 @@ const requestHandler = (req, res) => {
         const sessionCodeOK = Object.keys(sessions).includes(sessionCode);
         if (sessionCodeOK) {
           const sessionData = sessions[sessionCode];
+          const versionData = versionsData[sessionData.version];
           let playerData = getPlayers(sessionData);
           const playerNames = Object.values(playerData);
           // If the user is already a player:
@@ -832,6 +846,9 @@ const requestHandler = (req, res) => {
             require('./addPlayer')(versionData, sessionData, playerID, playerName, '');
             playerData = getPlayers(sessionData);
             // Serve a session-status page.
+            // Identify the limits on player counts.
+            const minPlayerCount = versionData.limits.playerCount.min;
+            const maxPlayerCount = versionData.limits.playerCount.max;
             serveTemplate(
               'playerStatus', {
                 sessionCode,
