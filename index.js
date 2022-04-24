@@ -342,7 +342,7 @@ const endRound = sessionData => {
       sessionData.piles.influences.push(...bid.influences.map(card => card.influence));
     });
     // If the winner has not won enough rounds to win the session:
-    if (player.roundsWon < versionsData[sessionData.version].limits.winningRounds.max) {
+    if (player.roundsWon < versionsData[sessionData.versionID].limits.winningRounds.max) {
       // Add the next round’s starter to the session data.
       round.nextStarterID = winningPlayerID;
       // If there are losing bidders:
@@ -395,7 +395,7 @@ const finishRound = sessionData => {
   // If the round has ended the session:
   const roundWinnerID = round.winner && round.winner.playerID;
   const {sessionCode, players} = sessionData;
-  const versionData = versionsData[sessionData.version];
+  const versionData = versionsData[sessionData.versionID];
   const sessionWon = roundWinnerID
   && players[roundWinnerID].roundsWon === versionData.limits.winningRounds.max;
   if (sessionWon || ! sessionData.piles.offers.latent.length) {
@@ -570,7 +570,7 @@ const requestHandler = (req, res) => {
         broadcast(sessionCode, false, 'sessionStart');
         console.log(`Session ${sessionCode} started`);
         // Notify all users of the time left.
-        const minutes = minutesLeft(versionsData[sessionData.version], sessionData);
+        const minutes = minutesLeft(versionsData[sessionData.versionID], sessionData);
         broadcast(sessionCode, false, 'timeLeft', minutes);
         // Shuffle the player IDs in the session data.
         const shuffler = sessionData.playerIDs.map(id => [id, Math.random()]);
@@ -597,7 +597,7 @@ const requestHandler = (req, res) => {
       else if (urlBase === 'patient') {
         const {sessionCode, playerID, task, index} = params;
         const sessionData = sessions[sessionCode];
-        const versionData = versionsData[sessionData.version];
+        const versionData = versionsData[sessionData.versionID];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
         if (timeLeft) {
@@ -609,9 +609,12 @@ const requestHandler = (req, res) => {
           const turn = turns[turns.length - 1];
           // If the move was a bid:
           if (task === 'bid') {
-            // Notify all players of the bid.
+            // Get data on the bid.
             const patient = player.hand.current.patients[index];
-            const bidNews = [playerID].concat(patientSpec(patient)).join('\t');
+            const bidData = [playerID].concat(patientSpec(patient));
+            // Add the patient’s priority as the net priority.
+            bidData.push(bidData[2]);
+            const bidNews = bidData.join('\t');
             broadcast(sessionCode, true, 'didBid', bidNews);
             // Add the bid to the round data.
             bids.push({
@@ -661,7 +664,7 @@ const requestHandler = (req, res) => {
       else if (urlBase === 'influence') {
         const {sessionCode, playerID, index, bidderID} = params;
         const sessionData = sessions[sessionCode];
-        const versionData = versionsData[sessionData.version];
+        const versionData = versionsData[sessionData.versionID];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
         if (timeLeft) {
@@ -715,7 +718,7 @@ const requestHandler = (req, res) => {
       else if (urlBase === 'influenceNone') {
         const {sessionCode, playerID} = params;
         const sessionData = sessions[sessionCode];
-        const versionData = versionsData[sessionData.version];
+        const versionData = versionsData[sessionData.versionID];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
         if (timeLeft) {
@@ -755,7 +758,7 @@ const requestHandler = (req, res) => {
         const {sessionCode, playerID} = params;
         console.log(`roundOK received from ${playerID}`);
         const sessionData = sessions[sessionCode];
-        const versionData = versionsData[sessionData.version];
+        const versionData = versionsData[sessionData.versionID];
         // If any time is left:
         const timeLeft = minutesLeft(versionData, sessionData);
         if (timeLeft) {
@@ -788,10 +791,9 @@ const requestHandler = (req, res) => {
       if (url === '/createSession') {
         // Create a session and get its data.
         const {version} = params;
-        const sessionData = require('./createSession')(versionsData[version]);
+        const versionData = versionsData[version];
+        const sessionData = require('./createSession')(versionData);
         const {sessionCode} = sessionData;
-        const versionData = versionsData[sessions[sessionCode].version];
-        // Add them to the data on all current sessions.
         sessions[sessionCode] = sessionData;
         // Initialize the new-player streams for the session.
         newsStreams[sessionCode] = {};
@@ -814,7 +816,7 @@ const requestHandler = (req, res) => {
         const sessionCodeOK = Object.keys(sessions).includes(sessionCode);
         if (sessionCodeOK) {
           const sessionData = sessions[sessionCode];
-          const versionData = versionsData[sessionData.version];
+          const versionData = versionsData[sessionData.versionID];
           let playerData = getPlayers(sessionData);
           const playerNames = Object.values(playerData);
           // If the user is already a player:

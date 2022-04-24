@@ -51,16 +51,43 @@
     "description": "Organs available for transplant per specified group (or each group)",
     "types": [
       {
-        "organ": "heart",
-        "count": 2
+        "organs": [
+          "heart"
+        ],
+        "count": 3
       },
       {
-        "organ": "liver",
-        "count": 2
+        "organs": [
+          "liver"
+        ],
+        "count": 3
       },
       {
-        "organ": "lung",
-        "count": 2
+        "organs": [
+          "lung"
+        ],
+        "count": 3
+      },
+      {
+        "organs": [
+          "heart",
+          "liver"
+        ],
+        "count": 1
+      },
+      {
+        "organs": [
+          "heart",
+          "lung"
+        ],
+        "count": 1
+      },
+      {
+        "organs": [
+          "liver",
+          "lung"
+        ],
+        "count": 1
       }
     ]
   },

@@ -327,6 +327,7 @@ news.onmessage = event => {
   }
   // Otherwise, if a bid was made:
   else if (params[0] === 'didBid') {
+    console.log(`didBid params: ${params}`);
     // Show it, with no influences and an unchanged net priority.
     const player = playerLIOf(params[1]);
     const patient = patientDigest(false, params.slice(2));
