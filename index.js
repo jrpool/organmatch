@@ -302,19 +302,19 @@ const exportSession = sessionData => {
 // Ends a round.
 const endRound = sessionData => {
   const round = sessionData.rounds[sessionData.roundsEnded];
-  const {bids} = round;
+  const {bids, roundOffer} = round;
   const {sessionCode, players} = sessionData;
   // If there were any bids in the round:
   if (bids.length) {
-    // Add the winner and its patient to the round data.
+    /*
+      Give each bid a score equal to the patient’s net priority, with wait time breaking ties,
+      multiplied by the count of matched organs.
+    */
     const scores = bids.map(bid => {
-      const {netPriority} = bid;
-      const qP = bid
-      .patient
-      .organNeed
-      .filter(need => need.organ === round.roundOffer.organ)[0]
-      .waitTime;
-      return 100 * netPriority - qP;
+      const {netPriority, patient} = bid;
+      const {organNeed, waitTime} = patient;
+      const matchCount = organNeed.filter(organ => roundOffer.organs.includes(organ)).length;
+      return matchCount * (1000 * netPriority + waitTime);
     });
     const winningBidIndex = scores.reduce(
       (windex, score, index) => score > scores[windex] ? index : windex, 0
