@@ -895,6 +895,8 @@ if (key && cert) {
   if (server) {
     const {PORT} = process.env;
     server.listen(PORT);
-    console.log(`OrganMatch server listening on port ${PORT} (${process.env.PROXY})`);
+    const proxy = process.env.PROXY;
+    const proxySuffix = proxy || ` (${proxy})`;
+    console.log(`OrganMatch server listening on port ${PORT}${proxySuffix}`);
   }
 }
