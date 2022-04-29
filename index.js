@@ -174,13 +174,15 @@ const taskSpecs = (version, hasMovedPatient, round, hand) => {
   return specs;
 };
 // Sends move specifications, if any, to a player and returns whether there were any.
-const sendTasks = (hasMovedPatient, sessionCode, playerID, round, hand) => {
+const sendTasks = (hasReplaced, sessionCode, playerID, round, hand) => {
   let anySpecs = false;
   const sessionData = sessions[sessionCode];
-  const specs = taskSpecs(sessionData.versionID, hasMovedPatient, round, hand);
+  const {versionID} = sessionData;
+  // Get the move specifications.
+  const specs = taskSpecs(versionID, hasReplaced, round, hand);
   const stream = newsStreams[sessionCode][playerID];
-  // If the player has not yet moved a patient:
-  if (! hasMovedPatient) {
+  // If the player has not yet replaced a patient:
+  if (! hasReplaced) {
     // Tell the player to bid, if possible, or otherwise to replace.
     if (specs.bid.length) {
       sendEventMsg(stream, `chooseBid=${specs.bid.join('\t')}`);
@@ -610,12 +612,14 @@ const requestHandler = (req, res) => {
           const turn = turns[turns.length - 1];
           // If the move was a bid:
           if (task === 'bid') {
+            console.log('A bid occurred');
             // Get data on the bid.
             const patient = player.hand.current.patients[index];
             const bidData = [playerID].concat(patientSpec(patient));
             // Add the patient’s priority as the net priority.
             bidData.push(bidData[2]);
             const bidNews = bidData.join('\t');
+            console.log(bidNews);
             broadcast(sessionCode, true, 'didBid', bidNews);
             // Add the bid to the round data.
             bids.push({
@@ -663,6 +667,7 @@ const requestHandler = (req, res) => {
       }
       // Otherwise, if an influence card was used:
       else if (urlBase === 'influence') {
+        console.log(`params:\n${JSON.stringify(params, null, 2)}`);
         const {sessionCode, playerID, index, bidderID} = params;
         const sessionData = sessions[sessionCode];
         const versionData = versionsData[sessionData.versionID];
@@ -681,7 +686,10 @@ const requestHandler = (req, res) => {
             playerID,
             influence: influences[index]
           };
+          console.log(`bids:\n${JSON.stringify(bids, null, 2)}`);
           const bidIndex = bids.findIndex(bid => bid.playerID === bidderID);
+          console.log(`bidIndex is ${bidIndex}`);
+          console.log(`bids is array? ${Array.isArray(bids)}`);
           const bid = bids[bidIndex];
           bid.influences.push(use);
           bid.netPriority = bid.patient.priority + bid.influences.reduce(
