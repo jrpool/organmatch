@@ -176,7 +176,8 @@ const taskSpecs = (version, hasMovedPatient, round, hand) => {
 // Sends move specifications, if any, to a player and returns whether there were any.
 const sendTasks = (hasMovedPatient, sessionCode, playerID, round, hand) => {
   let anySpecs = false;
-  const specs = taskSpecs(sessions[sessionCode].version, hasMovedPatient, round, hand);
+  const sessionData = sessions[sessionCode];
+  const specs = taskSpecs(sessionData.versionID, hasMovedPatient, round, hand);
   const stream = newsStreams[sessionCode][playerID];
   // If the player has not yet moved a patient:
   if (! hasMovedPatient) {
@@ -896,7 +897,7 @@ if (key && cert) {
     const {PORT} = process.env;
     server.listen(PORT);
     const proxy = process.env.PROXY;
-    const proxySuffix = proxy || ` (${proxy})`;
+    const proxySuffix = proxy ? ` (${proxy})` : '';
     console.log(`OrganMatch server listening on port ${PORT}${proxySuffix}`);
   }
 }
