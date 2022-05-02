@@ -14,15 +14,19 @@ const http2 = require('http2');
 
 // ########## GLOBAL CONSTANTS
 
-// SSE responses for player lists.
+// SSE (server-sent events) responses for player lists.
 const newsStreams = {};
 // Data on all versions.
 const versionsData = {};
+const getVersion = require('./getVersion');
 ['01', '02', '03'].forEach(num => {
-  versionsData[num] = require('./getVersion')(num);
+  versionsData[num] = getVersion(num);
 });
+// Encryption credentials.
 const key = fs.readFileSync(process.env.KEY);
 const cert = fs.readFileSync(process.env.CERT);
+// Stylesheet.
+const styleSheet = fs.readFileSync('style.css', 'utf8');
 // Organ images.
 const organSVGs = {};
 ['heart', 'liver', 'lung'].forEach(organ => {
@@ -47,11 +51,10 @@ const sessions = {};
 // ########## FUNCTIONS
 
 // Serves a page.
-const serveTemplate = (name, params, res) => {
+const ServePage = (name, params, res) => {
   res.setHeader('Content-Type', 'text/html');
   const template = fs.readFileSync(`${name}.html`, 'utf8');
-  const style = fs.readFileSync('style.css', 'utf8');
-  const styledTemplate = template.replace('__style__', `<style>\n${style}\n</style>`);
+  const styledTemplate = template.replace('__style__', `<style>\n${styleSheet}\n</style>`);
   const page = styledTemplate.replace('__params__', JSON.stringify(params));
   // Send the page.
   res.write(page);
@@ -86,14 +89,15 @@ const parse = queryString => {
   Array.from(USParams.entries()).forEach(entry => {
     params[entry[0]] = entry[1];
   });
+  // Return the object.
   return params;
 };
-// Returns an object describing all player IDs and names.
+// Returns an object mapping player IDs to player names.
 const getPlayers = sessionData => {
   const data = {};
   const {players} = sessionData;
-  Object.keys(players).forEach(playerID => {
-    data[playerID] = players[playerID].playerName;
+  Object.keys(players).forEach(id => {
+    data[id] = players[id].playerName;
   });
   return data;
 };
@@ -105,17 +109,18 @@ const broadcast = (sessionCode, onlyPlayers, subtype, value) => {
     }
   });
 };
-// Returns whether a patient matches an offer.
-const isMatch = (offer, patient) => {
-  const isGroupMatch = offer.group === patient.group;
+// Returns the match of a patient’s organ need with an offer.
+const getMatches = (offer, patient) => {
+  const isGroupMatch = offer.groupID === patient.groupID;
   if (isGroupMatch) {
-    return patient.organNeed.some(organ => offer.organs.includes(organ));
+    return patient.organNeed.filter(neededOrgan => offer.organIDs.includes(neededOrgan));
   }
   else {
-    return false;
+    return [];
   }
 };
 // Returns the IDs of the patients a player can use an influence on.
+/*
 const influenceTargets = (versionData, round, influence) => {
   const limits = versionData.limits.influences;
   const {turnsEnded, bids} = round;
@@ -150,8 +155,75 @@ const influenceTargets = (versionData, round, influence) => {
   const targetPatients = targetIndexes.map(index => bids[index].patient.waitTime);
   return targetPatients;
 };
-// Returns specifications for a turn player’s next move.
+*/
+// Returns the IDs of the patients a player can use an influence on.
+const getTargetIDs = (versionData, round, influence) => {
+  const limits = versionData.limits.influences;
+  const {turnsEnded, bids} = round;
+  const {turnPlayerID} = round.turns[turnsEnded];
+  const turnUseCount = bids.reduce(
+    (count, bid) => count + bid
+    .influences
+    .filter(use => use.playerID === turnPlayerID)
+    .length,
+    0
+  );
+  const targetIDs = [];
+  // If the player is still permitted to use an influence:
+  if (turnUseCount < limits.perTurn.max) {
+    // For each bid made in the turn:
+    bids.forEach(bid => {
+      const {influences} = bid;
+      // If any player is still permitted to influence it:
+      if (influences.length < limits.perBid.max) {
+        // If the turn player is still permitted to influence it:
+        const playerBidUseCount = influences.filter(use => use.playerID === turnPlayerID).length;
+        if (playerBidUseCount < limits.perTurnBid.max) {
+          // If the influence type differs from that of all existing influences on the bid:
+          if (influences.every(use => use.impact !== influence.impact)) {
+            // Add the patient ID to the eligible ones.
+            targetIDs.push(bid.patient.waitTime);
+          }
+        }
+      }
+    });
+  }
+  return targetIDs;
+};
+// Returns data on the current round.
+const getRound = sessionData => sessionData.rounds.slice(-1)[0];
+// Returns data on the current turn.
+const getTurn = sessionData => getRound(sessionData).turns.slice(-1)[0];
+// Returns whether the turn player has moved a patient.
+const hasMoved = sessionData => {
+  const turn = getTurn(sessionData);
+  return turn.bidCount || turn.hasReplaced;
+};
+// Returns the moves the turn player is permitted to make.
 const taskSpecs = (version, hasMovedPatient, round, hand) => {
+  const {patients, influences} = hand;
+  // Initialize the specifications.
+  const specs = {
+    bid: [],
+    influence: []
+  };
+  // If the turn player has not yet moved a patient:
+  if (! hasMovedPatient) {
+    // Add the indexes of the patients eligible to be bid to the specifications.
+    const matchIndexes = patients
+    .map((patient, index) => isMatch(round.roundOffer, patient) ? index : -1)
+    .filter(index => index > -1);
+    specs.bid = matchIndexes;
+  }
+  // Add the permitted influence uses to the specifications.
+  specs.influence = influences.map(
+    influence => influenceTargets(versionsData[version], round, influence)
+  );
+  // Return the specifications.
+  return specs;
+};
+// Returns the moves the turn player is permitted to make.
+const getPermittedMoves = sessionData => {
   const {patients, influences} = hand;
   // Initialize the specifications.
   const specs = {
@@ -223,8 +295,8 @@ const startTurn = sessionData => {
     turnNum,
     turnPlayerID,
     startTime: nowString(),
-    bid: false,
-    replaced: false,
+    bidCount: 0,
+    didReplace: false,
     influenced: false,
     influenceWaived: false,
     endTime: null
@@ -517,22 +589,22 @@ const requestHandler = (req, res) => {
       // Otherwise, if the home page was requested:
       else if (['home', 'home.html', ''].includes(urlBase)) {
         // Serve it.
-        serveTemplate('home', {}, res);
+        ServePage('home', {}, res);
       }
       // Otherwise, if the game documentation was requested:
       else if (urlBase === 'about') {
         // Serve it.
-        serveTemplate('about', {}, res);
+        ServePage('about', {}, res);
       }
       // Otherwise, if the session-creation form was requested:
       else if (urlBase === 'createForm') {
         // Serve it.
-        serveTemplate('createForm', {}, res);
+        ServePage('createForm', {}, res);
       }
       // Otherwise, if the session-joining form was requested:
       else if (urlBase === 'joinForm') {
         // Serve it.
-        serveTemplate('joinForm', {}, res);
+        ServePage('joinForm', {}, res);
       }
       // Otherwise, if adding a news stream was requested:
       else if (urlBase === 'newsRequest') {
@@ -628,8 +700,8 @@ const requestHandler = (req, res) => {
               influences: [],
               netPriority: patient.priority
             });
-            // Add the bid to the turn data.
-            turn.bid = true;
+            // Add the fact of a bid to the turn data.
+            turn.didBid = true;
           }
           // Otherwise, i.e. if the move was a replacement:
           else {
@@ -810,7 +882,7 @@ const requestHandler = (req, res) => {
         // Identify the limits on player counts.
         const minPlayerCount = versionData.limits.playerCount.min;
         const maxPlayerCount = versionData.limits.playerCount.max;
-        serveTemplate('leaderStatus', {
+        ServePage('leaderStatus', {
           minPlayerCount,
           maxPlayerCount,
           proxy: process.env.PROXY || '',
@@ -831,21 +903,21 @@ const requestHandler = (req, res) => {
           // If the user is already a player:
           if (playerNames.includes(playerName)) {
             // Serve an error page.
-            serveTemplate(
+            ServePage(
               'error', {error: `${playerName} is already a player in session ${sessionCode}`}, res
             );
           }
           // Otherwise, if no more players are permitted:
           else if (playerNames.length === versionData.limits.playerCount.max) {
             // Serve an error page.
-            serveTemplate(
+            ServePage(
               'error', {error: `Joining session ${sessionCode} would give it too many players`}, res
             );
           }
           // Otherwise, if the session has already started:
           else if (sessionData.startTime) {
             // Serve an error page.
-            serveTemplate('error', {error: `Session ${sessionCode} has already started`}, res);
+            ServePage('error', {error: `Session ${sessionCode} has already started`}, res);
           }
           // Otherwise, i.e. if the user is permitted to join the session:
           else {
@@ -860,7 +932,7 @@ const requestHandler = (req, res) => {
             // Identify the limits on player counts.
             const minPlayerCount = versionData.limits.playerCount.min;
             const maxPlayerCount = versionData.limits.playerCount.max;
-            serveTemplate(
+            ServePage(
               'playerStatus', {
                 sessionCode,
                 playerID,
@@ -879,7 +951,7 @@ const requestHandler = (req, res) => {
         // Otherwise, i.e. if the session code is invalid:
         else {
           // Serve an error page.
-          serveTemplate(
+          ServePage(
             'error', {error: `There is no session with code <q>${sessionCode}</q>`}, res
           );
         }

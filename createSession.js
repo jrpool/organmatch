@@ -9,27 +9,31 @@ const createCode = () => {
   const sessionCode = now.toString().slice(5, 10);
   return sessionCode;
 };
-// Returns an array of the names of the groups of a version.
-const matchGroups = versionData => Object.keys(versionData.matchGroups.groups);
 // Creates and returns all offer cards for a session.
 const createOfferCards = versionData => {
   const cards = [];
-  const cardTypes = versionData.offerCards.types;
-  cardTypes.forEach(type => {
-    const {count, group, organs} = type;
+  // For each offer-card type:
+  const {types} = versionData.offerCards;
+  types.forEach(type => {
+    const {count, groupID, organs} = type;
+    // For each card of that type:
     for (let i = 0; i < count; i++) {
-      if (group) {
+      // If the card is group-specific:
+      if (groupID) {
+        // Create it.
         cards.push({
           organs,
-          group
+          groupID
         });
       }
+      // Otherwise, i.e. if it is group-generic:
       else {
-        const groups = matchGroups(versionData);
-        groups.forEach(group => {
+        // Create one card per donor/patient group.
+        const {groups} = versionData.matchGroups;
+        Object.keys(groups).forEach(groupID => {
           cards.push({
             organs,
-            group
+            groupID
           });
         });
       }
@@ -40,12 +44,15 @@ const createOfferCards = versionData => {
 // Creates and returns the influence cards for a session.
 const createInfluenceCards = versionData => {
   const cards = [];
-  const cardTypes = versionData.influenceCards.types;
-  cardTypes.forEach(type => {
-    for (let i = 0; i < type.count; i++) {
+  // For each card type:
+  const {types} = versionData.influenceCards;
+  types.forEach(type => {
+    // Create the specified count of them.
+    const {id, impact, count} = type;
+    for (let i = 0; i < count; i++) {
       cards.push({
-        influenceName: type.name,
-        impact: type.impact
+        id,
+        impact
       });
     }
   });
@@ -59,7 +66,6 @@ const shuffle = array => {
 };
 // Creates and returns the patient cards for a session.
 const createPatientCards = versionData => {
-  const groupTypes = matchGroups(versionData);
   const cards = [];
   // For each type of patient card:
   versionData.patientCards.types.forEach(type => {
@@ -81,11 +87,13 @@ const createPatientCards = versionData => {
       // Otherwise, i.e. if the card applies to every group:
       else {
         // For each group:
-        groupTypes.forEach(group => {
+        const {groups} = versionData.matchGroups;
+        const groupIDs = Object.keys(groups);
+        groupIDs.forEach(groupID => {
           // Create a card.
           const card = {
             organNeed,
-            group,
+            groupID,
             priority,
             waitTime: Math.random()
           };
@@ -129,8 +137,8 @@ module.exports = versionData => {
     // Populate the card piles in the session data.
     const {piles} = sessionData;
     piles.offers.latent = shuffle(createOfferCards(versionData));
-    piles.influences = shuffle(createInfluenceCards(versionData));
     piles.patients = shuffle(createPatientCards(versionData));
+    piles.influences = shuffle(createInfluenceCards(versionData));
     return sessionData;
   }
   catch(error) {

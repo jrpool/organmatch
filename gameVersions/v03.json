@@ -1,15 +1,18 @@
 {
   "matchGroups": {
-    "description": "Categories of organs and of patients that must match",
+    "description": "Donor/patient groups",
     "groups": {
-      "&alpha;": {
-        "class": "groupAlpha"
+      "alpha": {
+        "htmlEntity": "&alpha",
+        "cssClass": "groupAlpha"
       },
-      "&beta;": {
-        "class": "groupBeta"
+      "beta": {
+        "htmlEntity": "&beta",
+        "cssClass": "groupBeta"
       },
-      "&gamma;": {
-        "class": "groupGamma"
+      "gamma": {
+        "htmlEntity": "&gamma",
+        "cssClass": "groupGama"
       }
     }
   },
@@ -92,28 +95,28 @@
     ]
   },
   "influenceCards": {
-    "description": "Factors modifying patient priorities",
+    "description": "Patient-priority modifiers",
     "types": [
       {
-        "name": "urgency",
+        "id": "urgency",
         "description": "Patient’s health has deteriorated, making transplant more urgent",
         "impact": 2,
         "count": 10
       },
       {
-        "name": "child",
+        "id": "child",
         "description": "Patient is a child",
         "impact": 1,
         "count": 10
       },
       {
-        "name": "addict",
+        "id": "addict",
         "description": "Patient has used a prohibited substance",
         "impact": -1,
         "count": 10
       },
       {
-        "name": "bribe",
+        "id": "bribe",
         "description": "Patient has offered a bribe to the transplant committee",
         "impact": -2,
         "count": 10
